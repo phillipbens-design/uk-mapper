@@ -3,119 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UK Coordinate Mapping Tool</title>
+    <title>UK Geospatial Visualizer Pro</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Tailwind CSS for UI -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Proj4js for Coordinate Conversion -->
+    <!-- Proj4js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
-    <!-- PapaParse for CSV -->
+    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- noUiSlider for Date Range -->
+    <!-- noUiSlider -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <style>
-        #map { height: calc(100vh - 220px); width: 100%; border-radius: 8px; }
-        .noUi-connect { background: #3b82f6; }
+        #map { height: calc(100vh - 360px); width: 100%; border-radius: 12px; z-index: 1; }
+        .noUi-connect { background: #2563eb; }
         .date-label {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #3b82f6;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #2563eb;
             border-radius: 4px;
-            padding: 2px 4px;
-            font-size: 10px;
-            font-weight: bold;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 600;
             color: #1e40af;
-            white-space: nowrap;
-            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .date-input {
-            border: 1px solid #e2e8f0;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            color: #1e293b;
-            background-color: #fff;
-        }
-        .date-input:focus {
-            border-color: #3b82f6;
-            outline: none;
-            ring: 2px;
-            ring-color: #3b82f6;
-        }
+        .custom-slider .noUi-handle { border-radius: 50%; cursor: pointer; }
+        input[type=range] { accent-color: #2563eb; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-slate-50 font-sans text-slate-900">
 
-    <nav class="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm">
-        <h1 class="text-xl font-bold text-gray-800">UK Geospatial Visualizer</h1>
-        <div class="flex gap-4 items-center">
-            <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium">
-                Upload CSV
+    <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
+        <div class="flex items-center gap-2">
+            <div class="p-2 bg-blue-600 rounded-lg text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-800">UK Geospatial Visualizer</h1>
+        </div>
+        <div class="flex gap-3 items-center">
+            <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm font-semibold inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Import CSV
                 <input type="file" id="csvFile" accept=".csv" class="hidden">
             </label>
         </div>
     </nav>
 
-    <main class="p-6 space-y-4">
-        <!-- Controls Bar -->
-        <div id="controls" class="bg-white p-4 rounded-xl shadow-sm border flex flex-col space-y-4 hidden">
-            <div class="flex flex-wrap items-center gap-6">
-                <div class="flex flex-col flex-1 min-w-[300px]">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-4">Date Range Slider</label>
-                    <div id="date-slider" class="mx-2 mb-2"></div>
+    <main class="p-4 md:p-6 max-w-7xl mx-auto space-y-4">
+        <div id="controls" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 hidden animate-in fade-in duration-500">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Time Selection Column -->
+                <div class="lg:col-span-7 space-y-5">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Temporal Range</label>
+                            <span id="range-display" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">--</span>
+                        </div>
+                        <div id="date-slider" class="custom-slider mx-2"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-2">
+                        <div class="sm:col-span-5 space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Start Time</label>
+                            <input type="datetime-local" id="input-start" class="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+                        <div class="sm:col-span-5 space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">End Time</label>
+                            <input type="datetime-local" id="input-end" class="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <button id="btnApplyFilter" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-2.5 rounded-lg text-xs font-bold transition shadow-sm h-[42px]">
+                                Apply
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="flex items-end gap-3 border-l pl-6">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Manual Start</label>
-                        <input type="datetime-local" id="input-start" class="date-input">
+
+                <!-- Playback Column -->
+                <div class="lg:col-span-5 flex flex-col gap-6 lg:border-l lg:pl-8">
+                    <div class="space-y-4">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Animation Playback</label>
+                        <div class="flex items-center gap-6">
+                            <button id="btnPlay" class="flex-shrink-0 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md">
+                                <svg id="playIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                                <svg id="pauseIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <div class="flex-grow space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Speed Control</label>
+                                    <span id="speed-label" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Slow</span>
+                                </div>
+                                <input type="range" id="playbackSpeedRange" min="0.0005" max="0.005" step="0.0001" value="0.001" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+                                <div class="flex justify-between text-[9px] text-slate-400 font-bold uppercase">
+                                    <span>Very Slow</span>
+                                    <span>Very Fast</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Manual End</label>
-                        <input type="datetime-local" id="input-end" class="date-input">
+
+                    <div class="pt-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Visualization Style</label>
+                        <div class="inline-flex p-1 bg-slate-100 rounded-xl w-full" role="group">
+                            <button id="viewMarkers" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
+                            <button id="viewHeatmap" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Heatmap</button>
+                            <button id="viewPath" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Path</button>
+                        </div>
                     </div>
-                    <button id="btnApplyFilter" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm h-[38px]">
-                        Apply Filter
-                    </button>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
-                <div class="flex items-center gap-4">
-                    <div class="flex flex-col">
-                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">View Type</label>
-                        <div class="inline-flex rounded-md shadow-sm" role="group">
-                            <button id="viewMarkers" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100">Markers</button>
-                            <button id="viewHeatmap" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-r border-gray-200 rounded-r-lg hover:bg-gray-100">Heatmap</button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col">
-                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Overlay</label>
-                        <button id="toggleLabels" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100">Show Labels: Off</button>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Actions</label>
-                        <button id="btnResetAll" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition">Reset View</button>
-                    </div>
+            <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
+                <div class="flex flex-wrap items-center gap-4">
+                    <button id="toggleLabels" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                        Show Labels: <span class="text-blue-600">Off</span>
+                    </button>
+                    <button id="toggleAutoSnap" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                        Auto-Snap: <span class="text-blue-600">Off</span>
+                    </button>
+                    <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
+                        Clear Filters
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button id="btnZoomToFit" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">Zoom to Filtered Extent</button>
-                    <div id="stats" class="text-sm font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">Points: 0</div>
+                    <button id="btnZoomToFit" class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                        Zoom to Fit
+                    </button>
+                    <div id="stats" class="text-xs font-black text-slate-700 bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-xl">
+                        Points: 0
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="empty-state" class="flex flex-col items-center justify-center h-[60vh] text-gray-400">
-            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
-            <p class="text-lg text-center">Upload CSV with Date (DD/MM/YYYY), Time, Easting, Northing headers.</p>
+        <div id="empty-state" class="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <div class="p-6 bg-slate-50 rounded-full mb-6">
+                <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            </div>
+            <h3 class="text-slate-800 font-bold mb-2">Ready to Visualize</h3>
+            <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date" (DD/MM/YYYY), "Time", "Easting", and "Northing" columns to begin.</p>
         </div>
 
         <div id="map-container" class="relative hidden">
-            <div id="map"></div>
+            <div id="map" class="shadow-xl border border-slate-200"></div>
         </div>
     </main>
 
@@ -125,57 +157,53 @@
     <script>
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
 
-        let map, markerLayer, heatLayer;
+        let map, markerLayer, heatLayer, pathLayer;
         let allData = [];
         let dateRange = { min: 0, max: 0 };
         let currentView = 'markers'; 
         let showLabels = false;
-        // Increased label limit to 500 as requested
+        let autoSnap = false;
+        let isPlaying = false;
+        let playInterval = null;
         const LABEL_LIMIT = 500;
 
         function initMap() {
             if (map) return;
-            map = L.map('map').setView([54.5, -3.0], 6);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            map = L.map('map', { preferCanvas: true }).setView([54.5, -3.0], 6);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap, &copy; CARTO'
             }).addTo(map);
             markerLayer = L.layerGroup().addTo(map);
+            pathLayer = L.layerGroup().addTo(map);
         }
 
         function parseUKDate(dateStr, timeStr) {
             if (!dateStr) return NaN;
-            const dateParts = dateStr.toString().split(/[\/\-.]/);
-            if (dateParts.length !== 3) return new Date(dateStr + ' ' + (timeStr || '')).getTime();
+            dateStr = dateStr.toString().trim();
+            timeStr = (timeStr || "00:00:00").toString().trim();
+            const dateParts = dateStr.split(/[\/\-.]/);
+            if (dateParts.length !== 3) return new Date(dateStr + ' ' + timeStr).getTime();
             const day = parseInt(dateParts[0], 10);
             const month = parseInt(dateParts[1], 10) - 1; 
-            const year = parseInt(dateParts[2], 10);
-            if (timeStr) {
-                const timeParts = timeStr.toString().split(':');
-                const hour = parseInt(timeParts[0], 10) || 0;
-                const min = parseInt(timeParts[1], 10) || 0;
-                const sec = parseInt(timeParts[2], 10) || 0;
-                return new Date(year, month, day, hour, min, sec).getTime();
-            }
-            return new Date(year, month, day).getTime();
+            const year = dateParts[2].length === 2 ? 2000 + parseInt(dateParts[2], 10) : parseInt(dateParts[2], 10);
+            const timeParts = timeStr.split(':');
+            const hour = parseInt(timeParts[0], 10) || 0;
+            const min = parseInt(timeParts[1], 10) || 0;
+            const sec = parseInt(timeParts[2], 10) || 0;
+            return new Date(year, month, day, hour, min, sec).getTime();
         }
 
         function formatToLocalISO(timestamp) {
             const date = new Date(timestamp);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
 
         function parseCSV(file) {
             Papa.parse(file, {
-                header: true,
-                dynamicTyping: true,
-                skipEmptyLines: true,
-                complete: (results) => processData(results.data),
-                error: (err) => alert("Error parsing CSV: " + err.message)
+                header: true, dynamicTyping: true, skipEmptyLines: true,
+                complete: (results) => results.data && results.data.length > 0 ? processData(results.data) : alert("Empty file."),
+                error: (err) => alert("Parsing error: " + err.message)
             });
         }
 
@@ -183,135 +211,140 @@
             allData = [];
             let validDates = [];
             data.forEach(row => {
-                const easting = row.Easting || row.easting;
-                const northing = row.Northing || row.northing;
-                const dateStr = row.Date || row.date;
-                const timeStr = row.Time || row.time;
+                const easting = row.Easting ?? row.easting ?? row.EASTING;
+                const northing = row.Northing ?? row.northing ?? row.NORTHING;
+                const dateStr = row.Date ?? row.date ?? row.DATE;
+                const timeStr = row.Time ?? row.time ?? row.TIME;
                 if (easting && northing && dateStr) {
                     try {
                         const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
                         const ts = parseUKDate(dateStr, timeStr);
-                        if (!isNaN(ts)) {
-                            allData.push({ lat: coords[1], lng: coords[0], ts, dateObj: new Date(ts), raw: row });
+                        if (!isNaN(ts) && !isNaN(coords[0])) {
+                            allData.push({ lat: coords[1], lng: coords[0], ts, dateObj: new Date(ts), label: `${dateStr} ${timeStr || ''}`.trim() });
                             validDates.push(ts);
                         }
-                    } catch (e) { console.error(e); }
+                    } catch (e) { }
                 }
             });
-
-            if (allData.length === 0) {
-                alert("No valid points found. Ensure date is DD/MM/YYYY.");
-                return;
-            }
-
+            if (allData.length === 0) return alert("Valid data not found.");
+            allData.sort((a, b) => a.ts - b.ts);
             dateRange.min = Math.min(...validDates);
             dateRange.max = Math.max(...validDates);
-            initSlider();
             showApp();
-            updateMap(true);
+            initSlider();
+            zoomToFit(allData);
+            updateMap(false); 
         }
 
         function initSlider() {
             const slider = document.getElementById('date-slider');
-            const inputStart = document.getElementById('input-start');
-            const inputEnd = document.getElementById('input-end');
-            const btnApply = document.getElementById('btnApplyFilter');
-            
+            const rangeDisplay = document.getElementById('range-display');
             if (slider.noUiSlider) slider.noUiSlider.destroy();
-
             noUiSlider.create(slider, {
                 start: [dateRange.min, dateRange.max],
                 connect: true,
+                behaviour: 'tap-drag',
                 range: { 'min': dateRange.min, 'max': dateRange.max },
-                step: 60000 
+                step: 1000 
             });
-
             slider.noUiSlider.on('update', (values) => {
-                inputStart.value = formatToLocalISO(parseInt(values[0]));
-                inputEnd.value = formatToLocalISO(parseInt(values[1]));
+                const s = parseInt(values[0]), e = parseInt(values[1]);
+                document.getElementById('input-start').value = formatToLocalISO(s);
+                document.getElementById('input-end').value = formatToLocalISO(e);
+                rangeDisplay.innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
             });
-
             slider.noUiSlider.on('change', () => {
+                if (isPlaying) togglePlayback();
                 updateMap();
             });
-
-            btnApply.onclick = () => {
-                const s = new Date(inputStart.value).getTime();
-                const e = new Date(inputEnd.value).getTime();
-                if (!isNaN(s) && !isNaN(e)) {
-                    slider.noUiSlider.set([s, e]);
-                    updateMap();
-                } else {
-                    alert("Please enter a valid start and end date/time.");
-                }
-            };
         }
 
-        function updateMap(shouldZoom = false) {
+        function togglePlayback() {
+            const btn = document.getElementById('btnPlay');
+            const playIcon = document.getElementById('playIcon');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const slider = document.getElementById('date-slider');
+
+            if (isPlaying) {
+                clearInterval(playInterval);
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                isPlaying = false;
+            } else {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                isPlaying = true;
+
+                playInterval = setInterval(() => {
+                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value);
+                    const totalRange = dateRange.max - dateRange.min;
+                    const step = (totalRange / 100) * multiplier; 
+
+                    const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
+                    let nextEnd = currEnd + step;
+                    
+                    if (nextEnd > dateRange.max) {
+                        slider.noUiSlider.set([currStart, dateRange.max]);
+                        togglePlayback();
+                        return;
+                    }
+
+                    const windowSize = currEnd - currStart;
+                    slider.noUiSlider.set([nextEnd - windowSize, nextEnd]);
+                    updateMap(autoSnap); 
+                }, 50);
+            }
+        }
+
+        function updateMap(shouldCenter = false) {
             if (!map || !allData.length) return;
             const slider = document.getElementById('date-slider');
-            if (!slider.noUiSlider) return;
-            
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
             const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
-            document.getElementById('stats').innerText = `Points: ${filtered.length}`;
+            document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
 
             markerLayer.clearLayers();
+            pathLayer.clearLayers();
             if (heatLayer) map.removeLayer(heatLayer);
 
             if (filtered.length > 0) {
                 if (currentView === 'markers') {
                     filtered.forEach((d, idx) => {
-                        const m = L.circleMarker([d.lat, d.lng], { radius: 5, fillColor: "#3b82f6", color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.8 })
-                            .bindPopup(`<strong>Date:</strong> ${d.dateObj.toLocaleDateString('en-GB')}<br><strong>Time:</strong> ${d.dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`);
-                        if (showLabels && idx < LABEL_LIMIT) {
-                            m.bindTooltip(`${d.dateObj.toLocaleDateString('en-GB')} ${d.dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -5] });
-                        }
+                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
+                            .bindPopup(`<p class="text-xs font-bold">${d.dateObj.toLocaleString('en-GB')}</p>`);
+                        if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
                         m.addTo(markerLayer);
                     });
-                } else {
-                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.5]), { radius: 25, blur: 15 }).addTo(map);
+                } else if (currentView === 'heat') {
+                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map);
+                } else if (currentView === 'path') {
+                    const latlngs = filtered.map(d => [d.lat, d.lng]);
+                    L.polyline(latlngs, { color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
+                    if (latlngs.length > 0) {
+                        L.circleMarker(latlngs[0], { radius: 7, fillColor: '#22c55e', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(pathLayer);
+                        L.circleMarker(latlngs[latlngs.length-1], { radius: 7, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(pathLayer);
+                    }
                 }
-
-                if (shouldZoom) zoomToFit();
+                
+                // Logical check: Pan if autoSnap is on, but DON'T change zoom
+                if (shouldCenter) {
+                    const lats = filtered.map(p => p.lat);
+                    const lngs = filtered.map(p => p.lng);
+                    const center = [
+                        lats.reduce((a, b) => a + b, 0) / lats.length,
+                        lngs.reduce((a, b) => a + b, 0) / lngs.length
+                    ];
+                    map.panTo(center, { animate: true, duration: 0.5 });
+                }
             }
         }
 
-        function zoomToFit() {
-            const markers = markerLayer.getLayers();
-            if (markers.length > 0) {
-                const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 14 });
-            } else if (allData.length > 0) {
-                const slider = document.getElementById('date-slider');
-                const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-                const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
-                if (filtered.length > 0) {
-                    const bounds = L.latLngBounds(filtered.map(d => [d.lat, d.lng]));
-                    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-                }
+        function zoomToFit(data) {
+            const points = data || allData;
+            if (points.length > 0) {
+                const bounds = L.latLngBounds(points.map(d => [d.lat, d.lng]));
+                map.fitBounds(bounds, { padding: [40, 40], animate: true });
             }
-        }
-
-        function resetView() {
-            if (!allData.length) return;
-            
-            // 1. Reset Labels
-            showLabels = false;
-            document.getElementById('toggleLabels').innerText = 'Show Labels: Off';
-            
-            // 2. Reset Slider to max range
-            const slider = document.getElementById('date-slider');
-            if (slider.noUiSlider) {
-                slider.noUiSlider.set([dateRange.min, dateRange.max]);
-            }
-
-            // 3. Reset manual inputs
-            document.getElementById('input-start').value = formatToLocalISO(dateRange.min);
-            document.getElementById('input-end').value = formatToLocalISO(dateRange.max);
-
-            // 4. Update Map & Zoom
-            updateMap(true);
         }
 
         function showApp() {
@@ -322,17 +355,50 @@
             map.invalidateSize();
         }
 
-        document.getElementById('csvFile').addEventListener('change', e => e.target.files[0] && parseCSV(e.target.files[0]));
-        document.getElementById('viewMarkers').onclick = () => { currentView = 'markers'; updateMap(); };
-        document.getElementById('viewHeatmap').onclick = () => { currentView = 'heat'; updateMap(); };
-        document.getElementById('btnZoomToFit').onclick = zoomToFit;
-        document.getElementById('btnResetAll').onclick = resetView;
-        document.getElementById('toggleLabels').onclick = function() {
-            showLabels = !showLabels;
-            this.innerText = `Show Labels: ${showLabels ? 'On' : 'Off'}`;
-            updateMap();
+        document.getElementById('playbackSpeedRange').oninput = function() {
+            const val = parseFloat(this.value);
+            const label = document.getElementById('speed-label');
+            if (val < 0.0015) label.innerText = "Very Slow";
+            else if (val < 0.003) label.innerText = "Moderate";
+            else if (val < 0.0045) label.innerText = "Fast";
+            else label.innerText = "Very Fast";
         };
 
+        document.getElementById('csvFile').onchange = e => e.target.files[0] && parseCSV(e.target.files[0]);
+        document.getElementById('btnPlay').onclick = togglePlayback;
+        document.getElementById('viewMarkers').onclick = () => setView('markers', 'viewMarkers');
+        document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
+        document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
+        
+        function setView(type, btnId) {
+            currentView = type;
+            ['viewMarkers', 'viewHeatmap', 'viewPath'].forEach(id => document.getElementById(id).className = id === btnId ? "flex-1 px-3 py-2 text-xs font-bold rounded-lg bg-white text-blue-600 shadow-sm border border-slate-200" : "flex-1 px-3 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900");
+            updateMap();
+        }
+
+        document.getElementById('btnApplyFilter').onclick = () => {
+            const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime();
+            if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); }
+        };
+        document.getElementById('btnZoomToFit').onclick = () => {
+            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v));
+            zoomToFit(allData.filter(d => d.ts >= s && d.ts <= e));
+        };
+        document.getElementById('btnResetAll').onclick = () => {
+            if (isPlaying) togglePlayback();
+            document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
+            updateMap(false);
+            zoomToFit(allData);
+        };
+        document.getElementById('toggleLabels').onclick = function() {
+            showLabels = !showLabels;
+            this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`;
+            updateMap();
+        };
+        document.getElementById('toggleAutoSnap').onclick = function() {
+            autoSnap = !autoSnap;
+            this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`;
+        };
         window.onload = initMap;
     </script>
 </body>
