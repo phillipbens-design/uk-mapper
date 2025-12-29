@@ -39,17 +39,9 @@
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
 
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
-        <div class="flex items-center gap-3">
-            <div class="flex-shrink-0">
-                <!-- Main Application Logo Integrated from GitHub -->
-                <img src="uk-mapper/1767034682067.jpg" 
-                     alt="Burnmouth Logo" 
-                     class="h-10 w-auto rounded-lg shadow-sm border border-slate-100 object-cover"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <!-- Fallback Icon if Image Fails to Load -->
-                <div class="hidden p-2 bg-blue-600 rounded-lg text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
+        <div class="flex items-center gap-2">
+            <div class="p-2 bg-blue-600 rounded-lg text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
             <h1 class="text-xl font-bold tracking-tight text-slate-800">Burnmouth - Geospatial tool kit</h1>
         </div>
@@ -87,6 +79,10 @@
                         <button id="btnApplyFilter" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-2.5 rounded-lg text-xs font-bold transition shadow-sm h-[42px]">
                             Apply
                         </button>
+                        <!-- Most Active Locations Button -->
+                        <button id="btnMostActive" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition shadow-md">
+                            Show Most Active Locations
+                        </button>
                     </div>
                 </div>
 
@@ -106,7 +102,7 @@
                                 <span class="text-[10px] font-bold text-slate-600 uppercase">Rail Journey detector (2.5km)</span>
                                 <input type="number" id="railRadius" value="2.5" step="0.1" class="w-14 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                             </div>
-                            <button id="btnDetectRail" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Analyze Rail Travel Sequence</button>
+                            <button id="btnDetectRail" class="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Detect Rail travel</button>
                         </div>
                         <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-2">
                             <div class="flex items-center justify-between">
@@ -115,9 +111,14 @@
                             </div>
                             <button id="btnDetectPrisons" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Search Prisons</button>
                         </div>
-                        <button id="btnMostActive" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition shadow-md">
-                            Show Most Active Locations
-                        </button>
+                        <!-- Service Station Detector Adjusted Default -->
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-slate-600 uppercase">Service Stations (0.5km)</span>
+                                <input type="number" id="serviceRadius" value="0.5" step="0.1" class="w-14 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
+                            </div>
+                            <button id="btnDetectService" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Service station detector</button>
+                        </div>
                     </div>
                 </div>
 
@@ -217,16 +218,51 @@
 
     <script>
         const TRANSPORT_HUBS = [
-            { name: "Heathrow Airport", lat: 51.4700, lng: -0.4543 },
-            { name: "Gatwick Airport", lat: 51.1537, lng: -0.1821 },
+            { name: "London Heathrow Airport", lat: 51.4700, lng: -0.4543 },
+            { name: "London Gatwick Airport", lat: 51.1537, lng: -0.1821 },
+            { name: "London Stansted Airport", lat: 51.8860, lng: 0.2389 },
+            { name: "London Luton Airport", lat: 51.8763, lng: -0.3717 },
+            { name: "London City Airport", lat: 51.5048, lng: 0.0495 },
             { name: "Manchester Airport", lat: 53.3588, lng: -2.2727 },
-            { name: "Stansted Airport", lat: 51.8860, lng: 0.2389 },
-            { name: "Port of Dover", lat: 51.1271, lng: 1.3283 },
-            { name: "Port of Felixstowe", lat: 51.9576, lng: 1.3090 },
-            { name: "Port of Liverpool", lat: 53.4357, lng: -3.0076 },
             { name: "Birmingham Airport", lat: 52.4524, lng: -1.7435 },
             { name: "Glasgow Airport", lat: 55.8645, lng: -4.4320 },
-            { name: "Edinburgh Airport", lat: 55.9508, lng: -3.3615 }
+            { name: "Edinburgh Airport", lat: 55.9508, lng: -3.3615 },
+            { name: "Bristol Airport", lat: 51.3827, lng: -2.7191 },
+            { name: "Newcastle Airport", lat: 55.0375, lng: -1.6917 },
+            { name: "Belfast International Airport", lat: 54.6575, lng: -6.2158 },
+            { name: "Belfast City Airport", lat: 54.6181, lng: -5.8725 },
+            { name: "Liverpool John Lennon Airport", lat: 53.3336, lng: -2.8497 },
+            { name: "East Midlands Airport", lat: 52.8311, lng: -1.3281 },
+            { name: "Leeds Bradford Airport", lat: 53.8659, lng: -1.6611 },
+            { name: "Aberdeen Airport", lat: 57.2019, lng: -2.1978 },
+            { name: "Southampton Airport", lat: 50.9503, lng: -1.3567 },
+            { name: "Jersey Airport", lat: 49.2075, lng: -2.1953 },
+            { name: "Guernsey Airport", lat: 49.4347, lng: -2.6006 },
+            { name: "Cardiff Airport", lat: 51.3967, lng: -3.3433 },
+            { name: "Inverness Airport", lat: 57.5425, lng: -4.0475 },
+            { name: "Bournemouth Airport", lat: 50.7800, lng: -1.8425 },
+            { name: "Exeter Airport", lat: 50.7344, lng: -3.4139 },
+            { name: "Norwich Airport", lat: 52.6758, lng: 1.2828 },
+            { name: "Prestwick Airport", lat: 55.5094, lng: -4.5947 },
+            { name: "Port of Dover", lat: 51.1271, lng: 1.3283 },
+            { name: "Port of Southampton", lat: 50.9000, lng: -1.4000 },
+            { name: "Port of Portsmouth (Intl Ferry)", lat: 50.8140, lng: -1.0900 },
+            { name: "Port of Felixstowe", lat: 51.9576, lng: 1.3090 },
+            { name: "Port of Liverpool", lat: 53.4357, lng: -3.0076 },
+            { name: "Port of Hull", lat: 53.7430, lng: -0.2830 },
+            { name: "Port of Harwich", lat: 51.9470, lng: 1.2530 },
+            { name: "Port of Plymouth", lat: 50.3650, lng: -4.1500 },
+            { name: "Port of Holyhead", lat: 53.3080, lng: -4.6330 },
+            { name: "Port of Fishguard", lat: 52.0120, lng: -4.9850 },
+            { name: "Port of Pembroke Dock", lat: 51.6960, lng: -4.9450 },
+            { name: "Port of Heysham", lat: 54.0320, lng: -2.9160 },
+            { name: "Port of Poole", lat: 50.7100, lng: -1.9900 },
+            { name: "Port of Newhaven", lat: 50.7880, lng: 0.0550 },
+            { name: "Port of Cairnryan", lat: 54.9650, lng: -5.0200 },
+            { name: "Port of Larne", lat: 54.8500, lng: -5.8100 },
+            { name: "Port of Belfast", lat: 54.6160, lng: -5.9000 },
+            { name: "Port of Tyne", lat: 54.9920, lng: -1.4420 },
+            { name: "Port of Grimsby/Immingham", lat: 53.6270, lng: -0.1900 }
         ];
 
         const RAIL_NETWORK_WAYPOINTS = [
@@ -247,12 +283,128 @@
 
         const PRISONS = [
             { name: "HMP Belmarsh", lat: 51.496, lng: 0.082 },
+            { name: "HMP Frankland", lat: 54.805, lng: -1.568 },
+            { name: "HMP Full Sutton", lat: 53.985, lng: -0.875 },
+            { name: "HMP Long Lartin", lat: 52.126, lng: -1.890 },
+            { name: "HMP Manchester", lat: 53.493, lng: -2.247 },
+            { name: "HMP Wakefield", lat: 53.678, lng: -1.508 },
+            { name: "HMP Whitemoor", lat: 52.576, lng: 0.038 },
+            { name: "HMP Woodhill", lat: 52.046, lng: -0.825 },
             { name: "HMP Wandsworth", lat: 51.450, lng: -0.187 },
             { name: "HMP Pentonville", lat: 51.545, lng: -0.116 },
+            { name: "HMP Wormwood Scrubs", lat: 51.517, lng: -0.239 },
             { name: "HMP Birmingham", lat: 52.492, lng: -1.916 },
-            { name: "HMP Manchester", lat: 53.493, lng: -2.247 },
             { name: "HMP Liverpool", lat: 53.447, lng: -2.964 },
-            { name: "HMP Wormwood Scrubs", lat: 51.517, lng: -0.239 }
+            { name: "HMP Leeds", lat: 53.791, lng: -1.583 },
+            { name: "HMP Bristol", lat: 51.478, lng: -2.593 },
+            { name: "HMP Cardiff", lat: 51.486, lng: -3.175 },
+            { name: "HMP Durham", lat: 54.777, lng: -1.567 },
+            { name: "HMP Hull", lat: 53.753, lng: -0.301 },
+            { name: "HMP Nottingham", lat: 52.980, lng: -1.168 },
+            { name: "HMP Exeter", lat: 50.728, lng: -3.528 },
+            { name: "HMP Lincoln", lat: 53.232, lng: -0.525 },
+            { name: "HMP Norwich", lat: 52.639, lng: 1.317 },
+            { name: "HMP Swansea", lat: 51.615, lng: -3.951 },
+            { name: "HMP Preston", lat: 53.764, lng: -2.691 },
+            { name: "HMP Bedford", lat: 52.138, lng: -0.468 },
+            { name: "HMP Chelmsford", lat: 51.734, lng: 0.485 },
+            { name: "HMP High Down", lat: 51.325, lng: -0.211 },
+            { name: "HMP Barlinnie", lat: 55.871, lng: -4.188 },
+            { name: "HMP Edinburgh", lat: 55.923, lng: -3.267 },
+            { name: "HMP Grampian", lat: 57.514, lng: -1.796 },
+            { name: "HMP Low Moss", lat: 55.918, lng: -4.223 },
+            { name: "HMP Perth", lat: 56.388, lng: -3.435 },
+            { name: "HMP Shotts", lat: 55.834, lng: -3.834 }
+        ];
+
+        const SERVICE_STATIONS = [
+            { name: "Abington (M74)", lat: 55.495, lng: -3.743 },
+            { name: "Andoversford (A40)", lat: 51.875, lng: -1.975 },
+            { name: "Annan (A75)", lat: 54.989, lng: -3.256 },
+            { name: "Annandale Water (M74)", lat: 55.228, lng: -3.402 },
+            { name: "Baldock (A1(M))", lat: 51.996, lng: -0.218 },
+            { name: "Barnsdale Bar (A1)", lat: 53.621, lng: -1.233 },
+            { name: "Barton Park (A1(M))", lat: 54.432, lng: -1.678 },
+            { name: "Beaconsfield (M40)", lat: 51.602, lng: -0.662 },
+            { name: "Birch (M62)", lat: 53.565, lng: -2.234 },
+            { name: "Birchanger Green (M11)", lat: 51.874, lng: 0.187 },
+            { name: "Blackburn with Darwen (M65)", lat: 53.712, lng: -2.463 },
+            { name: "Blyth (A1)", lat: 53.385, lng: -1.062 },
+            { name: "Bothwell (M74)", lat: 55.812, lng: -4.053 },
+            { name: "Bridgwater (M5)", lat: 51.108, lng: -2.986 },
+            { name: "Brighton (A23)", lat: 50.912, lng: -0.165 },
+            { name: "Burtonwood (M62)", lat: 53.418, lng: -2.656 },
+            { name: "Caerwent (A48)", lat: 51.612, lng: -2.764 },
+            { name: "Cambridge (A14)", lat: 52.234, lng: 0.002 },
+            { name: "Cardiff West (M4)", lat: 51.503, lng: -3.312 },
+            { name: "Carnforth (M6)", lat: 54.124, lng: -2.732 },
+            { name: "Cartgate (A303)", lat: 50.962, lng: -2.732 },
+            { name: "Castleford (M62)", lat: 53.715, lng: -1.332 },
+            { name: "Charnock Richard (M6)", lat: 53.632, lng: -2.696 },
+            { name: "Cheddar (A371)", lat: 51.272, lng: -2.783 },
+            { name: "Cherwell Valley (M40)", lat: 51.942, lng: -1.212 },
+            { name: "Chester (M56)", lat: 53.256, lng: -2.832 },
+            { name: "Chieveley (M4/A34)", lat: 51.458, lng: -1.312 },
+            { name: "Clacket Lane (M25)", lat: 51.265, lng: 0.012 },
+            { name: "Cobham (M25)", lat: 51.325, lng: -0.422 },
+            { name: "Corley (M6)", lat: 52.476, lng: -1.534 },
+            { name: "Cullompton (M5)", lat: 50.854, lng: -3.384 },
+            { name: "Doncaster North (M18/M180)", lat: 53.596, lng: -0.992 },
+            { name: "Donington Park (M1/A50)", lat: 52.842, lng: -1.376 },
+            { name: "Durham (A1(M))", lat: 54.723, lng: -1.512 },
+            { name: "Exeter (M5)", lat: 50.706, lng: -3.468 },
+            { name: "Ferrybridge (M62)", lat: 53.722, lng: -1.274 },
+            { name: "Fleet (M3)", lat: 51.284, lng: -0.832 },
+            { name: "Frankley (M5)", lat: 52.412, lng: -2.012 },
+            { name: "Gloucester (M5)", lat: 51.782, lng: -2.234 },
+            { name: "Gordano (M5)", lat: 51.482, lng: -2.732 },
+            { name: "Gretna (M74)", lat: 55.006, lng: -3.072 },
+            { name: "Hamilton (M74)", lat: 55.786, lng: -4.024 },
+            { name: "Hartshead Moor (M62)", lat: 53.722, lng: -1.732 },
+            { name: "Heston (M4)", lat: 51.486, lng: -0.382 },
+            { name: "Hilton Park (M6)", lat: 52.645, lng: -2.062 },
+            { name: "Hopwood Park (M42)", lat: 52.368, lng: -1.942 },
+            { name: "Keele (M6)", lat: 52.996, lng: -2.274 },
+            { name: "Knutsford (M6)", lat: 53.306, lng: -2.412 },
+            { name: "Lancaster (M6)", lat: 53.974, lng: -2.772 },
+            { name: "Leicester Forest East (M1)", lat: 52.622, lng: -1.212 },
+            { name: "Leigh Delamere (M4)", lat: 51.506, lng: -2.162 },
+            { name: "Lymm (M6/M56)", lat: 53.354, lng: -2.492 },
+            { name: "Maidstone (M20)", lat: 51.282, lng: 0.582 },
+            { name: "Medway (M2)", lat: 51.344, lng: 0.612 },
+            { name: "Membury (M4)", lat: 51.482, lng: -1.534 },
+            { name: "Michaelwood (M5)", lat: 51.674, lng: -2.434 },
+            { name: "Milton Keynes (M1)", lat: 52.072, lng: -0.732 },
+            { name: "Newport Pagnell (M1)", lat: 52.092, lng: -0.744 },
+            { name: "Northampton (M1)", lat: 52.202, lng: -0.912 },
+            { name: "Norton Canes (M6 Toll)", lat: 52.665, lng: -1.972 },
+            { name: "Oxford (M40)", lat: 51.745, lng: -1.102 },
+            { name: "Pease Pottage (M23)", lat: 51.086, lng: -0.192 },
+            { name: "Peterborough (A1(M))", lat: 52.522, lng: -0.324 },
+            { name: "Pont Abraham (M4)", lat: 51.752, lng: -4.062 },
+            { name: "Reading (M4)", lat: 51.412, lng: -0.992 },
+            { name: "Rownhams (M27)", lat: 50.954, lng: -1.452 },
+            { name: "Sandbach (M6)", lat: 53.152, lng: -2.352 },
+            { name: "Sarn Park (M4)", lat: 51.532, lng: -3.582 },
+            { name: "Sedgemoor (M5)", lat: 51.272, lng: -2.922 },
+            { name: "Severn View (M48)", lat: 51.595, lng: -2.612 },
+            { name: "South Mimms (M25/A1(M))", lat: 51.696, lng: -0.224 },
+            { name: "Stafford (M6)", lat: 52.852, lng: -2.142 },
+            { name: "Strensham (M5)", lat: 52.046, lng: -2.132 },
+            { name: "Tamworth (M42)", lat: 52.612, lng: -1.612 },
+            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.124 },
+            { name: "Tebay (M6)", lat: 54.444, lng: -2.612 },
+            { name: "Thurrock (M25)", lat: 51.482, lng: 0.282 },
+            { name: "Tibshelf (M1)", lat: 53.134, lng: -1.344 },
+            { name: "Toddington (M1)", lat: 51.942, lng: -0.524 },
+            { name: "Trowell (M1)", lat: 52.956, lng: -1.252 },
+            { name: "Warwick (M40)", lat: 52.222, lng: -1.534 },
+            { name: "Washington (A1(M))", lat: 54.896, lng: -1.542 },
+            { name: "Watford Gap (M1)", lat: 52.306, lng: -1.122 },
+            { name: "Wetherby (A1(M))", lat: 53.942, lng: -1.364 },
+            { name: "Winchester (M3)", lat: 51.106, lng: -1.272 },
+            { name: "Woodall (M1)", lat: 53.332, lng: -1.264 },
+            { name: "Woolley Edge (M1)", lat: 53.626, lng: -1.532 }
         ];
 
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
@@ -446,8 +598,8 @@
             const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
             
             const journeys = [];
-            const MIN_TIME = 20 * 60 * 1000; // 20 mins
-            const MAX_TIME = 180 * 60 * 1000; // 3 hours
+            const MIN_TIME = 20 * 60 * 1000; 
+            const MAX_TIME = 180 * 60 * 1000; 
 
             const railHits = [];
             filtered.forEach(p => {
@@ -583,6 +735,7 @@
         document.getElementById('btnDetectTransport').onclick = () => detectEntities(TRANSPORT_HUBS, 'transportRadius', 'Transport Hub Detections');
         document.getElementById('btnDetectRail').onclick = detectRailActivity;
         document.getElementById('btnDetectPrisons').onclick = () => detectEntities(PRISONS, 'prisonRadius', 'Correctional Facility Detections');
+        document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections');
         document.getElementById('btnMostActive').onclick = detectMostActive;
 
         function setView(type, btnId) {
