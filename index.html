@@ -34,9 +34,56 @@
         .custom-slider .noUi-handle { border-radius: 50%; cursor: pointer; }
         input[type=range] { accent-color: #2563eb; }
         .detection-card:hover { border-color: #2563eb; background-color: #f8fafc; }
+        
+        /* Modal Styles */
+        #entityModal { z-index: 9999; }
+
+        /* Custom Cluster Styling */
+        .entity-cluster {
+            background-clip: padding-box;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            border: 4px solid rgba(255,255,255,0.5);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .entity-cluster div {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 15px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.4);
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
+
+    <!-- Entity Assignment Modal -->
+    <div id="entityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-200">
+            <div class="mb-6 text-center">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800">Identify Intelligence Entity</h2>
+                <p class="text-sm text-slate-500 mt-2">To enable co-location analysis, please provide a unique description for this dataset.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block tracking-wider">Entity Description</label>
+                    <input type="text" id="entityNameInput" placeholder="e.g. Target Alpha, Vehicle BX67..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+                <button id="btnConfirmEntity" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">
+                    Proceed with Ingestion
+                </button>
+            </div>
+        </div>
+    </div>
 
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
         <div class="flex items-center gap-2">
@@ -94,6 +141,14 @@
                                 <button id="viewHeatmap" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Heatmap</button>
                                 <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
                             </div>
+                            
+                            <!-- Entity Checkbox Section -->
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
+                                <div id="entityCheckboxList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                    <p class="text-[10px] text-slate-400 italic">No entities loaded</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="space-y-4">
@@ -124,7 +179,7 @@
                     <button id="toggleAutoSnap" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
                         Auto-Snap: <span class="text-blue-600">Off</span>
                     </button>
-                    <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
+                    <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition">
                         Clear Filters
                     </button>
                 </div>
@@ -200,6 +255,26 @@
                             Isolate sustained movements to compare against ANPR logs and confirm vehicle utilization.
                         </div>
                     </div>
+
+                    <!-- Co-location Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2">
+                        <div class="h-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition shadow-sm min-h-[70px] col-span-1 md:col-span-1" id="btnDetectColocation">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-center">Co-location Detector</span>
+                        </div>
+                        <div class="col-span-1 md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-3 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                             <div class="space-y-1">
+                                <label class="text-[9px] font-bold text-emerald-700 uppercase">Max Dist (km)</label>
+                                <input type="number" id="colocDist" value="1.0" step="0.1" class="w-full text-xs border border-emerald-200 rounded p-1.5 font-bold outline-none">
+                             </div>
+                             <div class="space-y-1">
+                                <label class="text-[9px] font-bold text-emerald-700 uppercase">Max Gap (mins)</label>
+                                <input type="number" id="colocTime" value="10" step="1" class="w-full text-xs border border-emerald-200 rounded p-1.5 font-bold outline-none">
+                             </div>
+                             <div class="flex items-end text-[9px] text-emerald-600 italic leading-tight pb-1 hidden md:block">
+                                Identifies proximity events between two different active entities.
+                             </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -265,7 +340,6 @@
         ];
 
         const TRANSPORT_HUBS = [
-            // Airports
             { name: "London Heathrow (LHR)", lat: 51.4700, lng: -0.4543 },
             { name: "London Gatwick (LGW)", lat: 51.1537, lng: -0.1821 },
             { name: "Manchester Airport (MAN)", lat: 53.3588, lng: -2.2727 },
@@ -282,8 +356,6 @@
             { name: "Leeds Bradford (LBA)", lat: 53.8659, lng: -1.6610 },
             { name: "Aberdeen Airport (ABZ)", lat: 57.2019, lng: -2.1978 },
             { name: "Southampton Airport (SOU)", lat: 50.9503, lng: -1.3567 },
-            
-            // Seaports
             { name: "Port of Dover", lat: 51.1272, lng: 1.3283 },
             { name: "Port of Felixstowe", lat: 51.9540, lng: 1.3110 },
             { name: "Port of Southampton", lat: 50.9025, lng: -1.4042 },
@@ -299,7 +371,6 @@
         ];
 
         const RAIL_NETWORK_WAYPOINTS = [
-            // West Coast Main Line (WCML)
             { name: "WCML: London Euston Approach", lat: 51.5305, lng: -0.1340 },
             { name: "WCML: Wembley Central Corridor", lat: 51.5510, lng: -0.3015 },
             { name: "WCML: Watford Junction Corridor", lat: 51.6640, lng: -0.3920 },
@@ -315,8 +386,6 @@
             { name: "WCML: Beattock Corridor", lat: 55.3040, lng: -3.4520 },
             { name: "WCML: Motherwell Corridor", lat: 55.7920, lng: -3.9890 },
             { name: "WCML: Glasgow Central Approach", lat: 55.8590, lng: -4.2580 },
-
-            // East Coast Main Line (ECML)
             { name: "ECML: London Kings Cross Approach", lat: 51.5320, lng: -0.1235 },
             { name: "ECML: Stevenage Corridor", lat: 51.9020, lng: -0.2070 },
             { name: "ECML: Peterborough Corridor", lat: 52.5741, lng: -0.2505 },
@@ -332,8 +401,6 @@
             { name: "ECML: Alnmouth Corridor", lat: 55.3940, lng: -1.6360 },
             { name: "ECML: Berwick-upon-Tweed Corridor", lat: 55.7745, lng: -2.0125 },
             { name: "ECML: Edinburgh Waverley Approach", lat: 55.9520, lng: -3.1895 },
-
-            // Great Western Main Line (GWML)
             { name: "GWML: London Paddington Approach", lat: 51.5175, lng: -0.1775 },
             { name: "GWML: Slough Corridor", lat: 51.5115, lng: -0.5925 },
             { name: "GWML: Reading Corridor", lat: 51.4582, lng: -0.9715 },
@@ -343,31 +410,16 @@
             { name: "GWML: Newport Corridor", lat: 51.5885, lng: -2.9985 },
             { name: "GWML: Cardiff Central Approach", lat: 51.4760, lng: -3.1785 },
             { name: "GWML: Bath Spa Corridor", lat: 51.3775, lng: -2.3565 },
-            
-            // Midland Main Line (MML)
             { name: "MML: London St Pancras Approach", lat: 51.5315, lng: -0.1265 },
             { name: "MML: Luton Corridor", lat: 51.8815, lng: -0.4155 },
             { name: "MML: Bedford Corridor", lat: 52.1325, lng: -0.4770 },
             { name: "MML: Leicester Corridor", lat: 52.6315, lng: -1.1255 },
             { name: "MML: Nottingham Corridor", lat: 52.9465, lng: -1.1470 },
             { name: "MML: Derby Corridor", lat: 52.9160, lng: -1.4635 },
-            { name: "MML: Sheffield Midland Approach", lat: 53.3775, lng: -1.4630 },
-
-            // Cross Country & Other Major Routes
-            { name: "CrossCountry: Birmingham New St Approach", lat: 52.4775, lng: -1.8995 },
-            { name: "CrossCountry: Cheltenham Corridor", lat: 51.8965, lng: -2.1025 },
-            { name: "CrossCountry: Oxford Corridor", lat: 51.7535, lng: -1.2705 },
-            { name: "CrossCountry: Banbury Corridor", lat: 52.0620, lng: -1.3295 },
-            { name: "South Western: Basingstoke Corridor", lat: 51.2685, lng: -1.0885 },
-            { name: "South Western: Winchester Corridor", lat: 51.0665, lng: -1.3195 },
-            { name: "South Western: Southampton Approach", lat: 50.9080, lng: -1.4075 },
-            { name: "Great Eastern: Colchester Corridor", lat: 51.8985, lng: 0.8935 },
-            { name: "Great Eastern: Ipswich Corridor", lat: 52.0505, lng: 1.1435 },
-            { name: "Great Eastern: Norwich Approach", lat: 52.6275, lng: 1.3065 }
+            { name: "MML: Sheffield Midland Approach", lat: 53.3775, lng: -1.4630 }
         ];
 
         const PRISONS = [
-            // High Security Estate (Cat A)
             { name: "HMP Belmarsh", lat: 51.496, lng: 0.082 },
             { name: "HMP Frankland", lat: 54.805, lng: -1.568 },
             { name: "HMP Wakefield", lat: 53.682, lng: -1.512 },
@@ -376,8 +428,6 @@
             { name: "HMP Full Sutton", lat: 53.984, lng: -0.871 },
             { name: "HMP Woodhill", lat: 52.054, lng: -0.814 },
             { name: "HMP Manchester (Strangeways)", lat: 53.493, lng: -2.247 },
-            
-            // Major Local & Training Prisons
             { name: "HMP Wandsworth", lat: 51.450, lng: -0.187 },
             { name: "HMP Pentonville", lat: 51.545, lng: -0.117 },
             { name: "HMP Wormwood Scrubs", lat: 51.516, lng: -0.238 },
@@ -398,8 +448,6 @@
             { name: "HMP Lewes", lat: 50.877, lng: 0.001 },
             { name: "HMP Winchester", lat: 51.066, lng: -1.328 },
             { name: "HMP High Down", lat: 51.325, lng: -0.228 },
-            
-            // Scotland
             { name: "HMP Barlinnie (Glasgow)", lat: 55.867, lng: -4.184 },
             { name: "HMP Edinburgh (Saughton)", lat: 55.928, lng: -3.268 },
             { name: "HMP Grampian (Peterhead)", lat: 57.502, lng: -1.802 },
@@ -410,7 +458,6 @@
         ];
 
         const SERVICE_STATIONS = [
-            // M1 Services
             { name: "London Gateway (M1)", lat: 51.632, lng: -0.264 },
             { name: "Watford Gap (M1)", lat: 52.307, lng: -1.124 },
             { name: "Newport Pagnell (M1)", lat: 52.083, lng: -0.739 },
@@ -419,7 +466,6 @@
             { name: "Tibshelf (M1)", lat: 53.138, lng: -1.334 },
             { name: "Woodall (M1)", lat: 53.332, lng: -1.258 },
             { name: "Woolley Edge (M1)", lat: 53.611, lng: -1.523 },
-            // M6 Services
             { name: "Corley (M6)", lat: 52.484, lng: -1.518 },
             { name: "Hilton Park (M6)", lat: 52.645, lng: -2.062 },
             { name: "Stafford North/South (M6)", lat: 52.846, lng: -2.148 },
@@ -429,42 +475,22 @@
             { name: "Charnock Richard (M6)", lat: 53.633, lng: -2.712 },
             { name: "Lancaster (M6)", lat: 53.968, lng: -2.766 },
             { name: "Tebay (M6)", lat: 54.444, lng: -2.607 },
-            // M25 Services
             { name: "South Mimms (M25)", lat: 51.693, lng: -0.221 },
             { name: "Thurrock (M25)", lat: 51.487, lng: 0.274 },
             { name: "Clacket Lane (M25)", lat: 51.272, lng: 0.016 },
             { name: "Cobham (M25)", lat: 51.325, lng: -0.422 },
-            // M4 Services
             { name: "Heston (M4)", lat: 51.488, lng: -0.384 },
             { name: "Reading (M4)", lat: 51.425, lng: -0.993 },
             { name: "Membury (M4)", lat: 51.482, lng: -1.547 },
             { name: "Leigh Delamere (M4)", lat: 51.503, lng: -2.174 },
             { name: "Magor (M4)", lat: 51.574, lng: -2.822 },
-            // M5 Services
             { name: "Frankley (M5)", lat: 52.417, lng: -2.008 },
             { name: "Strensham (M5)", lat: 52.052, lng: -2.128 },
             { name: "Gloucester (M5)", lat: 51.815, lng: -2.221 },
             { name: "Michaelwood (M5)", lat: 51.666, lng: -2.414 },
             { name: "Gordano (M5)", lat: 51.483, lng: -2.723 },
             { name: "Sedgemoor (M5)", lat: 51.282, lng: -2.923 },
-            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.142 },
-            // M40 Services
-            { name: "Beaconsfield (M40)", lat: 51.602, lng: -0.662 },
-            { name: "Oxford (M40)", lat: 51.745, lng: -1.096 },
-            { name: "Cherwell Valley (M40)", lat: 51.942, lng: -1.212 },
-            { name: "Warwick (M40)", lat: 52.203, lng: -1.503 },
-            // M62 Services
-            { name: "Birch (M62)", lat: 53.562, lng: -2.223 },
-            { name: "Hartshead Moor (M62)", lat: 53.716, lng: -1.742 },
-            { name: "Ferrybridge (M62)", lat: 53.715, lng: -1.278 },
-            // Others
-            { name: "Baldock (A1M)", lat: 51.983, lng: -0.212 },
-            { name: "Peterborough (A1M)", lat: 52.518, lng: -0.316 },
-            { name: "Doncaster (A1M)", lat: 53.512, lng: -1.082 },
-            { name: "Fleet (M3)", lat: 51.284, lng: -0.832 },
-            { name: "Winchester (M3)", lat: 51.107, lng: -1.282 },
-            { name: "Hopwood Park (M42)", lat: 52.368, lng: -1.942 },
-            { name: "Donington Park (M1/A50)", lat: 52.842, lng: -1.348 }
+            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.142 }
         ];
 
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
@@ -474,7 +500,20 @@
         let dateRange = { min: 0, max: 0 };
         let currentView = 'markers'; 
         let showLabels = false, autoSnap = false, isPlaying = false, playInterval = null;
+        let pendingCsvData = null; 
         const LABEL_LIMIT = 500;
+        
+        let uniqueEntities = new Set();
+        let entityColors = {}; 
+        let activeEntityFilters = new Set();
+
+        function getNextColor(index) {
+            const palette = [
+                "#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", 
+                "#0891b2", "#4f46e5", "#be185d", "#ca8a04", "#15803d"
+            ];
+            return palette[index % palette.length];
+        }
 
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; 
@@ -528,7 +567,45 @@
 
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
-            clusterLayer = L.markerClusterGroup({ disableClusteringAtZoom: 17, spiderfyOnMaxZoom: true }).addTo(map);
+
+            // Logic-driven Cluster Styling with Entity Bands
+            clusterLayer = L.markerClusterGroup({ 
+                disableClusteringAtZoom: 17, 
+                spiderfyOnMaxZoom: true,
+                iconCreateFunction: function(cluster) {
+                    const markers = cluster.getAllChildMarkers();
+                    const entitiesInCluster = new Set();
+                    markers.forEach(m => {
+                        if (m.options.entityName) entitiesInCluster.add(m.options.entityName);
+                    });
+
+                    const entities = Array.from(entitiesInCluster);
+                    let borderStyle = "";
+
+                    if (entities.length === 1) {
+                        // Single entity band
+                        borderStyle = `border-color: ${entityColors[entities[0]]};`;
+                    } else if (entities.length > 1) {
+                        // Shared cluster - criss cross / segmented band logic
+                        const colors = entities.map(e => entityColors[e]);
+                        const segments = colors.length;
+                        const step = 360 / segments;
+                        let gradient = "conic-gradient(";
+                        colors.forEach((c, i) => {
+                            gradient += `${c} ${i * step}deg ${(i + 1) * step}deg${i === colors.length - 1 ? '' : ','}`;
+                        });
+                        gradient += ")";
+                        borderStyle = `background: ${gradient}; border: none; padding: 4px;`;
+                    }
+
+                    const count = cluster.getChildCount();
+                    return L.divIcon({
+                        html: `<div class="entity-cluster" style="${borderStyle}"><div>${count}</div></div>`,
+                        className: 'cluster-icon-wrapper',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            }).addTo(map);
         }
 
         function parseUKDate(dateStr, timeStr) {
@@ -553,9 +630,44 @@
             return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
 
-        function processData(data) {
-            allData = [];
-            let validDates = [];
+        function updateEntityCheckboxes() {
+            const container = document.getElementById('entityCheckboxList');
+            container.innerHTML = '';
+            if (uniqueEntities.size === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400 italic">No entities loaded</p>';
+                return;
+            }
+            uniqueEntities.forEach(entity => {
+                const label = document.createElement('label');
+                label.className = "inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-white transition-colors text-[10px] font-bold text-slate-700";
+                
+                const isChecked = activeEntityFilters.has(entity);
+                const color = entityColors[entity] || "#2563eb";
+
+                label.innerHTML = `
+                    <input type="checkbox" value="${entity}" ${isChecked ? 'checked' : ''} class="w-3 h-3 rounded text-blue-600 focus:ring-blue-500">
+                    <div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></div>
+                    <span class="truncate max-w-[120px]">${entity}</span>
+                `;
+                
+                label.querySelector('input').onchange = (e) => {
+                    if (e.target.checked) activeEntityFilters.add(entity);
+                    else activeEntityFilters.delete(entity);
+                    updateMap();
+                };
+                
+                container.appendChild(label);
+            });
+        }
+
+        function processData(data, entityName) {
+            if (!uniqueEntities.has(entityName)) {
+                entityColors[entityName] = getNextColor(uniqueEntities.size);
+            }
+
+            uniqueEntities.add(entityName);
+            activeEntityFilters.add(entityName);
+
             data.forEach(row => {
                 const easting = row.Easting ?? row.easting ?? row.EASTING;
                 const northing = row.Northing ?? row.northing ?? row.NORTHING;
@@ -566,16 +678,24 @@
                         const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
                         const ts = parseUKDate(dateStr, timeStr);
                         if (!isNaN(ts) && !isNaN(coords[0])) {
-                            allData.push({ lat: coords[1], lng: coords[0], ts, dateObj: new Date(ts), label: `${dateStr} ${timeStr || ''}`.trim() });
-                            validDates.push(ts);
+                            allData.push({ 
+                                lat: coords[1], 
+                                lng: coords[0], 
+                                ts, 
+                                dateObj: new Date(ts), 
+                                label: `${entityName}: ${dateStr} ${timeStr || ''}`.trim(),
+                                entity: entityName 
+                            });
                         }
                     } catch (e) { }
                 }
             });
             if (allData.length === 0) return;
             allData.sort((a, b) => a.ts - b.ts);
-            dateRange.min = Math.min(...validDates);
-            dateRange.max = Math.max(...validDates);
+            dateRange.min = Math.min(...allData.map(d => d.ts));
+            dateRange.max = Math.max(...allData.map(d => d.ts));
+            
+            updateEntityCheckboxes();
             showApp();
             initSlider();
             zoomToFit(allData);
@@ -631,7 +751,13 @@
             if (!map || !allData.length) return;
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            
+            const filtered = allData.filter(d => 
+                d.ts >= start && 
+                d.ts <= end && 
+                activeEntityFilters.has(d.entity)
+            );
+            
             document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
 
             markerLayer.clearLayers();
@@ -642,22 +768,37 @@
             if (filtered.length > 0) {
                 if (currentView === 'markers') {
                     filtered.forEach((d, idx) => {
-                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
+                        const color = entityColors[d.entity] || "#2563eb";
+                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
                             .bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
                         if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
                         m.addTo(markerLayer);
                     });
                 } else if (currentView === 'clusters') {
                     filtered.forEach((d) => {
-                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
-                            .bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
+                        const color = entityColors[d.entity] || "#2563eb";
+                        const m = L.circleMarker([d.lat, d.lng], { 
+                            radius: 6, 
+                            fillColor: color, 
+                            color: "#ffffff", 
+                            weight: 2, 
+                            opacity: 1, 
+                            fillOpacity: 0.9,
+                            entityName: d.entity 
+                        }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
                         clusterLayer.addLayer(m);
                     });
                 } else if (currentView === 'heat') {
                     heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map);
                 } else if (currentView === 'path') {
-                    const latlngs = filtered.map(d => [d.lat, d.lng]);
-                    L.polyline(latlngs, { color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
+                    activeEntityFilters.forEach(entity => {
+                        const entityPoints = filtered.filter(p => p.entity === entity);
+                        if (entityPoints.length > 1) {
+                            const latlngs = entityPoints.map(p => [p.lat, p.lng]);
+                            const color = entityColors[entity] || "#2563eb";
+                            L.polyline(latlngs, { color: color, weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
+                        }
+                    });
                 }
                 if (shouldCentre) {
                     const lats = filtered.map(p => p.lat); const lngs = filtered.map(p => p.lng);
@@ -691,7 +832,7 @@
                         ${res.temporalSummary ? `<p class="text-[9px] text-slate-500 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">${res.temporalSummary}</p>` : ''}
                         <p class="text-[10px] text-slate-400">Duration: ${res.duration || 'N/A'}</p>
                     </div>
-                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Visualise Journey</div>
+                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Visualise Event</div>
                 `;
                 card.onclick = () => {
                     markerLayer.clearLayers();
@@ -700,15 +841,17 @@
                     const latlngs = [];
 
                     res.matches.forEach(p => {
+                        const color = entityColors[p.entity] || "#ef4444";
                         latlngs.push([p.lat, p.lng]);
-                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 })
+                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 })
                             .bindPopup(`<div class="text-[10px]"><strong>Event:</strong> ${p.label}<br><strong>Coords:</strong> ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>`)
                             .bindTooltip(p.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] })
                             .addTo(group);
                     });
                     
                     if (latlngs.length > 1) {
-                        L.polyline(latlngs, { color: '#ef4444', weight: 4, opacity: 0.8 }).addTo(pathLayer);
+                        const pathColor = entityColors[res.matches[0].entity] || "#ef4444";
+                        L.polyline(latlngs, { color: pathColor, weight: 4, opacity: 0.8 }).addTo(pathLayer);
                     }
 
                     group.addTo(markerLayer);
@@ -723,13 +866,13 @@
         function detectCarJourneys() {
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             
             if (filtered.length < 2) return;
 
-            const MIN_DISPLACEMENT = 30; // 30km minimum travel
-            const MAX_GAP = 2 * 60 * 60 * 1000; // 2 hours max gap within a journey
-            const MIN_DURATION = 60 * 60 * 1000; // 1 hour minimum duration
+            const MIN_DISPLACEMENT = 30;
+            const MAX_GAP = 2 * 60 * 60 * 1000;
+            const MIN_DURATION = 60 * 60 * 1000;
 
             const journeys = [];
             let currentJourney = [filtered[0]];
@@ -765,26 +908,63 @@
                 const hours = Math.floor(durMs / (1000 * 60 * 60));
                 const mins = Math.floor((durMs % (1000 * 60 * 60)) / (1000 * 60));
                 const disp = getDistance(j[0].lat, j[0].lng, j[j.length-1].lat, j[j.length-1].lng).toFixed(1);
-                
                 const startLoc = getAreaDescription(j[0].lat, j[0].lng).split('from ')[1] || 'Start';
                 const endLoc = getAreaDescription(j[j.length-1].lat, j[j.length-1].lng).split('from ')[1] || 'End';
-
                 return {
-                    entity: { name: `Journey #${idx+1}`, lat: j[0].lat, lng: j[0].lng },
+                    entity: { name: `Journey #${idx+1} (${j[0].entity})`, lat: j[0].lat, lng: j[0].lng },
                     matches: j,
                     duration: `${hours}h ${mins}m (${disp}km displacement)`,
                     areaDescription: `From ${startLoc} to ${endLoc}`,
                     temporalSummary: `Started: ${j[0].label} <br> Finished: ${j[j.length-1].label}`
                 };
             });
-
             renderResults(results, "High-Confidence Journeys (>30km)");
+        }
+
+        function detectColocation() {
+            const maxDist = parseFloat(document.getElementById('colocDist').value);
+            const maxGapMs = parseFloat(document.getElementById('colocTime').value) * 60 * 1000;
+            const slider = document.getElementById('date-slider');
+            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            const entities = Array.from(activeEntityFilters);
+            if (entities.length < 2) return;
+
+            const colocations = [];
+            
+            for (let i = 0; i < entities.length; i++) {
+                const eA = entities[i];
+                const pointsA = filtered.filter(p => p.entity === eA);
+                for (let j = i + 1; j < entities.length; j++) {
+                    const eB = entities[j];
+                    const pointsB = filtered.filter(p => p.entity === eB);
+                    pointsA.forEach(pA => {
+                        pointsB.forEach(pB => {
+                            const timeDiff = Math.abs(pA.ts - pB.ts);
+                            if (timeDiff <= maxGapMs) {
+                                const dist = getDistance(pA.lat, pA.lng, pB.lat, pB.lng);
+                                if (dist <= maxDist) {
+                                    colocations.push({
+                                        entity: { name: `Colocation: ${eA} & ${eB}`, lat: pA.lat, lng: pA.lng },
+                                        matches: [pA, pB],
+                                        duration: `Time Gap: ${Math.round(timeDiff/1000/60)} mins`,
+                                        areaDescription: getAreaDescription(pA.lat, pA.lng),
+                                        temporalSummary: `E1: ${pA.label} <br> E2: ${pB.label}`
+                                    });
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+            renderResults(colocations, `Co-location Events (${maxDist}km, ${document.getElementById('colocTime').value}m)`);
         }
 
         function detectMostActive() {
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             const clusters = {};
             filtered.forEach(p => {
                 const key = `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`; 
@@ -802,7 +982,7 @@
             const radius = parseFloat(document.getElementById(radiusId).value);
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             const results = [];
             list.forEach(entity => {
                 const matches = filtered.filter(p => getDistance(p.lat, p.lng, entity.lat, entity.lng) <= radius);
@@ -813,7 +993,10 @@
 
         function zoomToFit(data) {
             const points = data || allData;
-            if (points.length > 0) map.fitBounds(L.latLngBounds(points.map(d => [d.lat, d.lng])), { padding: [40, 40], animate: true });
+            const filteredPoints = points.filter(p => activeEntityFilters.has(p.entity));
+            if (filteredPoints.length > 0) {
+                map.fitBounds(L.latLngBounds(filteredPoints.map(d => [d.lat, d.lng])), { padding: [40, 40], animate: true });
+            }
         }
 
         function showApp() {
@@ -825,10 +1008,30 @@
         }
 
         document.getElementById('csvFile').onchange = e => {
-            if (e.target.files[0]) Papa.parse(e.target.files[0], {
-                header: true, dynamicTyping: true, skipEmptyLines: true,
-                complete: (r) => processData(r.data)
-            });
+            if (e.target.files[0]) {
+                Papa.parse(e.target.files[0], {
+                    header: true, dynamicTyping: true, skipEmptyLines: true,
+                    complete: (r) => {
+                        pendingCsvData = r.data;
+                        document.getElementById('entityModal').classList.remove('hidden');
+                        document.getElementById('entityNameInput').focus();
+                    }
+                });
+            }
+        };
+
+        document.getElementById('btnConfirmEntity').onclick = () => {
+            const nameInput = document.getElementById('entityNameInput');
+            const name = nameInput.value.trim();
+            if (name && pendingCsvData) {
+                processData(pendingCsvData, name);
+                document.getElementById('entityModal').classList.add('hidden');
+                nameInput.value = '';
+                pendingCsvData = null;
+            } else {
+                nameInput.classList.add('border-rose-500');
+                setTimeout(() => nameInput.classList.remove('border-rose-500'), 1000);
+            }
         };
 
         document.getElementById('btnPlay').onclick = togglePlayback;
@@ -842,6 +1045,7 @@
         document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections');
         document.getElementById('btnMostActive').onclick = detectMostActive;
         document.getElementById('btnDetectCarJourneys').onclick = detectCarJourneys;
+        document.getElementById('btnDetectColocation').onclick = detectColocation;
 
         function setView(type, btnId) {
             currentView = type;
@@ -862,9 +1066,24 @@
         };
         document.getElementById('btnResetAll').onclick = () => {
             if (isPlaying) togglePlayback();
-            document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
+            // Clear analysis overlays and reset temporal bounds without wiping the loaded entity data
             document.getElementById('analysis-results').classList.add('hidden');
-            updateMap(false); zoomToFit(allData);
+            document.getElementById('results-grid').innerHTML = '';
+            
+            if (document.getElementById('date-slider').noUiSlider) {
+                document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
+            }
+            
+            // Re-enable all filters
+            activeEntityFilters = new Set(uniqueEntities);
+            updateEntityCheckboxes();
+            
+            // Reset to markers view
+            setView('markers', 'viewMarkers');
+            
+            // Refresh map and zoom to all entities
+            updateMap();
+            zoomToFit(allData);
         };
         document.getElementById('toggleLabels').onclick = function() {
             showLabels = !showLabels; this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap();
