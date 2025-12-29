@@ -39,9 +39,17 @@
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
 
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
-        <div class="flex items-center gap-2">
-            <div class="p-2 bg-blue-600 rounded-lg text-white">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <div class="flex items-center gap-3">
+            <div class="flex-shrink-0">
+                <!-- Main Application Logo Integrated from GitHub -->
+                <img src="uk-mapper/1767034682067.jpg" 
+                     alt="Burnmouth Logo" 
+                     class="h-10 w-auto rounded-lg shadow-sm border border-slate-100 object-cover"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <!-- Fallback Icon if Image Fails to Load -->
+                <div class="hidden p-2 bg-blue-600 rounded-lg text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
             </div>
             <h1 class="text-xl font-bold tracking-tight text-slate-800">Burnmouth - Geospatial tool kit</h1>
         </div>
@@ -120,7 +128,7 @@
                         <div class="flex items-center gap-4">
                             <button id="btnPlay" class="flex-shrink-0 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md">
                                 <svg id="playIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-                                <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
                             </button>
                             <div class="flex-grow space-y-1">
                                 <div class="flex justify-between items-center">
@@ -431,11 +439,6 @@
             renderResults(results, title);
         }
 
-        /**
-         * Enhanced Rail Detection Logic
-         * Scans for temporal-spatial sequences where the subject visits 2+ rail corridors 
-         * in chronological order within a plausible train journey timeframe (20 mins to 3 hours).
-         */
         function detectRailActivity() {
             const radius = parseFloat(document.getElementById('railRadius').value);
             const slider = document.getElementById('date-slider');
@@ -446,7 +449,6 @@
             const MIN_TIME = 20 * 60 * 1000; // 20 mins
             const MAX_TIME = 180 * 60 * 1000; // 3 hours
 
-            // Step 1: Find all points matching ANY rail corridor
             const railHits = [];
             filtered.forEach(p => {
                 RAIL_NETWORK_WAYPOINTS.forEach(wp => {
@@ -456,16 +458,13 @@
                 });
             });
 
-            // Step 2: Build sequences
             for (let i = 0; i < railHits.length; i++) {
                 const startHit = railHits[i];
                 for (let j = i + 1; j < railHits.length; j++) {
                     const endHit = railHits[j];
                     const timeGap = endHit.p.ts - startHit.p.ts;
 
-                    // If distinct corridors and within train journey timeframe
                     if (startHit.wp.name !== endHit.wp.name && timeGap >= MIN_TIME && timeGap <= MAX_TIME) {
-                        // Find all intermediate points in our data for this segment
                         const journeyData = filtered.filter(p => p.ts >= startHit.p.ts && p.ts <= endHit.p.ts);
                         
                         journeys.push({
@@ -478,7 +477,6 @@
                             isJourney: true
                         });
                         
-                        // Move i forward to avoid duplicating the same journey segment
                         i = j;
                         break;
                     }
