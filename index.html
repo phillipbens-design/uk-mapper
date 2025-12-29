@@ -61,7 +61,7 @@
                 <div class="lg:col-span-6 space-y-5">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Timeline</label>
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Temporal Range</label>
                             <span id="range-display" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">--</span>
                         </div>
                         <div id="date-slider" class="custom-slider mx-2"></div>
@@ -166,28 +166,28 @@
                             <span class="text-[10px] font-bold text-slate-600 uppercase">Hubs (km)</span>
                             <input type="number" id="transportRadius" value="5.0" step="0.5" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                         </div>
-                        <button id="btnDetectTransport" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Detect Airport/Seaport</button>
+                        <button id="btnDetectTransport" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Airport/Seaport detection</button>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-bold text-slate-600 uppercase">Rail (km)</span>
                             <input type="number" id="railRadius" value="2.5" step="0.1" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                         </div>
-                        <button id="btnDetectRail" class="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Detect Journey</button>
+                        <button id="btnDetectRail" class="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Detect Rail Journey</button>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-bold text-slate-600 uppercase">Prisons (km)</span>
                             <input type="number" id="prisonRadius" value="1.0" step="0.1" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                         </div>
-                        <button id="btnDetectPrisons" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Search Prisons</button>
+                        <button id="btnDetectPrisons" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Detect prison visits</button>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-bold text-slate-600 uppercase">Services (km)</span>
                             <input type="number" id="serviceRadius" value="0.5" step="0.1" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                         </div>
-                        <button id="btnDetectService" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Search Services</button>
+                        <button id="btnDetectService" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg text-[9px] font-bold uppercase transition">Detect Service Station visits</button>
                     </div>
                 </div>
             </div>
@@ -487,10 +487,39 @@
 
         function initMap() {
             if (map) return;
-            map = L.map('map', { preferCanvas: true }).setView([54.5, -3.0], 6);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            
+            // Define Base Layers
+            const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap, &copy; CARTO'
-            }).addTo(map);
+            });
+            
+            const darkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap, &copy; CARTO'
+            });
+
+            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            });
+
+            const baseMaps = {
+                "Voyager (Light)": voyager,
+                "Dark Matter": darkMatter,
+                "OpenStreetMap": osm,
+                "Satellite Imagery": satellite
+            };
+
+            map = L.map('map', { 
+                preferCanvas: true,
+                layers: [voyager] // Set default
+            }).setView([54.5, -3.0], 6);
+
+            // Add Control to UI
+            L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
             clusterLayer = L.markerClusterGroup({ disableClusteringAtZoom: 17, spiderfyOnMaxZoom: true }).addTo(map);
