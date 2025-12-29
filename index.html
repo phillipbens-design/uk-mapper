@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UK Geospatial Visualizer Pro</title>
+    <title>UK Geospatial Visualiser Pro</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Proj4js -->
@@ -16,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <style>
-        #map { height: calc(100vh - 360px); width: 100%; border-radius: 12px; z-index: 1; }
+        #map { height: calc(100vh - 420px); width: 100%; border-radius: 12px; z-index: 1; }
         .noUi-connect { background: #2563eb; }
         .date-label {
             background: rgba(255, 255, 255, 0.95);
@@ -30,6 +33,31 @@
         }
         .custom-slider .noUi-handle { border-radius: 50%; cursor: pointer; }
         input[type=range] { accent-color: #2563eb; }
+        .filter-chip { transition: all 0.2s; cursor: pointer; }
+        .filter-chip.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        
+        /* Frequency Marker Styles */
+        .freq-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2563eb;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 800;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapsible-content.open {
+            max-height: 200px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
@@ -39,7 +67,7 @@
             <div class="p-2 bg-blue-600 rounded-lg text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
-            <h1 class="text-xl font-bold tracking-tight text-slate-800">UK Geospatial Visualizer</h1>
+            <h1 class="text-xl font-bold tracking-tight text-slate-800">UK Geospatial Visualiser</h1>
         </div>
         <div class="flex gap-3 items-center">
             <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm font-semibold inline-flex items-center gap-2">
@@ -53,8 +81,8 @@
     <main class="p-4 md:p-6 max-w-7xl mx-auto space-y-4">
         <div id="controls" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 hidden animate-in fade-in duration-500">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Time Selection Column -->
-                <div class="lg:col-span-7 space-y-5">
+                <!-- Primary Filtering Column -->
+                <div class="lg:col-span-7 space-y-6">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
                             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Temporal Range</label>
@@ -62,25 +90,50 @@
                         </div>
                         <div id="date-slider" class="custom-slider mx-2"></div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-2">
-                        <div class="sm:col-span-5 space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase">Start Time</label>
-                            <input type="datetime-local" id="input-start" class="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                        </div>
-                        <div class="sm:col-span-5 space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase">End Time</label>
-                            <input type="datetime-local" id="input-end" class="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <button id="btnApplyFilter" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-2.5 rounded-lg text-xs font-bold transition shadow-sm h-[42px]">
-                                Apply
+
+                    <div class="grid grid-cols-1 gap-4 pt-2">
+                        <!-- Time of Day Accordion -->
+                        <div class="border border-slate-100 rounded-xl overflow-hidden">
+                            <button onclick="toggleAccordion('time-accordion')" class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Time of Day Filter</span>
+                                <svg id="time-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
+                            <div id="time-accordion" class="collapsible-content">
+                                <div id="timeBlocks" class="p-3 flex flex-wrap gap-2">
+                                    <button data-block="0" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">00-03</button>
+                                    <button data-block="3" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">03-06</button>
+                                    <button data-block="6" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">06-09</button>
+                                    <button data-block="9" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">09-12</button>
+                                    <button data-block="12" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">12-15</button>
+                                    <button data-block="15" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">15-18</button>
+                                    <button data-block="18" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">18-21</button>
+                                    <button data-block="21" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">21-00</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Days of Week Accordion -->
+                        <div class="border border-slate-100 rounded-xl overflow-hidden">
+                            <button onclick="toggleAccordion('day-accordion')" class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Days of Week Filter</span>
+                                <svg id="day-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div id="day-accordion" class="collapsible-content">
+                                <div id="dayFilters" class="p-3 flex flex-wrap gap-2">
+                                    <button data-day="1" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Mon</button>
+                                    <button data-day="2" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Tue</button>
+                                    <button data-day="3" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Wed</button>
+                                    <button data-day="4" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Thu</button>
+                                    <button data-day="5" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Fri</button>
+                                    <button data-day="6" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Sat</button>
+                                    <button data-day="0" class="filter-chip px-3 py-1.5 text-[10px] font-bold border border-slate-200 rounded-lg bg-white text-slate-600 active">Sun</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Playback Column -->
+                <!-- Playback & Density Column -->
                 <div class="lg:col-span-5 flex flex-col gap-6 lg:border-l lg:pl-8">
                     <div class="space-y-4">
                         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Animation Playback</label>
@@ -95,20 +148,31 @@
                                     <span id="speed-label" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Slow</span>
                                 </div>
                                 <input type="range" id="playbackSpeedRange" min="0.0005" max="0.005" step="0.0001" value="0.001" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
-                                <div class="flex justify-between text-[9px] text-slate-400 font-bold uppercase">
-                                    <span>Very Slow</span>
-                                    <span>Very Fast</span>
-                                </div>
                             </div>
                         </div>
                     </div>
 
+                    <div class="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Frequency Filtering</label>
+                            <button id="toggleFreqFilter" class="px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all bg-slate-200 text-slate-600">Disabled</button>
+                        </div>
+                        <div id="freqControls" class="space-y-3 opacity-50 pointer-events-none transition-opacity">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-slate-500 font-medium">Minimum Repeat Visits</span>
+                                <span id="freq-display" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">10</span>
+                            </div>
+                            <input type="range" id="minFrequencyRange" min="1" max="100" step="1" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+
                     <div class="pt-2">
-                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Visualization Style</label>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Visualisation Style</label>
                         <div class="inline-flex p-1 bg-slate-100 rounded-xl w-full" role="group">
-                            <button id="viewMarkers" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
-                            <button id="viewHeatmap" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Heatmap</button>
-                            <button id="viewPath" class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Path</button>
+                            <button id="viewMarkers" class="flex-1 px-3 py-2 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
+                            <button id="viewClusters" class="flex-1 px-3 py-2 text-[10px] font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Clusters</button>
+                            <button id="viewHeatmap" class="flex-1 px-3 py-2 text-[10px] font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Heatmap</button>
+                            <button id="viewPath" class="flex-1 px-3 py-2 text-[10px] font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">Path</button>
                         </div>
                     </div>
                 </div>
@@ -123,7 +187,7 @@
                         Auto-Snap: <span class="text-blue-600">Off</span>
                     </button>
                     <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
-                        Clear Filters
+                        Reset All Filters
                     </button>
                 </div>
 
@@ -142,7 +206,7 @@
             <div class="p-6 bg-slate-50 rounded-full mb-6">
                 <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
             </div>
-            <h3 class="text-slate-800 font-bold mb-2">Ready to Visualize</h3>
+            <h3 class="text-slate-800 font-bold mb-2">Ready to Visualise</h3>
             <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date" (DD/MM/YYYY), "Time", "Easting", and "Northing" columns to begin.</p>
         </div>
 
@@ -153,19 +217,33 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
 
-        let map, markerLayer, heatLayer, pathLayer;
+        let map, markerLayer, heatLayer, pathLayer, clusterLayer;
         let allData = [];
         let dateRange = { min: 0, max: 0 };
         let currentView = 'markers'; 
-        let showLabels = false;
-        let autoSnap = false;
-        let isPlaying = false;
-        let playInterval = null;
+        let showLabels = false, autoSnap = false, isPlaying = false, playInterval = null, freqFilterEnabled = false;
+        let activeTimeBlocks = [0,3,6,9,12,15,18,21];
+        let activeDays = [0,1,2,3,4,5,6];
         const LABEL_LIMIT = 500;
+        const FREQ_DEFAULT = 10;
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const chevronId = id.replace('accordion', 'chevron');
+            const chevron = document.getElementById(chevronId);
+            
+            content.classList.toggle('open');
+            if (content.classList.contains('open')) {
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
 
         function initMap() {
             if (map) return;
@@ -175,6 +253,23 @@
             }).addTo(map);
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
+            clusterLayer = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                showCoverageOnHover: false,
+                iconCreateFunction: function(cluster) {
+                    const count = cluster.getChildCount();
+                    let size = 30;
+                    let color = '#2563eb';
+                    if (count > 50) { size = 40; color = '#1e40af'; }
+                    if (count > 200) { size = 50; color = '#1e3a8a'; }
+                    
+                    return L.divIcon({
+                        html: `<div style="background-color:${color}; width:${size}px; height:${size}px;" class="flex items-center justify-center text-white rounded-full border-2 border-white shadow-lg text-[10px] font-black">${count}</div>`,
+                        className: 'custom-cluster-icon',
+                        iconSize: [size, size]
+                    });
+                }
+            }).addTo(map);
         }
 
         function parseUKDate(dateStr, timeStr) {
@@ -183,20 +278,11 @@
             timeStr = (timeStr || "00:00:00").toString().trim();
             const dateParts = dateStr.split(/[\/\-.]/);
             if (dateParts.length !== 3) return new Date(dateStr + ' ' + timeStr).getTime();
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1; 
+            const day = parseInt(dateParts[0], 10), month = parseInt(dateParts[1], 10) - 1;
             const year = dateParts[2].length === 2 ? 2000 + parseInt(dateParts[2], 10) : parseInt(dateParts[2], 10);
             const timeParts = timeStr.split(':');
-            const hour = parseInt(timeParts[0], 10) || 0;
-            const min = parseInt(timeParts[1], 10) || 0;
-            const sec = parseInt(timeParts[2], 10) || 0;
+            const hour = parseInt(timeParts[0], 10) || 0, min = parseInt(timeParts[1], 10) || 0, sec = parseInt(timeParts[2], 10) || 0;
             return new Date(year, month, day, hour, min, sec).getTime();
-        }
-
-        function formatToLocalISO(timestamp) {
-            const date = new Date(timestamp);
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
 
         function parseCSV(file) {
@@ -220,7 +306,14 @@
                         const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
                         const ts = parseUKDate(dateStr, timeStr);
                         if (!isNaN(ts) && !isNaN(coords[0])) {
-                            allData.push({ lat: coords[1], lng: coords[0], ts, dateObj: new Date(ts), label: `${dateStr} ${timeStr || ''}`.trim() });
+                            const dObj = new Date(ts);
+                            allData.push({ 
+                                lat: coords[1], lng: coords[0], ts, 
+                                hour: dObj.getHours(), 
+                                day: dObj.getDay(),
+                                key: `${coords[1].toFixed(5)},${coords[0].toFixed(5)}`, 
+                                label: `${dateStr} ${timeStr || ''}`.trim() 
+                            });
                             validDates.push(ts);
                         }
                     } catch (e) { }
@@ -230,6 +323,12 @@
             allData.sort((a, b) => a.ts - b.ts);
             dateRange.min = Math.min(...validDates);
             dateRange.max = Math.max(...validDates);
+            
+            const counts = {};
+            allData.forEach(p => counts[p.key] = (counts[p.key] || 0) + 1);
+            const maxCount = Math.max(...Object.values(counts));
+            document.getElementById('minFrequencyRange').max = Math.max(maxCount, 100);
+            
             showApp();
             initSlider();
             zoomToFit(allData);
@@ -238,113 +337,160 @@
 
         function initSlider() {
             const slider = document.getElementById('date-slider');
-            const rangeDisplay = document.getElementById('range-display');
             if (slider.noUiSlider) slider.noUiSlider.destroy();
             noUiSlider.create(slider, {
                 start: [dateRange.min, dateRange.max],
                 connect: true,
-                behaviour: 'tap-drag',
                 range: { 'min': dateRange.min, 'max': dateRange.max },
                 step: 1000 
             });
             slider.noUiSlider.on('update', (values) => {
                 const s = parseInt(values[0]), e = parseInt(values[1]);
-                document.getElementById('input-start').value = formatToLocalISO(s);
-                document.getElementById('input-end').value = formatToLocalISO(e);
-                rangeDisplay.innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
+                document.getElementById('range-display').innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
             });
-            slider.noUiSlider.on('change', () => {
-                if (isPlaying) togglePlayback();
-                updateMap();
-            });
+            slider.noUiSlider.on('change', () => { if (isPlaying) togglePlayback(); updateMap(); });
         }
 
-        function togglePlayback() {
-            const btn = document.getElementById('btnPlay');
-            const playIcon = document.getElementById('playIcon');
-            const pauseIcon = document.getElementById('pauseIcon');
-            const slider = document.getElementById('date-slider');
+        function updateMap(shouldCentre = false) {
+            if (!map || !allData.length) return;
+            const [start, end] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v));
+            const minFreq = parseInt(document.getElementById('minFrequencyRange').value);
+            
+            let filtered = allData.filter(d => 
+                d.ts >= start && d.ts <= end && 
+                activeDays.includes(d.day) && 
+                activeTimeBlocks.some(b => d.hour >= b && d.hour < b + 3)
+            );
 
+            const globalCounts = {};
+            allData.forEach(p => globalCounts[p.key] = (globalCounts[p.key] || 0) + 1);
+            
+            if (freqFilterEnabled) {
+                filtered = filtered.filter(d => globalCounts[d.key] >= minFreq);
+            }
+
+            document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
+
+            markerLayer.clearLayers();
+            pathLayer.clearLayers();
+            clusterLayer.clearLayers();
+            if (heatLayer) map.removeLayer(heatLayer);
+
+            if (filtered.length > 0) {
+                if (currentView === 'markers') {
+                    const uniqueCoords = freqFilterEnabled ? [...new Set(filtered.map(f => f.key))] : null;
+                    if (freqFilterEnabled) {
+                        uniqueCoords.forEach(key => {
+                            const count = globalCounts[key];
+                            const [lat, lng] = key.split(',').map(Number);
+                            const size = 20 + Math.min(count * 0.5, 30);
+                            const m = L.marker([lat, lng], { 
+                                icon: L.divIcon({
+                                    className: 'freq-icon',
+                                    html: `<span>${count}</span>`,
+                                    iconSize: [size, size],
+                                    iconAnchor: [size/2, size/2]
+                                })
+                            }).bindPopup(`<p class="text-xs font-bold">Location Frequency<br>Total Visits: ${count}</p>`);
+                            m.addTo(markerLayer);
+                        });
+                    } else {
+                        filtered.forEach((d, idx) => {
+                            const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 });
+                            m.bindPopup(`<p class="text-xs font-bold">${new Date(d.ts).toLocaleString('en-GB')}<br>Visits: ${globalCounts[d.key]}</p>`);
+                            if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
+                            m.addTo(markerLayer);
+                        });
+                    }
+                } else if (currentView === 'clusters') {
+                    const clusterMarkers = filtered.map(d => {
+                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 });
+                        m.bindPopup(`<p class="text-xs font-bold">${new Date(d.ts).toLocaleString('en-GB')}</p>`);
+                        return m;
+                    });
+                    clusterLayer.addLayers(clusterMarkers);
+                } else if (currentView === 'heat') {
+                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map);
+                } else if (currentView === 'path') {
+                    L.polyline(filtered.map(d => [d.lat, d.lng]), { color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
+                }
+                
+                if (shouldCentre) {
+                    const lats = filtered.map(p => p.lat), lngs = filtered.map(p => p.lng);
+                    map.panTo([lats.reduce((a, b) => a + b, 0) / lats.length, lngs.reduce((a, b) => a + b, 0) / lngs.length], { animate: true });
+                }
+            }
+        }
+
+        document.getElementById('toggleFreqFilter').onclick = function() {
+            freqFilterEnabled = !freqFilterEnabled;
+            this.innerText = freqFilterEnabled ? 'Active' : 'Disabled';
+            this.className = freqFilterEnabled 
+                ? 'px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all bg-blue-600 text-white shadow-md' 
+                : 'px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all bg-slate-200 text-slate-600';
+            
+            const controls = document.getElementById('freqControls');
+            if (freqFilterEnabled) {
+                controls.classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('minFrequencyRange').value = FREQ_DEFAULT;
+                document.getElementById('freq-display').innerText = FREQ_DEFAULT;
+            } else {
+                controls.classList.add('opacity-50', 'pointer-events-none');
+            }
+            updateMap();
+        };
+
+        document.querySelectorAll('#timeBlocks button').forEach(btn => {
+            btn.onclick = function() {
+                const block = parseInt(this.dataset.block);
+                this.classList.toggle('active', !activeTimeBlocks.includes(block));
+                if (activeTimeBlocks.includes(block)) activeTimeBlocks = activeTimeBlocks.filter(b => b !== block);
+                else activeTimeBlocks.push(block);
+                updateMap();
+            };
+        });
+
+        document.querySelectorAll('#dayFilters button').forEach(btn => {
+            btn.onclick = function() {
+                const day = parseInt(this.dataset.day);
+                this.classList.toggle('active', !activeDays.includes(day));
+                if (activeDays.includes(day)) activeDays = activeDays.filter(d => d !== day);
+                else activeDays.push(day);
+                updateMap();
+            };
+        });
+
+        document.getElementById('minFrequencyRange').oninput = function() {
+            document.getElementById('freq-display').innerText = this.value;
+            updateMap();
+        };
+
+        function togglePlayback() {
+            const slider = document.getElementById('date-slider');
             if (isPlaying) {
                 clearInterval(playInterval);
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
+                document.getElementById('playIcon').classList.remove('hidden');
+                document.getElementById('pauseIcon').classList.add('hidden');
                 isPlaying = false;
             } else {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
+                document.getElementById('playIcon').classList.add('hidden');
+                document.getElementById('pauseIcon').classList.remove('hidden');
                 isPlaying = true;
-
                 playInterval = setInterval(() => {
-                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value);
-                    const totalRange = dateRange.max - dateRange.min;
-                    const step = (totalRange / 100) * multiplier; 
-
+                    const mult = parseFloat(document.getElementById('playbackSpeedRange').value);
                     const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
+                    const step = ((dateRange.max - dateRange.min) / 100) * mult;
                     let nextEnd = currEnd + step;
-                    
-                    if (nextEnd > dateRange.max) {
-                        slider.noUiSlider.set([currStart, dateRange.max]);
-                        togglePlayback();
-                        return;
-                    }
-
-                    const windowSize = currEnd - currStart;
-                    slider.noUiSlider.set([nextEnd - windowSize, nextEnd]);
+                    if (nextEnd > dateRange.max) { slider.noUiSlider.set([currStart, dateRange.max]); togglePlayback(); return; }
+                    slider.noUiSlider.set([nextEnd - (currEnd - currStart), nextEnd]);
                     updateMap(autoSnap); 
                 }, 50);
             }
         }
 
-        function updateMap(shouldCenter = false) {
-            if (!map || !allData.length) return;
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
-            document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
-
-            markerLayer.clearLayers();
-            pathLayer.clearLayers();
-            if (heatLayer) map.removeLayer(heatLayer);
-
-            if (filtered.length > 0) {
-                if (currentView === 'markers') {
-                    filtered.forEach((d, idx) => {
-                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: "#2563eb", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
-                            .bindPopup(`<p class="text-xs font-bold">${d.dateObj.toLocaleString('en-GB')}</p>`);
-                        if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
-                        m.addTo(markerLayer);
-                    });
-                } else if (currentView === 'heat') {
-                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map);
-                } else if (currentView === 'path') {
-                    const latlngs = filtered.map(d => [d.lat, d.lng]);
-                    L.polyline(latlngs, { color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
-                    if (latlngs.length > 0) {
-                        L.circleMarker(latlngs[0], { radius: 7, fillColor: '#22c55e', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(pathLayer);
-                        L.circleMarker(latlngs[latlngs.length-1], { radius: 7, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(pathLayer);
-                    }
-                }
-                
-                // Logical check: Pan if autoSnap is on, but DON'T change zoom
-                if (shouldCenter) {
-                    const lats = filtered.map(p => p.lat);
-                    const lngs = filtered.map(p => p.lng);
-                    const center = [
-                        lats.reduce((a, b) => a + b, 0) / lats.length,
-                        lngs.reduce((a, b) => a + b, 0) / lngs.length
-                    ];
-                    map.panTo(center, { animate: true, duration: 0.5 });
-                }
-            }
-        }
-
         function zoomToFit(data) {
             const points = data || allData;
-            if (points.length > 0) {
-                const bounds = L.latLngBounds(points.map(d => [d.lat, d.lng]));
-                map.fitBounds(bounds, { padding: [40, 40], animate: true });
-            }
+            if (points.length > 0) map.fitBounds(L.latLngBounds(points.map(d => [d.lat, d.lng])), { padding: [40, 40] });
         }
 
         function showApp() {
@@ -355,50 +501,55 @@
             map.invalidateSize();
         }
 
-        document.getElementById('playbackSpeedRange').oninput = function() {
-            const val = parseFloat(this.value);
-            const label = document.getElementById('speed-label');
-            if (val < 0.0015) label.innerText = "Very Slow";
-            else if (val < 0.003) label.innerText = "Moderate";
-            else if (val < 0.0045) label.innerText = "Fast";
-            else label.innerText = "Very Fast";
-        };
-
         document.getElementById('csvFile').onchange = e => e.target.files[0] && parseCSV(e.target.files[0]);
         document.getElementById('btnPlay').onclick = togglePlayback;
         document.getElementById('viewMarkers').onclick = () => setView('markers', 'viewMarkers');
+        document.getElementById('viewClusters').onclick = () => setView('clusters', 'viewClusters');
         document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
         document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
         
         function setView(type, btnId) {
             currentView = type;
-            ['viewMarkers', 'viewHeatmap', 'viewPath'].forEach(id => document.getElementById(id).className = id === btnId ? "flex-1 px-3 py-2 text-xs font-bold rounded-lg bg-white text-blue-600 shadow-sm border border-slate-200" : "flex-1 px-3 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900");
+            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.className = id === btnId ? "flex-1 px-3 py-2 text-[10px] font-bold rounded-lg bg-white text-blue-600 shadow-sm border border-slate-200" : "flex-1 px-3 py-2 text-[10px] font-bold rounded-lg text-slate-600 hover:text-slate-900";
+            });
             updateMap();
         }
 
-        document.getElementById('btnApplyFilter').onclick = () => {
-            const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime();
-            if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); }
-        };
         document.getElementById('btnZoomToFit').onclick = () => {
             const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v));
             zoomToFit(allData.filter(d => d.ts >= s && d.ts <= e));
         };
+
         document.getElementById('btnResetAll').onclick = () => {
             if (isPlaying) togglePlayback();
+            activeTimeBlocks = [0,3,6,9,12,15,18,21];
+            activeDays = [0,1,2,3,4,5,6];
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
+            freqFilterEnabled = false;
+            const tFreq = document.getElementById('toggleFreqFilter');
+            tFreq.innerText = 'Disabled';
+            tFreq.className = 'px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all bg-slate-200 text-slate-600';
+            document.getElementById('freqControls').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('minFrequencyRange').value = FREQ_DEFAULT;
+            document.getElementById('freq-display').innerText = FREQ_DEFAULT;
             document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
             updateMap(false);
             zoomToFit(allData);
         };
+
         document.getElementById('toggleLabels').onclick = function() {
             showLabels = !showLabels;
             this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`;
             updateMap();
         };
+
         document.getElementById('toggleAutoSnap').onclick = function() {
             autoSnap = !autoSnap;
             this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`;
         };
+
         window.onload = initMap;
     </script>
 </body>
