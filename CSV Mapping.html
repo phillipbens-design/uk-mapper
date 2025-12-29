@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Coordinate Mapping Tool</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Proj4js for Coordinate Conversion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- noUiSlider for Date Range -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <style>
+        #map { height: calc(100vh - 220px); width: 100%; border-radius: 8px; }
+        .noUi-connect { background: #3b82f6; }
+        .date-label {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #1e40af;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .date-input {
+            border: 1px solid #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: #1e293b;
+            background-color: #fff;
+        }
+        .date-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            ring: 2px;
+            ring-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <nav class="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm">
+        <h1 class="text-xl font-bold text-gray-800">UK Geospatial Visualizer</h1>
+        <div class="flex gap-4 items-center">
+            <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium">
+                Upload CSV
+                <input type="file" id="csvFile" accept=".csv" class="hidden">
+            </label>
+        </div>
+    </nav>
+
+    <main class="p-6 space-y-4">
+        <!-- Controls Bar -->
+        <div id="controls" class="bg-white p-4 rounded-xl shadow-sm border flex flex-col space-y-4 hidden">
+            <div class="flex flex-wrap items-center gap-6">
+                <div class="flex flex-col flex-1 min-w-[300px]">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-4">Date Range Slider</label>
+                    <div id="date-slider" class="mx-2 mb-2"></div>
+                </div>
+                
+                <div class="flex items-end gap-3 border-l pl-6">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Manual Start</label>
+                        <input type="datetime-local" id="input-start" class="date-input">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Manual End</label>
+                        <input type="datetime-local" id="input-end" class="date-input">
+                    </div>
+                    <button id="btnApplyFilter" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm h-[38px]">
+                        Apply Filter
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">View Type</label>
+                        <div class="inline-flex rounded-md shadow-sm" role="group">
+                            <button id="viewMarkers" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100">Markers</button>
+                            <button id="viewHeatmap" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-r border-gray-200 rounded-r-lg hover:bg-gray-100">Heatmap</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col">
+                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Overlay</label>
+                        <button id="toggleLabels" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100">Show Labels: Off</button>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Actions</label>
+                        <button id="btnResetAll" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition">Reset View</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button id="btnZoomToFit" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">Zoom to Filtered Extent</button>
+                    <div id="stats" class="text-sm font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">Points: 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="empty-state" class="flex flex-col items-center justify-center h-[60vh] text-gray-400">
+            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            <p class="text-lg text-center">Upload CSV with Date (DD/MM/YYYY), Time, Easting, Northing headers.</p>
+        </div>
+
+        <div id="map-container" class="relative hidden">
+            <div id="map"></div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <script>
+        proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
+
+        let map, markerLayer, heatLayer;
+        let allData = [];
+        let dateRange = { min: 0, max: 0 };
+        let currentView = 'markers'; 
+        let showLabels = false;
+        // Increased label limit to 500 as requested
+        const LABEL_LIMIT = 500;
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([54.5, -3.0], 6);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }).addTo(map);
+            markerLayer = L.layerGroup().addTo(map);
+        }
+
+        function parseUKDate(dateStr, timeStr) {
+            if (!dateStr) return NaN;
+            const dateParts = dateStr.toString().split(/[\/\-.]/);
+            if (dateParts.length !== 3) return new Date(dateStr + ' ' + (timeStr || '')).getTime();
+            const day = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1; 
+            const year = parseInt(dateParts[2], 10);
+            if (timeStr) {
+                const timeParts = timeStr.toString().split(':');
+                const hour = parseInt(timeParts[0], 10) || 0;
+                const min = parseInt(timeParts[1], 10) || 0;
+                const sec = parseInt(timeParts[2], 10) || 0;
+                return new Date(year, month, day, hour, min, sec).getTime();
+            }
+            return new Date(year, month, day).getTime();
+        }
+
+        function formatToLocalISO(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function parseCSV(file) {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: (results) => processData(results.data),
+                error: (err) => alert("Error parsing CSV: " + err.message)
+            });
+        }
+
+        function processData(data) {
+            allData = [];
+            let validDates = [];
+            data.forEach(row => {
+                const easting = row.Easting || row.easting;
+                const northing = row.Northing || row.northing;
+                const dateStr = row.Date || row.date;
+                const timeStr = row.Time || row.time;
+                if (easting && northing && dateStr) {
+                    try {
+                        const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
+                        const ts = parseUKDate(dateStr, timeStr);
+                        if (!isNaN(ts)) {
+                            allData.push({ lat: coords[1], lng: coords[0], ts, dateObj: new Date(ts), raw: row });
+                            validDates.push(ts);
+                        }
+                    } catch (e) { console.error(e); }
+                }
+            });
+
+            if (allData.length === 0) {
+                alert("No valid points found. Ensure date is DD/MM/YYYY.");
+                return;
+            }
+
+            dateRange.min = Math.min(...validDates);
+            dateRange.max = Math.max(...validDates);
+            initSlider();
+            showApp();
+            updateMap(true);
+        }
+
+        function initSlider() {
+            const slider = document.getElementById('date-slider');
+            const inputStart = document.getElementById('input-start');
+            const inputEnd = document.getElementById('input-end');
+            const btnApply = document.getElementById('btnApplyFilter');
+            
+            if (slider.noUiSlider) slider.noUiSlider.destroy();
+
+            noUiSlider.create(slider, {
+                start: [dateRange.min, dateRange.max],
+                connect: true,
+                range: { 'min': dateRange.min, 'max': dateRange.max },
+                step: 60000 
+            });
+
+            slider.noUiSlider.on('update', (values) => {
+                inputStart.value = formatToLocalISO(parseInt(values[0]));
+                inputEnd.value = formatToLocalISO(parseInt(values[1]));
+            });
+
+            slider.noUiSlider.on('change', () => {
+                updateMap();
+            });
+
+            btnApply.onclick = () => {
+                const s = new Date(inputStart.value).getTime();
+                const e = new Date(inputEnd.value).getTime();
+                if (!isNaN(s) && !isNaN(e)) {
+                    slider.noUiSlider.set([s, e]);
+                    updateMap();
+                } else {
+                    alert("Please enter a valid start and end date/time.");
+                }
+            };
+        }
+
+        function updateMap(shouldZoom = false) {
+            if (!map || !allData.length) return;
+            const slider = document.getElementById('date-slider');
+            if (!slider.noUiSlider) return;
+            
+            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            document.getElementById('stats').innerText = `Points: ${filtered.length}`;
+
+            markerLayer.clearLayers();
+            if (heatLayer) map.removeLayer(heatLayer);
+
+            if (filtered.length > 0) {
+                if (currentView === 'markers') {
+                    filtered.forEach((d, idx) => {
+                        const m = L.circleMarker([d.lat, d.lng], { radius: 5, fillColor: "#3b82f6", color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.8 })
+                            .bindPopup(`<strong>Date:</strong> ${d.dateObj.toLocaleDateString('en-GB')}<br><strong>Time:</strong> ${d.dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`);
+                        if (showLabels && idx < LABEL_LIMIT) {
+                            m.bindTooltip(`${d.dateObj.toLocaleDateString('en-GB')} ${d.dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}`, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -5] });
+                        }
+                        m.addTo(markerLayer);
+                    });
+                } else {
+                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.5]), { radius: 25, blur: 15 }).addTo(map);
+                }
+
+                if (shouldZoom) zoomToFit();
+            }
+        }
+
+        function zoomToFit() {
+            const markers = markerLayer.getLayers();
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 14 });
+            } else if (allData.length > 0) {
+                const slider = document.getElementById('date-slider');
+                const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+                const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+                if (filtered.length > 0) {
+                    const bounds = L.latLngBounds(filtered.map(d => [d.lat, d.lng]));
+                    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+                }
+            }
+        }
+
+        function resetView() {
+            if (!allData.length) return;
+            
+            // 1. Reset Labels
+            showLabels = false;
+            document.getElementById('toggleLabels').innerText = 'Show Labels: Off';
+            
+            // 2. Reset Slider to max range
+            const slider = document.getElementById('date-slider');
+            if (slider.noUiSlider) {
+                slider.noUiSlider.set([dateRange.min, dateRange.max]);
+            }
+
+            // 3. Reset manual inputs
+            document.getElementById('input-start').value = formatToLocalISO(dateRange.min);
+            document.getElementById('input-end').value = formatToLocalISO(dateRange.max);
+
+            // 4. Update Map & Zoom
+            updateMap(true);
+        }
+
+        function showApp() {
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('map-container').classList.remove('hidden');
+            initMap();
+            map.invalidateSize();
+        }
+
+        document.getElementById('csvFile').addEventListener('change', e => e.target.files[0] && parseCSV(e.target.files[0]));
+        document.getElementById('viewMarkers').onclick = () => { currentView = 'markers'; updateMap(); };
+        document.getElementById('viewHeatmap').onclick = () => { currentView = 'heat'; updateMap(); };
+        document.getElementById('btnZoomToFit').onclick = zoomToFit;
+        document.getElementById('btnResetAll').onclick = resetView;
+        document.getElementById('toggleLabels').onclick = function() {
+            showLabels = !showLabels;
+            this.innerText = `Show Labels: ${showLabels ? 'On' : 'Off'}`;
+            updateMap();
+        };
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
