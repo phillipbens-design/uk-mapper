@@ -95,6 +95,13 @@
                         </div>
                         <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-2">
                             <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-slate-600 uppercase">Rail Journey detector (2.5km)</span>
+                                <input type="number" id="railRadius" value="2.5" step="0.1" class="w-14 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
+                            </div>
+                            <button id="btnDetectRail" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Analyze Rail Travel Sequence</button>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-2">
+                            <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-bold text-slate-600 uppercase">Prisons (1km)</span>
                                 <input type="number" id="prisonRadius" value="1.0" step="0.1" class="w-14 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
                             </div>
@@ -212,6 +219,22 @@
             { name: "Birmingham Airport", lat: 52.4524, lng: -1.7435 },
             { name: "Glasgow Airport", lat: 55.8645, lng: -4.4320 },
             { name: "Edinburgh Airport", lat: 55.9508, lng: -3.3615 }
+        ];
+
+        const RAIL_NETWORK_WAYPOINTS = [
+            { name: "WCML: Rugby Corridor", lat: 52.3736, lng: -1.2530 },
+            { name: "WCML: Crewe Corridor", lat: 53.0898, lng: -2.4334 },
+            { name: "WCML: Preston Corridor", lat: 53.7554, lng: -2.7073 },
+            { name: "WCML: Milton Keynes", lat: 52.0344, lng: -0.7745 },
+            { name: "ECML: Peterborough Corridor", lat: 52.5741, lng: -0.2505 },
+            { name: "ECML: Doncaster Corridor", lat: 53.5222, lng: -1.1388 },
+            { name: "ECML: York Corridor", lat: 53.9585, lng: -1.0931 },
+            { name: "ECML: Berwick Corridor", lat: 55.7725, lng: -2.0084 },
+            { name: "GWML: Reading Corridor", lat: 51.4582, lng: -0.9715 },
+            { name: "GWML: Didcot Corridor", lat: 51.6111, lng: -1.2427 },
+            { name: "GWML: Swindon Corridor", lat: 51.5658, lng: -1.7852 },
+            { name: "MML: Leicester Corridor", lat: 52.6315, lng: -1.1251 },
+            { name: "MML: Derby Corridor", lat: 52.9160, lng: -1.4633 }
         ];
 
         const PRISONS = [
@@ -408,6 +431,63 @@
             renderResults(results, title);
         }
 
+        /**
+         * Enhanced Rail Detection Logic
+         * Scans for temporal-spatial sequences where the subject visits 2+ rail corridors 
+         * in chronological order within a plausible train journey timeframe (20 mins to 3 hours).
+         */
+        function detectRailActivity() {
+            const radius = parseFloat(document.getElementById('railRadius').value);
+            const slider = document.getElementById('date-slider');
+            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end);
+            
+            const journeys = [];
+            const MIN_TIME = 20 * 60 * 1000; // 20 mins
+            const MAX_TIME = 180 * 60 * 1000; // 3 hours
+
+            // Step 1: Find all points matching ANY rail corridor
+            const railHits = [];
+            filtered.forEach(p => {
+                RAIL_NETWORK_WAYPOINTS.forEach(wp => {
+                    if (getDistance(p.lat, p.lng, wp.lat, wp.lng) <= radius) {
+                        railHits.push({ p, wp });
+                    }
+                });
+            });
+
+            // Step 2: Build sequences
+            for (let i = 0; i < railHits.length; i++) {
+                const startHit = railHits[i];
+                for (let j = i + 1; j < railHits.length; j++) {
+                    const endHit = railHits[j];
+                    const timeGap = endHit.p.ts - startHit.p.ts;
+
+                    // If distinct corridors and within train journey timeframe
+                    if (startHit.wp.name !== endHit.wp.name && timeGap >= MIN_TIME && timeGap <= MAX_TIME) {
+                        // Find all intermediate points in our data for this segment
+                        const journeyData = filtered.filter(p => p.ts >= startHit.p.ts && p.ts <= endHit.p.ts);
+                        
+                        journeys.push({
+                            entity: { 
+                                name: `Rail Sequence: ${startHit.wp.name.split(':')[1]} ➔ ${endHit.wp.name.split(':')[1]}`,
+                                startWp: startHit.wp,
+                                endWp: endHit.wp
+                            },
+                            matches: journeyData,
+                            isJourney: true
+                        });
+                        
+                        // Move i forward to avoid duplicating the same journey segment
+                        i = j;
+                        break;
+                    }
+                }
+            }
+
+            renderResults(journeys, journeys.length > 0 ? "Potential Rail Journeys Identified" : "No Rail Journeys Found (Sequence Check)");
+        }
+
         function detectMostActive() {
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
@@ -439,18 +519,39 @@
             results.forEach(res => {
                 const card = document.createElement('div');
                 card.className = "detection-card bg-white border border-slate-100 p-4 rounded-xl shadow-sm cursor-pointer transition-all";
+                
+                let subtitle = res.isJourney ? 
+                    `Duration: ${Math.round((res.matches[res.matches.length-1].ts - res.matches[0].ts) / 60000)} mins` :
+                    `Recent: ${res.matches[res.matches.length-1].label}`;
+
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight truncate pr-2">${res.entity.name}</h4>
                         <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black flex-shrink-0">X${res.matches.length}</span>
                     </div>
-                    <p class="text-[10px] text-slate-500 mb-2">Recent: ${res.matches[res.matches.length-1].label}</p>
-                    <div class="text-[9px] text-slate-400 font-medium">Click to inspect location</div>
+                    <p class="text-[10px] text-slate-500 mb-2">${subtitle}</p>
+                    <div class="text-[9px] text-slate-400 font-medium">Click to visualize ${res.isJourney ? 'journey path' : 'activity'}</div>
                 `;
                 card.onclick = () => {
-                    map.setView([res.entity.lat, res.entity.lng], 16);
+                    const group = L.featureGroup();
+                    markerLayer.clearLayers();
+                    pathLayer.clearLayers();
+
+                    if (res.isJourney) {
+                        const latlngs = res.matches.map(d => [d.lat, d.lng]);
+                        L.polyline(latlngs, { color: '#6366f1', weight: 5, opacity: 0.8 }).addTo(pathLayer);
+                    }
+
+                    res.matches.forEach(p => {
+                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 })
+                            .bindPopup(`<p class="text-xs font-bold">${p.label}</p>`)
+                            .bindTooltip(p.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] })
+                            .addTo(group);
+                    });
+                    
+                    group.addTo(markerLayer);
+                    map.fitBounds(group.getBounds(), { padding: [100, 100], animate: true });
                     window.scrollTo({ top: document.getElementById('map-container').offsetTop - 20, behavior: 'smooth' });
-                    L.popup().setLatLng([res.entity.lat, res.entity.lng]).setContent(`<p class="text-xs font-bold">${res.entity.name}</p><p class="text-[10px]">${res.matches.length} pings detected</p>`).openOn(map);
                 };
                 grid.appendChild(card);
             });
@@ -482,6 +583,7 @@
         document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
         document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
         document.getElementById('btnDetectTransport').onclick = () => detectEntities(TRANSPORT_HUBS, 'transportRadius', 'Transport Hub Detections');
+        document.getElementById('btnDetectRail').onclick = detectRailActivity;
         document.getElementById('btnDetectPrisons').onclick = () => detectEntities(PRISONS, 'prisonRadius', 'Correctional Facility Detections');
         document.getElementById('btnMostActive').onclick = detectMostActive;
 
