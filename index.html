@@ -19,7 +19,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <style>
-        #map { height: calc(100vh - 450px); width: 100%; border-radius: 12px; z-index: 1; }
+        #map { height: calc(100vh - 450px); width: 100%; border-radius: 12px; z-index: 1; transition: height 0.3s ease-in-out; }
+        #map.map-expanded { height: 90vh !important; }
         .noUi-connect { background: #2563eb; }
         .date-label {
             background: rgba(255, 255, 255, 0.95);
@@ -31,34 +32,21 @@
             color: #1e40af;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .user-label {
+            background: #1e293b;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
         .custom-slider .noUi-handle { border-radius: 50%; cursor: pointer; }
         input[type=range] { accent-color: #2563eb; }
         .detection-card:hover { border-color: #2563eb; background-color: #f8fafc; }
-        
-        /* Modal Styles */
-        #entityModal { z-index: 9999; }
-
-        /* Custom Cluster Styling */
-        .entity-cluster {
-            background-clip: padding-box;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            border: 4px solid rgba(255,255,255,0.5);
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-        .entity-cluster div {
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
-            border-radius: 15px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.4);
-        }
+        #entityModal, #userMarkerModal { z-index: 9999; }
+        .placement-cursor { cursor: crosshair !important; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
@@ -81,6 +69,27 @@
                 <button id="btnConfirmEntity" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">
                     Proceed with Ingestion
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Marker Modal -->
+    <div id="userMarkerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-200">
+            <div class="mb-4 text-center">
+                <h2 id="markerModalTitle" class="text-lg font-bold text-slate-800">Tag Location</h2>
+                <p class="text-xs text-slate-500 mt-1">Add or edit intelligence labels for this coordinate.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block tracking-wider">Label Content</label>
+                    <input type="text" id="markerLabelInput" placeholder="e.g. Suspect Sighting, Safehouse..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+                <div class="flex gap-2">
+                    <button id="btnDeleteUserMarker" class="hidden flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-3 rounded-xl transition-all active:scale-95">Delete</button>
+                    <button id="btnSaveUserMarker" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">Save Tag</button>
+                </div>
+                <button id="btnCancelUserMarker" class="w-full text-slate-400 text-xs font-bold py-2">Cancel</button>
             </div>
         </div>
     </div>
@@ -142,7 +151,6 @@
                                 <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
                             </div>
                             
-                            <!-- Entity Checkbox Section -->
                             <div class="mt-4 pt-4 border-t border-slate-100">
                                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
                                 <div id="entityCheckboxList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
@@ -179,7 +187,11 @@
                     <button id="toggleAutoSnap" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
                         Auto-Snap: <span class="text-blue-600">Off</span>
                     </button>
-                    <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition">
+                    <button id="btnStartDrawing" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Tag Location
+                    </button>
+                    <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
                         Clear Filters
                     </button>
                 </div>
@@ -201,10 +213,16 @@
                 <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
             </div>
             <h3 class="text-slate-800 font-bold mb-2">Ready to Visualise</h3>
-            <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date", "Time", "Easting", and "Northing" columns to begin.</p>
+            <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date", "Time", "Easting/Northing" or "Lat/Long" to begin.</p>
         </div>
 
         <div id="map-container" class="relative hidden">
+            <!-- Expand Button Overlay -->
+            <button id="btnToggleExpand" class="absolute top-4 left-14 z-[1000] bg-white border border-slate-200 p-2 rounded-lg shadow-md hover:bg-slate-50 transition-all text-slate-600 flex items-center gap-2 text-xs font-bold">
+                <svg id="expandIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                <svg id="collapseIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0h4m-4 0v4m11 1l5-5m0 0h-4m4 0v4m-11 11l-5-5m0 0v4m0-4h4m11 5l5-5m0 0v-4m0 4h-4"></path></svg>
+                <span>Expand map</span>
+            </button>
             <div id="map" class="shadow-xl border border-slate-200"></div>
         </div>
 
@@ -247,32 +265,30 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <button id="btnDetectCarJourneys" class="h-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition shadow-sm min-h-[50px] col-span-1 md:col-span-1">
-                            Detect Journeys
-                        </button>
-                        <div class="col-span-1 md:col-span-4 flex items-center bg-indigo-50 px-4 py-2 rounded-xl text-[10px] text-indigo-700 font-medium">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Isolate sustained movements to compare against ANPR logs and confirm vehicle utilization.
+                        <div class="col-span-1 md:col-span-1 flex flex-col gap-2">
+                            <button id="btnDetectCarJourneys" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition shadow-sm min-h-[50px]">
+                                Detect Journeys
+                            </button>
+                            <button id="btnDetectCoLocation" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white p-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition shadow-sm min-h-[50px]">
+                                Detect Co-location
+                            </button>
                         </div>
-                    </div>
-
-                    <!-- Co-location Section -->
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2">
-                        <div class="h-full bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition shadow-sm min-h-[70px] col-span-1 md:col-span-1" id="btnDetectColocation">
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-center">Co-location Detector</span>
-                        </div>
-                        <div class="col-span-1 md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-3 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                             <div class="space-y-1">
-                                <label class="text-[9px] font-bold text-emerald-700 uppercase">Max Dist (km)</label>
-                                <input type="number" id="colocDist" value="1.0" step="0.1" class="w-full text-xs border border-emerald-200 rounded p-1.5 font-bold outline-none">
-                             </div>
-                             <div class="space-y-1">
-                                <label class="text-[9px] font-bold text-emerald-700 uppercase">Max Gap (mins)</label>
-                                <input type="number" id="colocTime" value="10" step="1" class="w-full text-xs border border-emerald-200 rounded p-1.5 font-bold outline-none">
-                             </div>
-                             <div class="flex items-end text-[9px] text-emerald-600 italic leading-tight pb-1 hidden md:block">
-                                Identifies proximity events between two different active entities.
-                             </div>
+                        <div class="col-span-1 md:col-span-4 flex flex-col gap-2">
+                            <div class="flex items-center bg-indigo-50 px-4 py-2 rounded-xl text-[10px] text-indigo-700 font-medium h-[50px]">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Isolate sustained movements to compare against ANPR logs and confirm vehicle utilization.
+                            </div>
+                            <div class="flex items-center bg-cyan-50 px-4 py-2 rounded-xl text-[10px] text-cyan-700 font-medium h-[50px] gap-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold uppercase opacity-60">Dist (km):</span>
+                                    <input type="number" id="coLocationDist" value="1.0" step="0.1" class="w-12 bg-white border border-cyan-200 rounded px-1 outline-none">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold uppercase opacity-60">Time (min):</span>
+                                    <input type="number" id="coLocationTime" value="10" step="1" class="w-12 bg-white border border-cyan-200 rounded px-1 outline-none">
+                                </div>
+                                <p class="opacity-80 italic">Identify when different datasets intersect in time and space.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -416,7 +432,17 @@
             { name: "MML: Leicester Corridor", lat: 52.6315, lng: -1.1255 },
             { name: "MML: Nottingham Corridor", lat: 52.9465, lng: -1.1470 },
             { name: "MML: Derby Corridor", lat: 52.9160, lng: -1.4635 },
-            { name: "MML: Sheffield Midland Approach", lat: 53.3775, lng: -1.4630 }
+            { name: "MML: Sheffield Midland Approach", lat: 53.3775, lng: -1.4630 },
+            { name: "CrossCountry: Birmingham New St Approach", lat: 52.4775, lng: -1.8995 },
+            { name: "CrossCountry: Cheltenham Corridor", lat: 51.8965, lng: -2.1025 },
+            { name: "CrossCountry: Oxford Corridor", lat: 51.7535, lng: -1.2705 },
+            { name: "CrossCountry: Banbury Corridor", lat: 52.0620, lng: -1.3295 },
+            { name: "South Western: Basingstoke Corridor", lat: 51.2685, lng: -1.0885 },
+            { name: "South Western: Winchester Corridor", lat: 51.0665, lng: -1.3195 },
+            { name: "South Western: Southampton Approach", lat: 50.9080, lng: -1.4075 },
+            { name: "Great Eastern: Colchester Corridor", lat: 51.8985, lng: 0.8935 },
+            { name: "Great Eastern: Ipswich Corridor", lat: 52.0505, lng: 1.1435 },
+            { name: "Great Eastern: Norwich Approach", lat: 52.6275, lng: 1.3065 }
         ];
 
         const PRISONS = [
@@ -490,17 +516,34 @@
             { name: "Michaelwood (M5)", lat: 51.666, lng: -2.414 },
             { name: "Gordano (M5)", lat: 51.483, lng: -2.723 },
             { name: "Sedgemoor (M5)", lat: 51.282, lng: -2.923 },
-            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.142 }
+            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.142 },
+            { name: "Beaconsfield (M40)", lat: 51.602, lng: -0.662 },
+            { name: "Oxford (M40)", lat: 51.745, lng: -1.096 },
+            { name: "Cherwell Valley (M40)", lat: 51.942, lng: -1.212 },
+            { name: "Warwick (M40)", lat: 52.203, lng: -1.503 },
+            { name: "Birch (M62)", lat: 53.562, lng: -2.223 },
+            { name: "Hartshead Moor (M62)", lat: 53.716, lng: -1.742 },
+            { name: "Ferrybridge (M62)", lat: 53.715, lng: -1.278 },
+            { name: "Baldock (A1M)", lat: 51.983, lng: -0.212 },
+            { name: "Peterborough (A1M)", lat: 52.518, lng: -0.316 },
+            { name: "Doncaster (A1M)", lat: 53.512, lng: -1.082 },
+            { name: "Fleet (M3)", lat: 51.284, lng: -0.832 },
+            { name: "Winchester (M3)", lat: 51.107, lng: -1.282 },
+            { name: "Hopwood Park (M42)", lat: 52.368, lng: -1.942 },
+            { name: "Donington Park (M1/A50)", lat: 52.842, lng: -1.348 }
         ];
 
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
 
-        let map, markerLayer, heatLayer, pathLayer, clusterLayer;
+        let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
         let allData = [];
+        let userMarkers = []; // { id, lat, lng, label }
         let dateRange = { min: 0, max: 0 };
         let currentView = 'markers'; 
         let showLabels = false, autoSnap = false, isPlaying = false, playInterval = null;
+        let isPlacementMode = false;
         let pendingCsvData = null; 
+        let editingUserMarker = null;
         const LABEL_LIMIT = 500;
         
         let uniqueEntities = new Set();
@@ -508,10 +551,7 @@
         let activeEntityFilters = new Set();
 
         function getNextColor(index) {
-            const palette = [
-                "#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", 
-                "#0891b2", "#4f46e5", "#be185d", "#ca8a04", "#15803d"
-            ];
+            const palette = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", "#0891b2", "#4f46e5", "#be185d", "#ca8a04", "#15803d"];
             return palette[index % palette.length];
         }
 
@@ -537,75 +577,107 @@
 
         function initMap() {
             if (map) return;
-            
-            const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap, &copy; CARTO'
-            });
-            const darkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap, &copy; CARTO'
-            });
-            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            });
-            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri'
-            });
-
-            const baseMaps = {
-                "Voyager (Light)": voyager,
-                "Dark Matter": darkMatter,
-                "OpenStreetMap": osm,
-                "Satellite Imagery": satellite
-            };
-
-            map = L.map('map', { 
-                preferCanvas: true,
-                layers: [voyager] 
-            }).setView([54.5, -3.0], 6);
-
+            const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap, &copy; CARTO' });
+            const darkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap, &copy; CARTO' });
+            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' });
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' });
+            const baseMaps = { "Voyager (Light)": voyager, "Dark Matter": darkMatter, "OpenStreetMap": osm, "Satellite Imagery": satellite };
+            map = L.map('map', { preferCanvas: true, layers: [voyager] }).setView([54.5, -3.0], 6);
             L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+            L.control.scale({ imperial: true, metric: true, position: 'bottomright' }).addTo(map);
 
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
+            userMarkerLayer = L.layerGroup().addTo(map);
+            clusterLayer = L.markerClusterGroup({ disableClusteringAtZoom: 17, spiderfyOnMaxZoom: true }).addTo(map);
 
-            // Logic-driven Cluster Styling with Entity Bands
-            clusterLayer = L.markerClusterGroup({ 
-                disableClusteringAtZoom: 17, 
-                spiderfyOnMaxZoom: true,
-                iconCreateFunction: function(cluster) {
-                    const markers = cluster.getAllChildMarkers();
-                    const entitiesInCluster = new Set();
-                    markers.forEach(m => {
-                        if (m.options.entityName) entitiesInCluster.add(m.options.entityName);
-                    });
-
-                    const entities = Array.from(entitiesInCluster);
-                    let borderStyle = "";
-
-                    if (entities.length === 1) {
-                        // Single entity band
-                        borderStyle = `border-color: ${entityColors[entities[0]]};`;
-                    } else if (entities.length > 1) {
-                        // Shared cluster - criss cross / segmented band logic
-                        const colors = entities.map(e => entityColors[e]);
-                        const segments = colors.length;
-                        const step = 360 / segments;
-                        let gradient = "conic-gradient(";
-                        colors.forEach((c, i) => {
-                            gradient += `${c} ${i * step}deg ${(i + 1) * step}deg${i === colors.length - 1 ? '' : ','}`;
-                        });
-                        gradient += ")";
-                        borderStyle = `background: ${gradient}; border: none; padding: 4px;`;
-                    }
-
-                    const count = cluster.getChildCount();
-                    return L.divIcon({
-                        html: `<div class="entity-cluster" style="${borderStyle}"><div>${count}</div></div>`,
-                        className: 'cluster-icon-wrapper',
-                        iconSize: L.point(40, 40)
-                    });
+            map.on('click', (e) => {
+                if (isPlacementMode) {
+                    togglePlacementMode(false);
+                    openUserMarkerModal(null, e.latlng.lat, e.latlng.lng);
                 }
-            }).addTo(map);
+            });
+        }
+
+        function togglePlacementMode(force) {
+            isPlacementMode = typeof force === 'boolean' ? force : !isPlacementMode;
+            const mapEl = document.getElementById('map');
+            const btn = document.getElementById('btnStartDrawing');
+            if (isPlacementMode) {
+                mapEl.classList.add('placement-cursor');
+                btn.classList.add('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerText = "Click Map to Tag";
+            } else {
+                mapEl.classList.remove('placement-cursor');
+                btn.classList.remove('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Tag Location`;
+            }
+        }
+
+        function openUserMarkerModal(markerId, lat, lng) {
+            const modal = document.getElementById('userMarkerModal');
+            const input = document.getElementById('markerLabelInput');
+            const delBtn = document.getElementById('btnDeleteUserMarker');
+            const title = document.getElementById('markerModalTitle');
+            
+            modal.classList.remove('hidden');
+            input.focus();
+            
+            if (markerId !== null) {
+                const existing = userMarkers.find(m => m.id === markerId);
+                editingUserMarker = { ...existing };
+                input.value = existing.label;
+                delBtn.classList.remove('hidden');
+                title.innerText = "Edit Tag";
+            } else {
+                editingUserMarker = { id: Date.now(), lat, lng, label: '' };
+                input.value = '';
+                delBtn.classList.add('hidden');
+                title.innerText = "Tag Location";
+            }
+        }
+
+        function saveUserMarker() {
+            const label = document.getElementById('markerLabelInput').value.trim();
+            if (!label) return;
+            
+            editingUserMarker.label = label;
+            const index = userMarkers.findIndex(m => m.id === editingUserMarker.id);
+            if (index !== -1) userMarkers[index] = editingUserMarker;
+            else userMarkers.push(editingUserMarker);
+            
+            document.getElementById('userMarkerModal').classList.add('hidden');
+            updateUserMarkersOnMap();
+        }
+
+        function deleteUserMarker() {
+            if (!editingUserMarker) return;
+            userMarkers = userMarkers.filter(m => m.id !== editingUserMarker.id);
+            document.getElementById('userMarkerModal').classList.add('hidden');
+            updateUserMarkersOnMap();
+        }
+
+        function updateUserMarkersOnMap() {
+            userMarkerLayer.clearLayers();
+            userMarkers.forEach(m => {
+                const marker = L.circleMarker([m.lat, m.lng], {
+                    radius: 8,
+                    fillColor: '#1e293b',
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 1
+                }).bindTooltip(m.label, {
+                    permanent: true,
+                    direction: 'top',
+                    className: 'user-label',
+                    offset: [0, -10]
+                }).addTo(userMarkerLayer);
+                
+                marker.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    openUserMarkerModal(m.id);
+                });
+            });
         }
 
         function parseUKDate(dateStr, timeStr) {
@@ -640,61 +712,57 @@
             uniqueEntities.forEach(entity => {
                 const label = document.createElement('label');
                 label.className = "inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-white transition-colors text-[10px] font-bold text-slate-700";
-                
                 const isChecked = activeEntityFilters.has(entity);
                 const color = entityColors[entity] || "#2563eb";
-
-                label.innerHTML = `
-                    <input type="checkbox" value="${entity}" ${isChecked ? 'checked' : ''} class="w-3 h-3 rounded text-blue-600 focus:ring-blue-500">
-                    <div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></div>
-                    <span class="truncate max-w-[120px]">${entity}</span>
-                `;
-                
+                label.innerHTML = `<input type="checkbox" value="${entity}" ${isChecked ? 'checked' : ''} class="w-3 h-3 rounded text-blue-600 focus:ring-blue-500"><div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></div><span class="truncate max-w-[120px]">${entity}</span>`;
                 label.querySelector('input').onchange = (e) => {
                     if (e.target.checked) activeEntityFilters.add(entity);
                     else activeEntityFilters.delete(entity);
                     updateMap();
                 };
-                
                 container.appendChild(label);
             });
         }
 
         function processData(data, entityName) {
-            if (!uniqueEntities.has(entityName)) {
-                entityColors[entityName] = getNextColor(uniqueEntities.size);
-            }
-
+            let validDates = [];
+            if (!uniqueEntities.has(entityName)) { entityColors[entityName] = getNextColor(uniqueEntities.size); }
             uniqueEntities.add(entityName);
             activeEntityFilters.add(entityName);
 
             data.forEach(row => {
                 const easting = row.Easting ?? row.easting ?? row.EASTING;
                 const northing = row.Northing ?? row.northing ?? row.NORTHING;
+                const latVal = row.Lat ?? row.lat ?? row.LAT ?? row.Latitude ?? row.latitude;
+                const lngVal = row.Long ?? row.long ?? row.LONG ?? row.Longitude ?? row.longitude ?? row.Lng ?? row.lng;
                 const dateStr = row.Date ?? row.date ?? row.DATE;
                 const timeStr = row.Time ?? row.time ?? row.TIME;
-                if (easting && northing && dateStr) {
+
+                let finalLat = null, finalLng = null;
+
+                if (latVal !== undefined && lngVal !== undefined) {
+                    finalLat = parseFloat(latVal);
+                    finalLng = parseFloat(lngVal);
+                } else if (easting !== undefined && northing !== undefined) {
                     try {
                         const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
-                        const ts = parseUKDate(dateStr, timeStr);
-                        if (!isNaN(ts) && !isNaN(coords[0])) {
-                            allData.push({ 
-                                lat: coords[1], 
-                                lng: coords[0], 
-                                ts, 
-                                dateObj: new Date(ts), 
-                                label: `${entityName}: ${dateStr} ${timeStr || ''}`.trim(),
-                                entity: entityName 
-                            });
-                        }
+                        finalLng = coords[0];
+                        finalLat = coords[1];
                     } catch (e) { }
+                }
+
+                if (finalLat !== null && finalLng !== null && !isNaN(finalLat) && !isNaN(finalLng) && dateStr) {
+                    const ts = parseUKDate(dateStr, timeStr);
+                    if (!isNaN(ts)) {
+                        allData.push({ lat: finalLat, lng: finalLng, ts, dateObj: new Date(ts), label: `${entityName}: ${dateStr} ${timeStr || ''}`.trim(), entity: entityName });
+                        validDates.push(ts);
+                    }
                 }
             });
             if (allData.length === 0) return;
             allData.sort((a, b) => a.ts - b.ts);
             dateRange.min = Math.min(...allData.map(d => d.ts));
             dateRange.max = Math.max(...allData.map(d => d.ts));
-            
             updateEntityCheckboxes();
             showApp();
             initSlider();
@@ -706,42 +774,28 @@
             const slider = document.getElementById('date-slider');
             const rangeDisplay = document.getElementById('range-display');
             if (slider.noUiSlider) slider.noUiSlider.destroy();
-            noUiSlider.create(slider, {
-                start: [dateRange.min, dateRange.max],
-                connect: true,
-                behaviour: 'tap-drag',
-                range: { 'min': dateRange.min, 'max': dateRange.max },
-                step: 1000 
-            });
+            noUiSlider.create(slider, { start: [dateRange.min, dateRange.max], connect: true, behaviour: 'tap-drag', range: { 'min': dateRange.min, 'max': dateRange.max }, step: 1000 });
             slider.noUiSlider.on('update', (values) => {
                 const s = parseInt(values[0]), e = parseInt(values[1]);
                 document.getElementById('input-start').value = formatToLocalISO(s);
                 document.getElementById('input-end').value = formatToLocalISO(e);
                 rangeDisplay.innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
             });
-            slider.noUiSlider.on('change', () => {
-                if (isPlaying) togglePlayback();
-                updateMap();
-            });
+            slider.noUiSlider.on('change', () => { if (isPlaying) togglePlayback(); updateMap(); });
         }
 
         function togglePlayback() {
             const btn = document.getElementById('btnPlay');
-            const playIcon = document.getElementById('playIcon');
-            const pauseIcon = document.getElementById('pauseIcon');
-            const slider = document.getElementById('date-slider');
+            const playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), slider = document.getElementById('date-slider');
             if (isPlaying) { clearInterval(playInterval); playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); isPlaying = false; }
             else {
                 playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); isPlaying = true;
                 playInterval = setInterval(() => {
-                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value);
-                    const totalRange = dateRange.max - dateRange.min;
-                    const step = (totalRange / 100) * multiplier; 
+                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value), totalRange = dateRange.max - dateRange.min, step = (totalRange / 100) * multiplier; 
                     const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
                     let nextEnd = currEnd + step;
                     if (nextEnd > dateRange.max) { slider.noUiSlider.set([currStart, dateRange.max]); togglePlayback(); return; }
-                    const windowSize = currEnd - currStart;
-                    slider.noUiSlider.set([nextEnd - windowSize, nextEnd]);
+                    slider.noUiSlider.set([nextEnd - (currEnd - currStart), nextEnd]);
                     updateMap(autoSnap); 
                 }, 50);
             }
@@ -749,59 +803,34 @@
 
         function updateMap(shouldCentre = false) {
             if (!map || !allData.length) return;
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            
-            const filtered = allData.filter(d => 
-                d.ts >= start && 
-                d.ts <= end && 
-                activeEntityFilters.has(d.entity)
-            );
-            
+            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
-
-            markerLayer.clearLayers();
-            pathLayer.clearLayers();
-            clusterLayer.clearLayers();
-            if (heatLayer) map.removeLayer(heatLayer);
-
+            markerLayer.clearLayers(); pathLayer.clearLayers(); clusterLayer.clearLayers(); if (heatLayer) map.removeLayer(heatLayer);
             if (filtered.length > 0) {
                 if (currentView === 'markers') {
                     filtered.forEach((d, idx) => {
-                        const color = entityColors[d.entity] || "#2563eb";
-                        const m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 })
-                            .bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
+                        const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
                         if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
                         m.addTo(markerLayer);
                     });
                 } else if (currentView === 'clusters') {
                     filtered.forEach((d) => {
-                        const color = entityColors[d.entity] || "#2563eb";
-                        const m = L.circleMarker([d.lat, d.lng], { 
-                            radius: 6, 
-                            fillColor: color, 
-                            color: "#ffffff", 
-                            weight: 2, 
-                            opacity: 1, 
-                            fillOpacity: 0.9,
-                            entityName: d.entity 
-                        }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
+                        const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
                         clusterLayer.addLayer(m);
                     });
-                } else if (currentView === 'heat') {
-                    heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map);
-                } else if (currentView === 'path') {
+                } else if (currentView === 'heat') { heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map); }
+                else if (currentView === 'path') {
                     activeEntityFilters.forEach(entity => {
                         const entityPoints = filtered.filter(p => p.entity === entity);
                         if (entityPoints.length > 1) {
-                            const latlngs = entityPoints.map(p => [p.lat, p.lng]);
-                            const color = entityColors[entity] || "#2563eb";
+                            const latlngs = entityPoints.map(p => [p.lat, p.lng]), color = entityColors[entity] || "#2563eb";
                             L.polyline(latlngs, { color: color, weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
                         }
                     });
                 }
                 if (shouldCentre) {
-                    const lats = filtered.map(p => p.lat); const lngs = filtered.map(p => p.lng);
+                    const lats = filtered.map(p => p.lat), lngs = filtered.map(p => p.lng);
                     map.panTo([lats.reduce((a, b) => a + b, 0) / lats.length, lngs.reduce((a, b) => a + b, 0) / lngs.length], { animate: true, duration: 0.5 });
                 }
             }
@@ -811,51 +840,23 @@
             document.getElementById('analysis-results').classList.remove('hidden');
             document.getElementById('results-title').innerText = title;
             document.getElementById('results-count').innerText = `${results.length} Matches`;
-            
             const grid = document.getElementById('results-grid');
             grid.innerHTML = '';
             document.getElementById('no-results').classList.toggle('hidden', results.length > 0);
-
             results.forEach(res => {
-                const card = document.createElement('div');
+                const card = document.createElement('div'), areaDesc = res.areaDescription || (res.entity.lat ? getAreaDescription(res.entity.lat, res.entity.lng) : '');
                 card.className = "detection-card bg-white border border-slate-100 p-4 rounded-xl shadow-sm cursor-pointer transition-all";
-                
-                const areaDesc = res.areaDescription || (res.entity.lat ? getAreaDescription(res.entity.lat, res.entity.lng) : '');
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight truncate pr-2">${res.entity.name}</h4>
-                        <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black flex-shrink-0">X${res.matches.length}</span>
-                    </div>
-                    <div class="space-y-1.5 mb-3">
-                        <p class="text-[10px] text-slate-700 font-semibold leading-relaxed">${areaDesc}</p>
-                        ${res.temporalSummary ? `<p class="text-[9px] text-slate-500 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">${res.temporalSummary}</p>` : ''}
-                        <p class="text-[10px] text-slate-400">Duration: ${res.duration || 'N/A'}</p>
-                    </div>
-                    <div class="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Visualise Event</div>
-                `;
+                card.innerHTML = `<div class="flex justify-between items-start mb-2"><h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight truncate pr-2">${res.entity.name}</h4><span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black flex-shrink-0">X${res.matches.length}</span></div><div class="space-y-1.5 mb-3"><p class="text-[10px] text-slate-700 font-semibold leading-relaxed">${areaDesc}</p>${res.temporalSummary ? `<p class="text-[9px] text-slate-500 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">${res.temporalSummary}</p>` : ''}<p class="text-[10px] text-slate-400">Duration: ${res.duration || 'N/A'}</p></div><div class="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Visualise Journey</div>`;
                 card.onclick = () => {
-                    markerLayer.clearLayers();
-                    pathLayer.clearLayers();
-                    const group = L.featureGroup();
-                    const latlngs = [];
-
+                    markerLayer.clearLayers(); pathLayer.clearLayers();
+                    const group = L.featureGroup(), latlngs = [];
                     res.matches.forEach(p => {
                         const color = entityColors[p.entity] || "#ef4444";
                         latlngs.push([p.lat, p.lng]);
-                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 })
-                            .bindPopup(`<div class="text-[10px]"><strong>Event:</strong> ${p.label}<br><strong>Coords:</strong> ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>`)
-                            .bindTooltip(p.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] })
-                            .addTo(group);
+                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 }).bindPopup(`<div class="text-[10px]"><strong>Event:</strong> ${p.label}<br><strong>Coords:</strong> ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>`).bindTooltip(p.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] }).addTo(group);
                     });
-                    
-                    if (latlngs.length > 1) {
-                        const pathColor = entityColors[res.matches[0].entity] || "#ef4444";
-                        L.polyline(latlngs, { color: pathColor, weight: 4, opacity: 0.8 }).addTo(pathLayer);
-                    }
-
-                    group.addTo(markerLayer);
-                    map.fitBounds(group.getBounds(), { padding: [50, 50], animate: true });
+                    if (latlngs.length > 1) { L.polyline(latlngs, { color: entityColors[res.matches[0].entity] || "#ef4444", weight: 4, opacity: 0.8 }).addTo(pathLayer); }
+                    group.addTo(markerLayer); map.fitBounds(group.getBounds(), { padding: [50, 50], animate: true });
                     window.scrollTo({ top: document.getElementById('map-container').offsetTop - 20, behavior: 'smooth' });
                 };
                 grid.appendChild(card);
@@ -864,93 +865,67 @@
         }
 
         function detectCarJourneys() {
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
             const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            
             if (filtered.length < 2) return;
-
-            const MIN_DISPLACEMENT = 30;
-            const MAX_GAP = 2 * 60 * 60 * 1000;
-            const MIN_DURATION = 60 * 60 * 1000;
-
-            const journeys = [];
+            const MIN_DISPLACEMENT = 30, MAX_GAP = 2 * 60 * 60 * 1000, MIN_DURATION = 60 * 60 * 1000, journeys = [];
             let currentJourney = [filtered[0]];
-
             for (let i = 1; i < filtered.length; i++) {
-                const diffTs = filtered[i].ts - filtered[i-1].ts;
-                if (diffTs > MAX_GAP) {
-                    processJourney(currentJourney);
-                    currentJourney = [filtered[i]];
-                } else {
-                    currentJourney.push(filtered[i]);
-                }
+                if (filtered[i].ts - filtered[i-1].ts > MAX_GAP) { processJourney(currentJourney); currentJourney = [filtered[i]]; }
+                else { currentJourney.push(filtered[i]); }
             }
             processJourney(currentJourney);
-
             function processJourney(jPoints) {
                 if (jPoints.length < 2) return;
-                const duration = jPoints[jPoints.length - 1].ts - jPoints[0].ts;
-                const displacement = getDistance(jPoints[0].lat, jPoints[0].lng, jPoints[jPoints.length - 1].lat, jPoints[jPoints.length - 1].lng);
+                const duration = jPoints[jPoints.length - 1].ts - jPoints[0].ts, displacement = getDistance(jPoints[0].lat, jPoints[0].lng, jPoints[jPoints.length - 1].lat, jPoints[jPoints.length - 1].lng);
                 if (duration >= MIN_DURATION && displacement >= MIN_DISPLACEMENT) {
-                    let totalPath = 0;
-                    for(let k = 1; k < jPoints.length; k++) {
-                        totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng);
-                    }
-                    if (totalPath < displacement * 4) {
-                        journeys.push([...jPoints]);
-                    }
+                    let totalPath = 0; for(let k = 1; k < jPoints.length; k++) { totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng); }
+                    if (totalPath < displacement * 4) { journeys.push([...jPoints]); }
                 }
             }
-
             const results = journeys.map((j, idx) => {
-                const durMs = j[j.length-1].ts - j[0].ts;
-                const hours = Math.floor(durMs / (1000 * 60 * 60));
-                const mins = Math.floor((durMs % (1000 * 60 * 60)) / (1000 * 60));
-                const disp = getDistance(j[0].lat, j[0].lng, j[j.length-1].lat, j[j.length-1].lng).toFixed(1);
-                const startLoc = getAreaDescription(j[0].lat, j[0].lng).split('from ')[1] || 'Start';
-                const endLoc = getAreaDescription(j[j.length-1].lat, j[j.length-1].lng).split('from ')[1] || 'End';
-                return {
-                    entity: { name: `Journey #${idx+1} (${j[0].entity})`, lat: j[0].lat, lng: j[0].lng },
-                    matches: j,
-                    duration: `${hours}h ${mins}m (${disp}km displacement)`,
-                    areaDescription: `From ${startLoc} to ${endLoc}`,
-                    temporalSummary: `Started: ${j[0].label} <br> Finished: ${j[j.length-1].label}`
-                };
+                const durMs = j[j.length-1].ts - j[0].ts, hours = Math.floor(durMs / 3600000), mins = Math.floor((durMs % 3600000) / 60000), disp = getDistance(j[0].lat, j[0].lng, j[j.length-1].lat, j[j.length-1].lng).toFixed(1);
+                return { entity: { name: `Journey #${idx+1} (${j[0].entity})`, lat: j[0].lat, lng: j[0].lng }, matches: j, duration: `${hours}h ${mins}m (${disp}km displacement)`, areaDescription: `From ${getAreaDescription(j[0].lat, j[0].lng).split('from ')[1] || 'Start'} to ${getAreaDescription(j[j.length-1].lat, j[j.length-1].lng).split('from ')[1] || 'End'}`, temporalSummary: `Started: ${j[0].label} <br> Finished: ${j[j.length-1].label}` };
             });
             renderResults(results, "High-Confidence Journeys (>30km)");
         }
 
-        function detectColocation() {
-            const maxDist = parseFloat(document.getElementById('colocDist').value);
-            const maxGapMs = parseFloat(document.getElementById('colocTime').value) * 60 * 1000;
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            const entities = Array.from(activeEntityFilters);
-            if (entities.length < 2) return;
+        function detectMostActive() {
+            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity)), clusters = {};
+            filtered.forEach(p => { const key = `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`; if (!clusters[key]) { clusters[key] = { entity: { name: `Hotspot`, lat: p.lat, lng: p.lng }, matches: [], areaDescription: getAreaDescription(p.lat, p.lng) }; } clusters[key].matches.push(p); });
+            const sorted = Object.values(clusters).sort((a, b) => b.matches.length - a.matches.length).slice(0, 12);
+            sorted.forEach((item, idx) => { item.entity.name = `Activity Hotspot #${idx + 1}`; });
+            renderResults(sorted, "Top 12 Most Active Locations");
+        }
 
-            const colocations = [];
+        function detectCoLocation() {
+            const maxDist = parseFloat(document.getElementById('coLocationDist').value);
+            const maxTimeMs = parseFloat(document.getElementById('coLocationTime').value) * 60000;
+            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             
-            for (let i = 0; i < entities.length; i++) {
-                const eA = entities[i];
-                const pointsA = filtered.filter(p => p.entity === eA);
-                for (let j = i + 1; j < entities.length; j++) {
-                    const eB = entities[j];
-                    const pointsB = filtered.filter(p => p.entity === eB);
-                    pointsA.forEach(pA => {
-                        pointsB.forEach(pB => {
-                            const timeDiff = Math.abs(pA.ts - pB.ts);
-                            if (timeDiff <= maxGapMs) {
-                                const dist = getDistance(pA.lat, pA.lng, pB.lat, pB.lng);
+            if (uniqueEntities.size < 2) return;
+            const entityGroups = {};
+            filtered.forEach(p => { if (!entityGroups[p.entity]) entityGroups[p.entity] = []; entityGroups[p.entity].push(p); });
+            
+            const entityList = Object.keys(entityGroups);
+            const intersections = [];
+            for (let i = 0; i < entityList.length; i++) {
+                for (let j = i + 1; j < entityList.length; j++) {
+                    const e1 = entityGroups[entityList[i]]; const e2 = entityGroups[entityList[j]];
+                    e1.forEach(p1 => {
+                        e2.forEach(p2 => {
+                            const timeDiff = Math.abs(p1.ts - p2.ts);
+                            if (timeDiff <= maxTimeMs) {
+                                const dist = getDistance(p1.lat, p1.lng, p2.lat, p2.lng);
                                 if (dist <= maxDist) {
-                                    colocations.push({
-                                        entity: { name: `Colocation: ${eA} & ${eB}`, lat: pA.lat, lng: pA.lng },
-                                        matches: [pA, pB],
-                                        duration: `Time Gap: ${Math.round(timeDiff/1000/60)} mins`,
-                                        areaDescription: getAreaDescription(pA.lat, pA.lng),
-                                        temporalSummary: `E1: ${pA.label} <br> E2: ${pB.label}`
+                                    intersections.push({
+                                        entity: { name: `Intersection: ${p1.entity} & ${p2.entity}`, lat: p1.lat, lng: p1.lng },
+                                        matches: [p1, p2],
+                                        areaDescription: getAreaDescription(p1.lat, p1.lng),
+                                        temporalSummary: `Time gap: ${(timeDiff / 60000).toFixed(1)} mins<br>Spatial gap: ${dist.toFixed(2)} km`,
+                                        duration: new Date(p1.ts).toLocaleString('en-GB')
                                     });
                                 }
                             }
@@ -958,80 +933,45 @@
                     });
                 }
             }
-            renderResults(colocations, `Co-location Events (${maxDist}km, ${document.getElementById('colocTime').value}m)`);
-        }
-
-        function detectMostActive() {
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            const clusters = {};
-            filtered.forEach(p => {
-                const key = `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`; 
-                if (!clusters[key]) {
-                    clusters[key] = { entity: { name: `Hotspot`, lat: p.lat, lng: p.lng }, matches: [], areaDescription: getAreaDescription(p.lat, p.lng) };
-                }
-                clusters[key].matches.push(p);
-            });
-            const sorted = Object.values(clusters).sort((a, b) => b.matches.length - a.matches.length).slice(0, 12);
-            sorted.forEach((item, idx) => { item.entity.name = `Activity Hotspot #${idx + 1}`; });
-            renderResults(sorted, "Top 12 Most Active Locations");
+            const uniqueIntersections = intersections.filter((v, i, a) => a.findIndex(t => (t.matches[0].ts === v.matches[0].ts && t.matches[1].ts === v.matches[1].ts)) === i);
+            renderResults(uniqueIntersections, "Entity Co-location Detections");
         }
 
         function detectEntities(list, radiusId, title) {
-            const radius = parseFloat(document.getElementById(radiusId).value);
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            const results = [];
-            list.forEach(entity => {
-                const matches = filtered.filter(p => getDistance(p.lat, p.lng, entity.lat, entity.lng) <= radius);
-                if (matches.length > 0) results.push({ entity, matches, areaDescription: getAreaDescription(entity.lat, entity.lng) });
-            });
+            const radius = parseFloat(document.getElementById(radiusId).value), slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity)), results = [];
+            list.forEach(entity => { const matches = filtered.filter(p => getDistance(p.lat, p.lng, entity.lat, entity.lng) <= radius); if (matches.length > 0) results.push({ entity, matches, areaDescription: getAreaDescription(entity.lat, entity.lng) }); });
             renderResults(results, title);
         }
 
         function zoomToFit(data) {
-            const points = data || allData;
-            const filteredPoints = points.filter(p => activeEntityFilters.has(p.entity));
-            if (filteredPoints.length > 0) {
-                map.fitBounds(L.latLngBounds(filteredPoints.map(d => [d.lat, d.lng])), { padding: [40, 40], animate: true });
-            }
+            const points = data || allData, filteredPoints = points.filter(p => activeEntityFilters.has(p.entity));
+            if (filteredPoints.length > 0) { map.fitBounds(L.latLngBounds(filteredPoints.map(d => [d.lat, d.lng])), { padding: [40, 40], animate: true }); }
         }
 
         function showApp() {
-            document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('controls').classList.remove('hidden');
-            document.getElementById('map-container').classList.remove('hidden');
-            document.getElementById('analysis-section').classList.remove('hidden');
+            document.getElementById('empty-state').classList.add('hidden'); document.getElementById('controls').classList.remove('hidden'); document.getElementById('map-container').classList.remove('hidden'); document.getElementById('analysis-section').classList.remove('hidden');
             initMap(); map.invalidateSize();
         }
 
-        document.getElementById('csvFile').onchange = e => {
-            if (e.target.files[0]) {
-                Papa.parse(e.target.files[0], {
-                    header: true, dynamicTyping: true, skipEmptyLines: true,
-                    complete: (r) => {
-                        pendingCsvData = r.data;
-                        document.getElementById('entityModal').classList.remove('hidden');
-                        document.getElementById('entityNameInput').focus();
-                    }
-                });
-            }
-        };
+        document.getElementById('csvFile').onchange = e => { if (e.target.files[0]) { Papa.parse(e.target.files[0], { header: true, dynamicTyping: true, skipEmptyLines: true, complete: (r) => { pendingCsvData = r.data; document.getElementById('entityModal').classList.remove('hidden'); document.getElementById('entityNameInput').focus(); } }); } };
 
         document.getElementById('btnConfirmEntity').onclick = () => {
-            const nameInput = document.getElementById('entityNameInput');
-            const name = nameInput.value.trim();
-            if (name && pendingCsvData) {
-                processData(pendingCsvData, name);
-                document.getElementById('entityModal').classList.add('hidden');
-                nameInput.value = '';
-                pendingCsvData = null;
-            } else {
-                nameInput.classList.add('border-rose-500');
-                setTimeout(() => nameInput.classList.remove('border-rose-500'), 1000);
-            }
+            const nameInput = document.getElementById('entityNameInput'), name = nameInput.value.trim();
+            if (name && pendingCsvData) { processData(pendingCsvData, name); document.getElementById('entityModal').classList.add('hidden'); nameInput.value = ''; pendingCsvData = null; }
+            else { nameInput.classList.add('border-rose-500'); setTimeout(() => nameInput.classList.remove('border-rose-500'), 1000); }
+        };
+
+        document.getElementById('btnStartDrawing').onclick = (e) => {
+            L.DomEvent.stopPropagation(e);
+            togglePlacementMode();
+        };
+        
+        document.getElementById('btnSaveUserMarker').onclick = saveUserMarker;
+        document.getElementById('btnDeleteUserMarker').onclick = deleteUserMarker;
+        document.getElementById('btnCancelUserMarker').onclick = () => {
+            document.getElementById('userMarkerModal').classList.add('hidden');
+            editingUserMarker = null;
         };
 
         document.getElementById('btnPlay').onclick = togglePlayback;
@@ -1045,52 +985,52 @@
         document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections');
         document.getElementById('btnMostActive').onclick = detectMostActive;
         document.getElementById('btnDetectCarJourneys').onclick = detectCarJourneys;
-        document.getElementById('btnDetectColocation').onclick = detectColocation;
+        document.getElementById('btnDetectCoLocation').onclick = detectCoLocation;
 
         function setView(type, btnId) {
             currentView = type;
-            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath'].forEach(id => {
-                const b = document.getElementById(id);
-                if (b) b.className = id === btnId ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600";
-            });
+            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath'].forEach(id => { const b = document.getElementById(id); if (b) b.className = id === btnId ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"; });
             updateMap();
         }
 
-        document.getElementById('btnApplyFilter').onclick = () => {
-            const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime();
-            if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); }
-        };
-        document.getElementById('btnZoomToFit').onclick = () => {
-            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v));
-            zoomToFit(allData.filter(d => d.ts >= s && d.ts <= e));
-        };
-        document.getElementById('btnResetAll').onclick = () => {
-            if (isPlaying) togglePlayback();
-            // Clear analysis overlays and reset temporal bounds without wiping the loaded entity data
-            document.getElementById('analysis-results').classList.add('hidden');
-            document.getElementById('results-grid').innerHTML = '';
-            
+        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); } };
+        document.getElementById('btnZoomToFit').onclick = () => { const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); zoomToFit(allData.filter(d => d.ts >= s && d.ts <= e)); };
+        
+        document.getElementById('btnResetAll').onclick = () => { 
+            if (isPlaying) togglePlayback(); 
+            uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
+            updateEntityCheckboxes();
             if (document.getElementById('date-slider').noUiSlider) {
                 document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
             }
-            
-            // Re-enable all filters
-            activeEntityFilters = new Set(uniqueEntities);
-            updateEntityCheckboxes();
-            
-            // Reset to markers view
-            setView('markers', 'viewMarkers');
-            
-            // Refresh map and zoom to all entities
+            document.getElementById('analysis-results').classList.add('hidden');
+            document.getElementById('results-grid').innerHTML = '';
             updateMap();
-            zoomToFit(allData);
+            updateUserMarkersOnMap(); // Ensure user markers persist visually
+            zoomToFit();
         };
-        document.getElementById('toggleLabels').onclick = function() {
-            showLabels = !showLabels; this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap();
+        
+        document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels; this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
+        document.getElementById('toggleAutoSnap').onclick = function() { autoSnap = !autoSnap; this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`; };
+        
+        document.getElementById('btnToggleExpand').onclick = function() {
+            const mapEl = document.getElementById('map');
+            const expandIcon = document.getElementById('expandIcon');
+            const collapseIcon = document.getElementById('collapseIcon');
+            const btnSpan = this.querySelector('span');
+            mapEl.classList.toggle('map-expanded');
+            if (mapEl.classList.contains('map-expanded')) {
+                expandIcon.classList.add('hidden');
+                collapseIcon.classList.remove('hidden');
+                btnSpan.innerText = "Normal View";
+            } else {
+                expandIcon.classList.remove('hidden');
+                collapseIcon.classList.add('hidden');
+                btnSpan.innerText = "Expand map";
+            }
+            setTimeout(() => { map.invalidateSize(); }, 300);
         };
-        document.getElementById('toggleAutoSnap').onclick = function() {
-            autoSnap = !autoSnap; this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`;
-        };
+
         window.onload = initMap;
     </script>
 </body>
