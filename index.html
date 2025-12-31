@@ -15,6 +15,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
     <!-- Three.js for 3D View -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts: Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- noUiSlider -->
@@ -78,6 +80,44 @@
             background: white;
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        /* Duplicate Top Joystick */
+        #nav-joystick-top {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: grab;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            transition: transform 0.1s;
+        }
+        #nav-joystick-top:active { cursor: grabbing; background: rgba(37, 99, 235, 0.4); border-color: #3b82f6; transform: scale(0.95); }
+        #nav-joystick-top::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        /* New Selection Box Style */
+        .selection-box {
+            position: absolute;
+            border: 2px dashed #3b82f6;
+            background-color: rgba(59, 130, 246, 0.2);
+            pointer-events: none;
+            z-index: 20;
+            display: none;
         }
     </style>
 </head>
@@ -235,10 +275,15 @@
 
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
         <div class="flex items-center gap-2">
-            <div class="p-2 bg-blue-600 rounded-lg text-white">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Water Drop Base -->
+                    <path d="M12 22C16.4183 22 20 18.4183 20 14C20 9 13 2 12 2C11 2 4 9 4 14C4 18.4183 7.58172 22 12 22Z" fill="#3B82F6"/>
+                    <!-- Fire Core mixing in -->
+                    <path d="M12 19.5C14.4853 19.5 16.5 17.4853 16.5 15C16.5 12.5 14.5 9 14.5 9C14.5 9 13.5 12 12 12C10.5 12 9.5 10 9.5 10C9.5 10 7.5 12.5 7.5 15C7.5 17.4853 9.51472 19.5 12 19.5Z" fill="#F97316"/>
+                </svg>
             </div>
-            <h1 class="text-xl font-bold tracking-tight text-slate-800">Burnmouth - Geospatial tool kit</h1>
+            <h1 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase" style="font-family: 'Montserrat', sans-serif;">Burnmouth <span class="text-slate-400 font-semibold normal-case tracking-normal">- Geospatial tool kit</span></h1>
         </div>
         <div class="flex gap-3 items-center">
             <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm font-semibold inline-flex items-center gap-2">
@@ -290,7 +335,7 @@
                                 <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
                                 <button id="view3D" class="col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                    3D Cube
+                                    3D
                                 </button>
                             </div>
                             
@@ -345,6 +390,9 @@
                     <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
                         Clear Filters
                     </button>
+                    <button id="btnFitSelected" class="px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition hidden">
+                        Fit Selected
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -360,10 +408,22 @@
 
         <!-- Map Section -->
         <div id="empty-state" class="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-            <div class="p-6 bg-slate-50 rounded-full mb-6">
-                <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            <div class="mb-8 relative group cursor-default">
+                <!-- Stylized Flame/Water Border Effect -->
+                <div class="absolute -inset-1 bg-gradient-to-br from-blue-500 via-transparent to-orange-500 rounded-full blur opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                
+                <div class="relative w-48 h-48 rounded-full p-1.5 bg-gradient-to-br from-blue-500 via-white to-orange-500 shadow-2xl">
+                    <div class="w-full h-full rounded-full border-[3px] border-white overflow-hidden bg-slate-50 relative shadow-inner flex items-center justify-center p-8">
+                        <svg class="w-full h-full drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Water Drop Base -->
+                            <path d="M12 22C16.4183 22 20 18.4183 20 14C20 9 13 2 12 2C11 2 4 9 4 14C4 18.4183 7.58172 22 12 22Z" fill="#3B82F6"/>
+                            <!-- Fire Core mixing in -->
+                            <path d="M12 19.5C14.4853 19.5 16.5 17.4853 16.5 15C16.5 12.5 14.5 9 14.5 9C14.5 9 13.5 12 12 12C10.5 12 9.5 10 9.5 10C9.5 10 7.5 12.5 7.5 15C7.5 17.4853 9.51472 19.5 12 19.5Z" fill="#F97316"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
-            <h3 class="text-slate-800 font-bold mb-2">Ready to Visualise</h3>
+            <h3 class="text-slate-800 font-bold mb-2 text-lg font-['Montserrat']">Ready to Visualise</h3>
             <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date", "Time", "Easting/Northing" or "Lat/Long" to begin.</p>
         </div>
 
@@ -378,13 +438,22 @@
             
             <!-- 3D Container -->
             <div id="view-3d" class="shadow-xl border border-slate-200 hidden">
-                <div class="absolute top-4 right-4 bg-slate-900/80 text-white p-3 rounded-xl text-[10px] backdrop-blur z-10 border border-slate-700">
-                    <p class="font-bold uppercase tracking-wider mb-1 text-slate-400">Axis Legend</p>
-                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Vertical: Time</div>
-                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Floor: Map Overlay</div>
-                </div>
-                <!-- Navigation Joystick -->
+                <!-- Navigation Joysticks -->
                 <div id="nav-joystick" title="Click & Drag to Navigate"></div>
+                <div id="nav-joystick-top" title="Click & Drag to Navigate"></div>
+                
+                <!-- Time Axis Overlay -->
+                <div id="time-axis-display" class="absolute right-6 top-8 bottom-24 flex flex-col justify-between text-right pointer-events-none z-10 hidden">
+                    <div class="relative">
+                        <span id="time-axis-end" class="text-[10px] font-bold text-green-400 bg-slate-900/50 px-1 rounded shadow-sm backdrop-blur-sm">--</span>
+                        <div class="absolute right-[-14px] top-1/2 w-3 h-px bg-green-400"></div>
+                    </div>
+                    <div class="absolute right-[-12px] top-2 bottom-2 w-px bg-gradient-to-b from-green-400 via-blue-500 to-indigo-500 opacity-60"></div>
+                    <div class="relative">
+                        <span id="time-axis-start" class="text-[10px] font-bold text-indigo-400 bg-slate-900/50 px-1 rounded shadow-sm backdrop-blur-sm">--</span>
+                        <div class="absolute right-[-14px] top-1/2 w-3 h-px bg-indigo-400"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -719,6 +788,28 @@
         let is3DInitialized = false;
         let mapGroup = null; // Store map group globally to avoid rebuilding
         let worldScale = { x: 100, z: 100, latRange: 1, lngRange: 1, minLat: 0, minLng: 0, minTime: 0, timeRange: 1 }; // Store world scaling factors
+        
+        // 3D Camera State (Global)
+        let cameraOffset = new THREE.Vector3(0, 50, 0);
+        let theta = Math.PI / 2; // Orient North (Looking from South along Z axis)
+        let phi = Math.PI / 3; 
+        let radius = 180;
+
+        // Selection Variables
+        let pendingSelection = new Set();
+        let activeSelectionFilter = null;
+        let isSelecting = false;
+        let selectionStartClient = { x: 0, y: 0 }; // Screen relative
+        const selectionBoxEl = document.createElement('div');
+        selectionBoxEl.className = 'selection-box';
+
+        function updateCameraPosition() {
+            if (!camera) return;
+            camera.position.x = cameraOffset.x + radius * Math.sin(phi) * Math.cos(theta);
+            camera.position.y = cameraOffset.y + radius * Math.cos(phi);
+            camera.position.z = cameraOffset.z + radius * Math.sin(phi) * Math.sin(theta);
+            camera.lookAt(cameraOffset);
+        }
 
         function getNextColor(index) {
             const palette = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", "#0891b2", "#4f46e5", "#be185d", "#ca8a04", "#15803d"];
@@ -1164,7 +1255,12 @@
         function updateMap(shouldCentre = false) {
             if (!map || !allData.length) return;
             const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            
+            if (activeSelectionFilter) {
+                filtered = filtered.filter(d => activeSelectionFilter.has(d));
+            }
+
             document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
             markerLayer.clearLayers(); pathLayer.clearLayers(); clusterLayer.clearLayers(); if (heatLayer) map.removeLayer(heatLayer);
             if (filtered.length > 0) {
@@ -1494,11 +1590,18 @@
             if (type === '3d') {
                 document.getElementById('map').classList.add('hidden');
                 document.getElementById('view-3d').classList.remove('hidden');
+                document.getElementById('time-axis-display').classList.remove('hidden');
                 init3D();
             } else {
                 document.getElementById('map').classList.remove('hidden');
                 document.getElementById('view-3d').classList.add('hidden');
-                updateMap();
+                document.getElementById('time-axis-display').classList.add('hidden');
+                
+                // Fix: Invalidate map size to ensure tiles render correctly after being hidden
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                    updateMap();
+                }, 100);
             }
         }
 
@@ -1506,6 +1609,8 @@
             if (is3DInitialized) { update3D(); return; }
             
             const container = document.getElementById('view-3d');
+            container.appendChild(selectionBoxEl); // Append selection box to 3D view
+
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
             scene.fog = new THREE.FogExp2(0x0f172a, 0.002);
@@ -1525,19 +1630,6 @@
             dirLight.position.set(50, 200, 100);
             scene.add(dirLight);
 
-            // Camera State
-            let theta = Math.PI / 4; 
-            let phi = Math.PI / 3; 
-            let radius = 180;
-            let cameraOffset = new THREE.Vector3(0, 50, 0);
-
-            function updateCameraPosition() {
-                camera.position.x = cameraOffset.x + radius * Math.sin(phi) * Math.cos(theta);
-                camera.position.y = cameraOffset.y + radius * Math.cos(phi);
-                camera.position.z = cameraOffset.z + radius * Math.sin(phi) * Math.sin(theta);
-                camera.lookAt(cameraOffset);
-            }
-
             // Mouse Interaction Logic
             let isMouseDragging = false;
             let mouseStartX, mouseStartY;
@@ -1547,7 +1639,8 @@
                 e.preventDefault();
                 const zoomIntensity = 0.1;
                 radius += e.deltaY * zoomIntensity;
-                radius = Math.max(2, Math.min(800, radius)); // Adjusted min from 20 to 2 for street level zoom
+                // Allow zooming much closer (0.1) for street level inspection
+                radius = Math.max(0.1, Math.min(800, radius)); 
                 updateCameraPosition();
             }, { passive: false });
 
@@ -1560,29 +1653,87 @@
                     container.style.cursor = 'grabbing';
                     e.preventDefault();
                 }
+                
+                // Box Selection Logic (Left Click)
+                // Ensure we aren't clicking the joysticks
+                if (e.button === 0 && 
+                    !document.getElementById('nav-joystick').contains(e.target) && 
+                    !document.getElementById('nav-joystick-top').contains(e.target)) {
+                    
+                    isSelecting = true;
+                    selectionStartClient.x = e.clientX;
+                    selectionStartClient.y = e.clientY;
+                    
+                    // Calculate visual offset relative to container
+                    const rect = container.getBoundingClientRect();
+                    const relX = e.clientX - rect.left;
+                    const relY = e.clientY - rect.top;
+                    
+                    selectionBoxEl.style.display = 'block';
+                    selectionBoxEl.style.left = relX + 'px';
+                    selectionBoxEl.style.top = relY + 'px';
+                    selectionBoxEl.style.width = '0px';
+                    selectionBoxEl.style.height = '0px';
+                }
             });
 
-            // Joystick Logic
+            // Joystick Logic (Bottom)
             const joystick = document.getElementById('nav-joystick');
+            // Joystick Logic (Top)
+            const joystickTop = document.getElementById('nav-joystick-top');
+            
             let isJoystickDragging = false;
             let joyStartX, joyStartY;
 
-            joystick.onmousedown = (e) => {
+            const startJoystick = (e) => {
                 isJoystickDragging = true;
                 joyStartX = e.clientX;
                 joyStartY = e.clientY;
-                joystick.style.cursor = 'grabbing';
+                e.target.style.cursor = 'grabbing';
                 e.preventDefault(); 
             };
+
+            joystick.onmousedown = startJoystick;
+            joystickTop.onmousedown = startJoystick;
 
             window.onmouseup = () => { 
                 isJoystickDragging = false; 
                 isMouseDragging = false;
                 joystick.style.cursor = 'grab'; 
+                joystickTop.style.cursor = 'grab'; 
                 container.style.cursor = 'auto';
+                
+                if (isSelecting) {
+                    isSelecting = false;
+                    selectionBoxEl.style.display = 'none';
+                    
+                    // Calculate Selection if box was drawn
+                    if (Math.abs(window.event.clientX - selectionStartClient.x) > 5 || Math.abs(window.event.clientY - selectionStartClient.y) > 5) {
+                        calculateSelection(selectionStartClient.x, selectionStartClient.y, window.event.clientX, window.event.clientY);
+                    }
+                }
             };
             
             window.onmousemove = (e) => {
+                // Handle Selection Box
+                if (isSelecting) {
+                    const rect = container.getBoundingClientRect();
+                    const currentX = e.clientX - rect.left;
+                    const currentY = e.clientY - rect.top;
+                    const startX = selectionStartClient.x - rect.left;
+                    const startY = selectionStartClient.y - rect.top;
+                    
+                    const width = Math.abs(currentX - startX);
+                    const height = Math.abs(currentY - startY);
+                    const left = Math.min(currentX, startX);
+                    const top = Math.min(currentY, startY);
+                    
+                    selectionBoxEl.style.width = width + 'px';
+                    selectionBoxEl.style.height = height + 'px';
+                    selectionBoxEl.style.left = left + 'px';
+                    selectionBoxEl.style.top = top + 'px';
+                }
+
                 // Handle Joystick Drag (Rotate)
                 if (isJoystickDragging) {
                     const deltaX = (e.clientX - joyStartX) * 0.005;
@@ -1598,8 +1749,8 @@
 
                 // Handle Middle Mouse Drag (Pan)
                 if (isMouseDragging) {
-                    // Improved Pan Speed
-                    const panSpeed = Math.max(0.2, radius * 0.002);
+                    // Improved Pan Speed: Lower floor (0.01) allows precision at high zoom
+                    const panSpeed = Math.max(0.01, radius * 0.002);
                     const dx = (e.clientX - mouseStartX) * panSpeed;
                     const dy = (e.clientY - mouseStartY) * panSpeed;
 
@@ -1690,15 +1841,140 @@
         function tile2long(x, z) { return (x / Math.pow(2, z) * 360 - 180); }
         function tile2lat(y, z) { var n = Math.PI - 2 * Math.PI * y / Math.pow(2, z); return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))); }
 
+        function calculateSelection(x1, y1, x2, y2) {
+            const minX = Math.min(x1, x2);
+            const maxX = Math.max(x1, x2);
+            const minY = Math.min(y1, y2);
+            const maxY = Math.max(y1, y2);
+            
+            pendingSelection.clear();
+            
+            // Get currently visible data
+            const slider = document.getElementById('date-slider');
+            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            
+            const tempV = new THREE.Vector3();
+            const rect = renderer.domElement.getBoundingClientRect();
+            
+            // Dynamic Time Scale for Selection Calculation
+            const currentMinTime = start;
+            const currentTimeRange = end - start || 1;
+
+            filtered.forEach(d => {
+                // Normalize 3D Pos
+                const px = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                const pz = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                
+                // Use Dynamic Time Scaling
+                const py = ((d.ts - currentMinTime) / currentTimeRange) * 100;
+                
+                tempV.set(px, py, pz);
+                tempV.project(camera);
+                
+                // Map to screen space
+                const sx = (tempV.x * .5 + .5) * rect.width;
+                const sy = (tempV.y * -.5 + .5) * rect.height;
+                
+                const absX = sx + rect.left;
+                const absY = sy + rect.top;
+
+                if (absX >= minX && absX <= maxX && absY >= minY && absY <= maxY) {
+                    pendingSelection.add(d);
+                }
+            });
+            
+            // Re-render to show highlights
+            if(currentView === '3d') update3D();
+
+            const btn = document.getElementById('btnFitSelected');
+            if (pendingSelection.size > 0) {
+                btn.classList.remove('hidden');
+                btn.innerText = `Fit Selected (${pendingSelection.size})`;
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btnFitSelected').onclick = () => {
+            if (pendingSelection.size === 0) return;
+            
+            // 1. Convert Set to Array
+            const subset = Array.from(pendingSelection);
+            
+            // 2. Update Slider to match selected Time Range
+            const timestamps = subset.map(d => d.ts);
+            const minTs = Math.min(...timestamps);
+            const maxTs = Math.max(...timestamps);
+            
+            // Apply new time range to slider
+            const slider = document.getElementById('date-slider');
+            if (slider.noUiSlider) {
+                slider.noUiSlider.set([minTs, maxTs]);
+            }
+
+            // 3. Set Active Filter
+            activeSelectionFilter = new Set(pendingSelection);
+            
+            document.getElementById('btnFitSelected').classList.add('hidden');
+            pendingSelection.clear();
+            
+            // 4. Update Views
+            updateMap();
+            if (currentView === '3d') update3D();
+            
+            // 5. Zoom 2D Map
+            zoomToFit(subset);
+            
+            // 6. Zoom 3D Camera (Space & Time)
+            if(currentView === '3d') {
+                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+                 let minY = Infinity, maxY = -Infinity;
+
+                 // Use the new subset time range for zooming calculation
+                 const currentMinTime = minTs;
+                 const currentTimeRange = maxTs - minTs || 1;
+
+                 subset.forEach(d => {
+                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                    // Dynamic Y based on the new focused range
+                    const y = ((d.ts - currentMinTime) / currentTimeRange) * 100;
+
+                    if(x < minX) minX = x;
+                    if(x > maxX) maxX = x;
+                    if(z < minZ) minZ = z;
+                    if(z > maxZ) maxZ = z;
+                    if(y < minY) minY = y;
+                    if(y > maxY) maxY = y;
+                 });
+                 
+                 if (minX !== Infinity) {
+                     const cx = (minX + maxX) / 2;
+                     const cz = (minZ + maxZ) / 2;
+                     const cy = (minY + maxY) / 2; 
+
+                     const width = maxX - minX;
+                     const depth = maxZ - minZ;
+                     const height = maxY - minY;
+                     
+                     const maxDim = Math.max(width, depth, height);
+                     
+                     cameraOffset.set(cx, cy, cz); 
+                     
+                     // Allow camera to zoom in much closer (0.1 min) for small selections
+                     radius = Math.max(0.1, maxDim * 1.5); 
+                     updateCameraPosition();
+                 }
+            }
+        };
+
         function update3D() {
             if (!scene) return;
             
             // 1. CLEAR DYNAMIC DATA ONLY
-            // We iterate backwards and only remove Points and Lines (Data), preserving MapGroup and Lights
             for(let i = scene.children.length - 1; i >= 0; i--) { 
                 const obj = scene.children[i];
-                // Remove Lines, Points (Data), and InstancedMesh (Spheres)
-                // Keep 'Group' (Map Tiles), lights, and grid helpers (if any distinct check needed)
                 if (obj.type === "Line" || obj.type === "Points" || obj.type === "InstancedMesh" || (obj.type === "Mesh" && obj !== mapGroup && !obj.isMapTile)) {
                     scene.remove(obj); 
                 }
@@ -1707,16 +1983,22 @@
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
             
+            // Update Time Axis Labels
+            document.getElementById('time-axis-start').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time-axis-end').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
             // Filter Data
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            
+            // Apply Selection Filter
+            if (activeSelectionFilter) {
+                filtered = filtered.filter(d => activeSelectionFilter.has(d));
+            }
 
             // 2. BUILD WORLD & MAP (Run Once or on Data Load)
-            // We use allData bounds to define the stable coordinate system
             if (!mapGroup || mapGroup.children.length === 0) {
-                // Clean up any old map group
                 if (mapGroup) scene.remove(mapGroup);
                 
-                // Calculate Global Bounds based on ALL data (not just filtered)
                 const lats = allData.map(d => d.lat);
                 const lngs = allData.map(d => d.lng);
                 
@@ -1725,15 +2007,12 @@
                 const minLat = Math.min(...lats), maxLat = Math.max(...lats);
                 const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
                 
-                // Store World Scale Factors
                 worldScale.minLat = minLat;
                 worldScale.minLng = minLng;
                 worldScale.latRange = maxLat - minLat || 0.0001;
                 worldScale.lngRange = maxLng - minLng || 0.0001;
-                worldScale.minTime = dateRange.min;
-                worldScale.timeRange = dateRange.max - dateRange.min || 1;
+                // Note: We DO NOT store Time Scaling here anymore, it is dynamic.
 
-                // Fix Aspect Ratio (Geospatial Scaling)
                 const meanLatRad = (minLat + maxLat) / 2 * (Math.PI / 180);
                 const aspectRatio = (worldScale.lngRange * Math.cos(meanLatRad)) / worldScale.latRange;
                 
@@ -1745,14 +2024,14 @@
                     worldScale.scaleZ = 100 / aspectRatio;
                 }
 
-                // Generate Map Tiles
                 mapGroup = new THREE.Group();
                 const loader = new THREE.TextureLoader();
                 loader.crossOrigin = 'anonymous';
 
-                const zoom = Math.min(15, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 2));
+                // Increased Max Zoom to 19 to support street level details on small datasets
+                const zoom = Math.min(19, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 2));
                 const minTileX = lon2tile(worldScale.minLng, zoom) - 1;
-                const maxTileX = lon2tile(maxLng, zoom) + 1; // Use local var maxLng or recalculate
+                const maxTileX = lon2tile(maxLng, zoom) + 1;
                 const minTileY = lat2tile(maxLat, zoom) - 1;
                 const maxTileY = lat2tile(worldScale.minLat, zoom) + 1;
 
@@ -1775,23 +2054,20 @@
                         const cx = (x1 + x2) / 2;
                         const cz = (z1 + z2) / 2;
 
-                        // Slight overlap (1.05) and opaque material to fix grid lines
                         const geometry = new THREE.PlaneGeometry(w * 1.05, h * 1.05);
                         const texture = loader.load(url);
                         texture.minFilter = THREE.LinearFilter;
                         
-                        // Opaque material prevents background bleed-through
                         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false, depthWrite: true });
                         const plane = new THREE.Mesh(geometry, material);
                         plane.position.set(cx, 0, cz);
                         plane.rotation.x = -Math.PI / 2;
-                        plane.isMapTile = true; // Tag for cleanup logic
+                        plane.isMapTile = true; 
                         mapGroup.add(plane);
                     }
                 }
                 scene.add(mapGroup);
                 
-                // Re-add Grid Helper on top
                 const gridHelper = new THREE.GridHelper(500, 50, 0x94a3b8, 0x1e293b);
                 gridHelper.position.y = 0.1; 
                 gridHelper.material.opacity = 0.1;
@@ -1805,14 +2081,19 @@
             const entityGroups = {};
             let centerSumX = 0, centerSumZ = 0;
             
+            // Dynamic Time Scaling Variables
+            const currentMinTime = start;
+            const currentTimeRange = end - start || 1;
+
             filtered.forEach(d => {
-                // Use stored World Scale
                 const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
                 const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                const y = ((d.ts - worldScale.minTime) / worldScale.timeRange) * HEIGHT;
+                
+                // Dynamic Y Calculation: 0 is start of slider, 100 is end of slider
+                const y = ((d.ts - currentMinTime) / currentTimeRange) * HEIGHT;
 
                 if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
-                entityGroups[d.entity].points.push({x, y, z});
+                entityGroups[d.entity].points.push({x, y, z, data: d});
                 
                 centerSumX += x;
                 centerSumZ += z;
@@ -1822,34 +2103,45 @@
             if (autoSnap && filtered.length > 0) {
                 const centerX = centerSumX / filtered.length;
                 const centerZ = centerSumZ / filtered.length;
-                // Move camera offset to center of active data
                 cameraOffset.x = centerX;
                 cameraOffset.z = centerZ;
-                // Keep Y offset or adjust? Let's keep Y relative.
                 updateCameraPosition();
             }
 
             Object.values(entityGroups).forEach(group => {
-                // Instanced Spheres
                 const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
-                const sphereMat = new THREE.MeshLambertMaterial({ color: group.color });
+                const sphereMat = new THREE.MeshLambertMaterial({ color: 0xffffff }); 
                 const iMesh = new THREE.InstancedMesh(sphereGeo, sphereMat, group.points.length);
                 const dummy = new THREE.Object3D();
+                const _color = new THREE.Color();
 
                 group.points.forEach((p, i) => {
                     dummy.position.set(p.x, p.y, p.z);
                     dummy.updateMatrix();
                     iMesh.setMatrixAt(i, dummy.matrix);
+                    
+                    if (pendingSelection.has(p.data)) {
+                        _color.setHex(0xffff00); 
+                    } else if (pendingSelection.size > 0) {
+                        _color.set(group.color).multiplyScalar(0.3); 
+                    } else {
+                        _color.set(group.color); 
+                    }
+                    iMesh.setColorAt(i, _color);
                 });
                 iMesh.instanceMatrix.needsUpdate = true;
+                if(iMesh.instanceColor) iMesh.instanceColor.needsUpdate = true;
                 scene.add(iMesh);
                 
-                // Drop lines
                 group.points.forEach((p, idx) => {
                     if (idx % 10 === 0 || idx === 0 || idx === group.points.length - 1) {
                         const dropPoints = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, 0, p.z)];
                         const dropGeo = new THREE.BufferGeometry().setFromPoints(dropPoints);
-                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: 0.2, transparent: true });
+                        
+                        let lineOpacity = 0.2;
+                        if (pendingSelection.size > 0 && !pendingSelection.has(p.data)) lineOpacity = 0.05;
+                        
+                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: lineOpacity, transparent: true });
                         scene.add(new THREE.Line(dropGeo, dropMat));
                     }
                 });
@@ -1895,6 +2187,12 @@
         document.getElementById('btnResetAll').onclick = () => { 
             if (isPlaying) togglePlayback(); 
             uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
+            
+            // Clear Selection
+            activeSelectionFilter = null;
+            pendingSelection.clear();
+            document.getElementById('btnFitSelected').classList.add('hidden');
+            
             updateEntityCheckboxes();
             if (document.getElementById('date-slider').noUiSlider) {
                 document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
