@@ -488,6 +488,28 @@
                     <p class="mt-2 italic text-[10px] text-slate-400">Note: If columns are not automatically detected, you will be prompted to map them manually.</p>
                 </div>
             </details>
+
+            <!-- Collapsible Privacy Notice -->
+            <details class="group max-w-md w-full px-4 text-center cursor-pointer">
+                <summary class="list-none text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <span>🔒 Privacy & Data Security</span>
+                </summary>
+                <div class="mt-3 text-left bg-slate-50 border border-slate-100 rounded-xl p-4 text-[11px] text-slate-600 space-y-3 shadow-sm animate-in slide-in-from-top-2 cursor-default">
+                    <p class="font-bold text-slate-800 border-b border-slate-200 pb-1">Burnmouth is a 100% Client-Side Application.</p>
+                    <ul class="list-disc pl-4 space-y-2">
+                        <li><strong>No Data Uploads:</strong> This tool operates entirely within your web browser. When you open a CSV file, it is processed locally on your machine using JavaScript. Your sensitive dataset (CDRs, location records) is never uploaded to a server, cloud storage, or external database.</li>
+                        <li><strong>Volatile Memory:</strong> Your data exists only in your browser's temporary memory (RAM) while the tab is open. Refreshing the page or closing the window instantly and permanently wipes all loaded data from the application.</li>
+                        <li><strong>Transparency on Network Traffic:</strong> The tool requires an internet connection solely for visualization assets. Your bulk data does not leave your device, but you will see network requests for:
+                            <ul class="list-circle pl-4 mt-1 text-slate-500">
+                                <li>Map Tiles: Fetching the visual map background (e.g., from OpenStreetMap or Carto).</li>
+                                <li>Postcode Lookups: Sending individual coordinates to postcodes.io to retrieve location names (only occurs when you explicitly trigger a lookup or analysis).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Auditable Security:</strong> Because the application is a single static HTML file, the code is fully transparent. You can verify the security yourself by inspecting the source code to confirm there are no data export mechanisms.</li>
+                    </ul>
+                </div>
+            </details>
         </div>
 
         <div id="map-container" class="relative hidden">
