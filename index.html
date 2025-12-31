@@ -13,6 +13,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Proj4js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
+    <!-- Three.js for 3D View -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- noUiSlider -->
@@ -21,6 +23,8 @@
     <style>
         #map { height: calc(100vh - 450px); width: 100%; border-radius: 12px; z-index: 1; transition: height 0.3s ease-in-out; }
         #map.map-expanded { height: 90vh !important; }
+        #view-3d { height: calc(100vh - 450px); width: 100%; border-radius: 12px; z-index: 1; background: #0f172a; position: relative; overflow: hidden; }
+        #view-3d.map-expanded { height: 90vh !important; }
         .noUi-connect { background: #2563eb; }
         .date-label {
             background: rgba(255, 255, 255, 0.95);
@@ -47,6 +51,34 @@
         .detection-card:hover { border-color: #2563eb; background-color: #f8fafc; }
         #entityModal, #userMarkerModal { z-index: 9999; }
         .placement-cursor { cursor: crosshair !important; }
+        
+        /* 3D Nav Button */
+        #nav-joystick {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: grab;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            transition: transform 0.1s;
+        }
+        #nav-joystick:active { cursor: grabbing; background: rgba(37, 99, 235, 0.4); border-color: #3b82f6; transform: scale(0.95); }
+        #nav-joystick::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
@@ -85,11 +117,118 @@
                     <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block tracking-wider">Label Content</label>
                     <input type="text" id="markerLabelInput" placeholder="e.g. Suspect Sighting, Safehouse..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
                 </div>
-                <div class="flex gap-2">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block tracking-wider">Tag Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="markerColorInput" class="h-10 w-full border border-slate-200 rounded cursor-pointer p-1" value="#1e293b">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
                     <button id="btnDeleteUserMarker" class="hidden flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-3 rounded-xl transition-all active:scale-95">Delete</button>
                     <button id="btnSaveUserMarker" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">Save Tag</button>
                 </div>
                 <button id="btnCancelUserMarker" class="w-full text-slate-400 text-xs font-bold py-2">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Mapping Modal -->
+    <div id="columnMappingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10000]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div class="mb-4 text-center">
+                <h2 class="text-xl font-bold text-slate-800">Map Data Columns</h2>
+                <p class="text-sm text-slate-500 mt-2">We couldn't automatically identify all columns. Please map your CSV headers to the required fields.</p>
+            </div>
+            <div class="space-y-4 overflow-y-auto flex-grow px-2">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4 text-xs text-blue-800">
+                    <strong>Note:</strong> You must map either <strong>Latitude/Longitude</strong> OR <strong>Easting/Northing</strong>. Date is required.
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block">Date Column <span class="text-red-500">*</span></label>
+                        <select id="mapDate" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase block">Time Column (Optional)</label>
+                        <select id="mapTime" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 my-2 pt-2">
+                    <p class="text-xs font-bold text-slate-500 mb-2 uppercase">Geospatial Coordinates</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase block">Latitude</label>
+                            <select id="mapLat" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase block">Longitude</label>
+                            <select id="mapLng" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                        </div>
+                        <div class="col-span-2 text-center text-[10px] text-slate-300 font-bold uppercase tracking-widest">- OR -</div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase block">Easting</label>
+                            <select id="mapEasting" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase block">Northing</label>
+                            <select id="mapNorthing" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex gap-3">
+                 <button id="btnCancelMapping" class="flex-1 text-slate-400 hover:text-slate-600 text-xs font-bold py-3">Cancel</button>
+                 <button id="btnConfirmMapping" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Co-location Selection Modal -->
+    <div id="coLocationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10000]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in duration-200">
+            <div class="mb-4 text-center">
+                <h2 class="text-lg font-bold text-slate-800">Co-location Analysis</h2>
+                <p class="text-xs text-slate-500 mt-1">Select two distinct entities to compare.</p>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Entity A</label>
+                    <select id="colocEntityA" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Entity B</label>
+                    <select id="colocEntityB" class="w-full text-sm border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"></select>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button id="btnCancelCoLocation" class="flex-1 text-slate-400 hover:text-slate-600 text-xs font-bold py-2">Cancel</button>
+                    <button id="btnRunCoLocation" class="flex-[2] bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded-xl shadow-lg transition-all active:scale-95">Analyze</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Entity Modal -->
+    <div id="editEntityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10001]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in duration-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Edit Entity</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Entity Name</label>
+                    <input type="text" id="editEntityName" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Color</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="editEntityColor" class="h-10 w-full border border-slate-200 rounded cursor-pointer p-1">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button id="btnDeleteEntity" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-2 rounded-xl transition-all">Delete</button>
+                    <button id="btnSaveEntityChanges" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl shadow-lg transition-all">Save</button>
+                </div>
+                <button id="btnCancelEditEntity" class="w-full text-slate-400 text-xs font-bold py-2">Cancel</button>
             </div>
         </div>
     </div>
@@ -133,7 +272,7 @@
                             <input type="datetime-local" id="input-end" class="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
                         </div>
                         <div class="flex items-end">
-                            <button id="btnApplyFilter" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-2.5 rounded-lg text-xs font-bold transition shadow-sm h-[42px]">
+                            <button id="btnApplyFilter" class="w-full bg-orange-600 hover:bg-orange-700 text-white p-2.5 rounded-lg text-xs font-bold transition shadow-sm h-[42px]">
                                 Apply
                             </button>
                         </div>
@@ -144,17 +283,29 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
                             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Visualisation Style</label>
-                            <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
                                 <button id="viewMarkers" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
                                 <button id="viewClusters" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Clusters</button>
                                 <button id="viewHeatmap" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Heatmap</button>
                                 <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
+                                <button id="view3D" class="col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    3D Cube
+                                </button>
                             </div>
                             
-                            <div class="mt-4 pt-4 border-t border-slate-100">
-                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
-                                <div id="entityCheckboxList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                                    <p class="text-[10px] text-slate-400 italic">No entities loaded</p>
+                            <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
+                                    <div id="entityCheckboxList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                        <p class="text-[10px] text-slate-400 italic">No entities loaded</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tagged Locations</label>
+                                    <div id="userMarkerList" class="flex flex-col gap-2 max-h-32 overflow-y-auto">
+                                        <p class="text-[10px] text-slate-400 italic">No tags added</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -224,6 +375,17 @@
                 <span>Expand map</span>
             </button>
             <div id="map" class="shadow-xl border border-slate-200"></div>
+            
+            <!-- 3D Container -->
+            <div id="view-3d" class="shadow-xl border border-slate-200 hidden">
+                <div class="absolute top-4 right-4 bg-slate-900/80 text-white p-3 rounded-xl text-[10px] backdrop-blur z-10 border border-slate-700">
+                    <p class="font-bold uppercase tracking-wider mb-1 text-slate-400">Axis Legend</p>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Vertical: Time</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Floor: Map Overlay</div>
+                </div>
+                <!-- Navigation Joystick -->
+                <div id="nav-joystick" title="Click & Drag to Navigate"></div>
+            </div>
         </div>
 
         <!-- Analysis Section -->
@@ -537,7 +699,7 @@
 
         let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
         let allData = [];
-        let userMarkers = []; // { id, lat, lng, label }
+        let userMarkers = []; // { id, lat, lng, label, color }
         let dateRange = { min: 0, max: 0 };
         let currentView = 'markers'; 
         let showLabels = false, autoSnap = false, isPlaying = false, playInterval = null;
@@ -549,6 +711,14 @@
         let uniqueEntities = new Set();
         let entityColors = {}; 
         let activeEntityFilters = new Set();
+        let activeColumnMap = null;
+        let currentEditingEntity = null;
+        
+        // 3D Variables
+        let scene, camera, renderer, animationId;
+        let is3DInitialized = false;
+        let mapGroup = null; // Store map group globally to avoid rebuilding
+        let worldScale = { x: 100, z: 100, latRange: 1, lngRange: 1, minLat: 0, minLng: 0, minTime: 0, timeRange: 1 }; // Store world scaling factors
 
         function getNextColor(index) {
             const palette = ["#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c", "#0891b2", "#4f46e5", "#be185d", "#ca8a04", "#15803d"];
@@ -589,7 +759,36 @@
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
             userMarkerLayer = L.layerGroup().addTo(map);
-            clusterLayer = L.markerClusterGroup({ disableClusteringAtZoom: 17, spiderfyOnMaxZoom: true }).addTo(map);
+            
+            clusterLayer = L.markerClusterGroup({ 
+                disableClusteringAtZoom: 17, 
+                spiderfyOnMaxZoom: true,
+                iconCreateFunction: function(cluster) {
+                    const markers = cluster.getAllChildMarkers();
+                    const entities = [...new Set(markers.map(m => m.options.entity).filter(Boolean))];
+                    const count = markers.length;
+                    
+                    let bgStyle = '';
+                    if (entities.length >= 2) {
+                        const c1 = entityColors[entities[0]] || '#2563eb';
+                        const c2 = entityColors[entities[1]] || '#ef4444';
+                        bgStyle = `background: conic-gradient(${c1} 0% 50%, ${c2} 50% 100%)`;
+                    } else if (entities.length === 1) {
+                        bgStyle = `background: ${entityColors[entities[0]] || '#2563eb'}`;
+                    } else {
+                        bgStyle = `background: #2563eb`;
+                    }
+
+                    const html = `
+                        <div style="width: 40px; height: 40px; border-radius: 50%; ${bgStyle}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #334155;">
+                                ${count}
+                            </div>
+                        </div>
+                    `;
+                    return L.divIcon({ html: html, className: '', iconSize: L.point(40, 40) });
+                }
+            }).addTo(map);
 
             map.on('click', (e) => {
                 if (isPlacementMode) {
@@ -617,6 +816,7 @@
         function openUserMarkerModal(markerId, lat, lng) {
             const modal = document.getElementById('userMarkerModal');
             const input = document.getElementById('markerLabelInput');
+            const colorInput = document.getElementById('markerColorInput');
             const delBtn = document.getElementById('btnDeleteUserMarker');
             const title = document.getElementById('markerModalTitle');
             
@@ -627,11 +827,13 @@
                 const existing = userMarkers.find(m => m.id === markerId);
                 editingUserMarker = { ...existing };
                 input.value = existing.label;
+                colorInput.value = existing.color || '#1e293b';
                 delBtn.classList.remove('hidden');
                 title.innerText = "Edit Tag";
             } else {
-                editingUserMarker = { id: Date.now(), lat, lng, label: '' };
+                editingUserMarker = { id: Date.now(), lat, lng, label: '', color: '#1e293b' };
                 input.value = '';
+                colorInput.value = '#1e293b';
                 delBtn.classList.add('hidden');
                 title.innerText = "Tag Location";
             }
@@ -639,9 +841,11 @@
 
         function saveUserMarker() {
             const label = document.getElementById('markerLabelInput').value.trim();
+            const color = document.getElementById('markerColorInput').value;
             if (!label) return;
             
             editingUserMarker.label = label;
+            editingUserMarker.color = color;
             const index = userMarkers.findIndex(m => m.id === editingUserMarker.id);
             if (index !== -1) userMarkers[index] = editingUserMarker;
             else userMarkers.push(editingUserMarker);
@@ -659,10 +863,11 @@
 
         function updateUserMarkersOnMap() {
             userMarkerLayer.clearLayers();
+            updateUserMarkerList();
             userMarkers.forEach(m => {
                 const marker = L.circleMarker([m.lat, m.lng], {
                     radius: 8,
-                    fillColor: '#1e293b',
+                    fillColor: m.color || '#1e293b',
                     color: '#ffffff',
                     weight: 2,
                     fillOpacity: 1
@@ -677,6 +882,37 @@
                     L.DomEvent.stopPropagation(e);
                     openUserMarkerModal(m.id);
                 });
+            });
+        }
+
+        function updateUserMarkerList() {
+            const container = document.getElementById('userMarkerList');
+            container.innerHTML = '';
+            if (userMarkers.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400 italic">No tags added</p>';
+                return;
+            }
+            userMarkers.forEach(m => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-white transition-colors group cursor-pointer";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${m.color || '#1e293b'}"></div>
+                        <span class="text-[10px] font-bold text-slate-700 truncate">${m.label}</span>
+                    </div>
+                    <button class="text-slate-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                `;
+                div.querySelector('button').onclick = (e) => {
+                    e.stopPropagation();
+                    openUserMarkerModal(m.id);
+                };
+                div.onclick = () => {
+                    map.flyTo([m.lat, m.lng], 12);
+                    openUserMarkerModal(m.id);
+                };
+                container.appendChild(div);
             });
         }
 
@@ -710,19 +946,126 @@
                 return;
             }
             uniqueEntities.forEach(entity => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "inline-flex items-center gap-0 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-sm";
+                
                 const label = document.createElement('label');
-                label.className = "inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-white transition-colors text-[10px] font-bold text-slate-700";
+                label.className = "flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-[10px] font-bold text-slate-700 border-r border-slate-100";
                 const isChecked = activeEntityFilters.has(entity);
                 const color = entityColors[entity] || "#2563eb";
-                label.innerHTML = `<input type="checkbox" value="${entity}" ${isChecked ? 'checked' : ''} class="w-3 h-3 rounded text-blue-600 focus:ring-blue-500"><div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></div><span class="truncate max-w-[120px]">${entity}</span>`;
+                
+                label.innerHTML = `
+                    <input type="checkbox" value="${entity}" ${isChecked ? 'checked' : ''} class="w-3 h-3 rounded text-blue-600 focus:ring-blue-500">
+                    <div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${color}"></div>
+                    <span class="truncate max-w-[100px] select-none">${entity}</span>
+                `;
                 label.querySelector('input').onchange = (e) => {
                     if (e.target.checked) activeEntityFilters.add(entity);
                     else activeEntityFilters.delete(entity);
                     updateMap();
                 };
-                container.appendChild(label);
+
+                const editBtn = document.createElement('button');
+                editBtn.className = "px-2 py-1.5 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors";
+                editBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
+                editBtn.onclick = () => openEditEntityModal(entity);
+
+                wrapper.appendChild(label);
+                wrapper.appendChild(editBtn);
+                container.appendChild(wrapper);
             });
         }
+
+        function openEditEntityModal(name) {
+            currentEditingEntity = name;
+            document.getElementById('editEntityName').value = name;
+            document.getElementById('editEntityColor').value = entityColors[name] || '#2563eb';
+            document.getElementById('editEntityModal').classList.remove('hidden');
+        }
+
+        document.getElementById('btnSaveEntityChanges').onclick = () => {
+            const newName = document.getElementById('editEntityName').value.trim();
+            const newColor = document.getElementById('editEntityColor').value;
+            
+            if (!newName) return;
+            if (newName !== currentEditingEntity && uniqueEntities.has(newName)) {
+                alert("An entity with this name already exists.");
+                return;
+            }
+
+            // Update Data
+            if (newName !== currentEditingEntity) {
+                // Rename logic
+                uniqueEntities.delete(currentEditingEntity);
+                uniqueEntities.add(newName);
+                
+                if (activeEntityFilters.has(currentEditingEntity)) {
+                    activeEntityFilters.delete(currentEditingEntity);
+                    activeEntityFilters.add(newName);
+                }
+                
+                // Move color
+                delete entityColors[currentEditingEntity];
+                
+                // Update allData
+                allData.forEach(d => {
+                    if (d.entity === currentEditingEntity) {
+                        d.entity = newName;
+                        // Update label if it starts with the old entity name
+                        if (d.label.startsWith(currentEditingEntity + ":")) {
+                             d.label = newName + ":" + d.label.substring(currentEditingEntity.length + 1);
+                        }
+                    }
+                });
+            }
+            
+            // Set new color
+            entityColors[newName] = newColor;
+
+            // Clean up
+            document.getElementById('editEntityModal').classList.add('hidden');
+            updateEntityCheckboxes();
+            updateMap(false);
+            
+            // Re-render detection results if any exist to reflect name/color changes
+            const resultsDiv = document.getElementById('analysis-results');
+            if (!resultsDiv.classList.contains('hidden')) {
+                resultsDiv.classList.add('hidden'); // Hide results as they might be stale or broken
+            }
+        };
+
+        document.getElementById('btnDeleteEntity').onclick = () => {
+            if (!confirm(`Are you sure you want to delete "${currentEditingEntity}" and all its data?`)) return;
+
+            uniqueEntities.delete(currentEditingEntity);
+            activeEntityFilters.delete(currentEditingEntity);
+            delete entityColors[currentEditingEntity];
+            
+            allData = allData.filter(d => d.entity !== currentEditingEntity);
+            
+            // Recalc Date Range if needed? 
+            if (allData.length > 0) {
+                 dateRange.min = Math.min(...allData.map(d => d.ts));
+                 dateRange.max = Math.max(...allData.map(d => d.ts));
+                 initSlider(); // Re-init slider with new bounds
+            } else {
+                 document.getElementById('empty-state').classList.remove('hidden');
+                 document.getElementById('controls').classList.add('hidden');
+                 document.getElementById('map-container').classList.add('hidden');
+                 document.getElementById('analysis-section').classList.add('hidden');
+            }
+
+            document.getElementById('editEntityModal').classList.add('hidden');
+            updateEntityCheckboxes();
+            updateMap(false);
+            
+            document.getElementById('analysis-results').classList.add('hidden');
+        };
+
+        document.getElementById('btnCancelEditEntity').onclick = () => {
+             document.getElementById('editEntityModal').classList.add('hidden');
+             currentEditingEntity = null;
+        };
 
         function processData(data, entityName) {
             let validDates = [];
@@ -731,19 +1074,31 @@
             activeEntityFilters.add(entityName);
 
             data.forEach(row => {
-                const easting = row.Easting ?? row.easting ?? row.EASTING;
-                const northing = row.Northing ?? row.northing ?? row.NORTHING;
-                const latVal = row.Lat ?? row.lat ?? row.LAT ?? row.Latitude ?? row.latitude;
-                const lngVal = row.Long ?? row.long ?? row.LONG ?? row.Longitude ?? row.longitude ?? row.Lng ?? row.lng;
-                const dateStr = row.Date ?? row.date ?? row.DATE;
-                const timeStr = row.Time ?? row.time ?? row.TIME;
+                let easting, northing, latVal, lngVal, dateStr, timeStr;
+
+                if (activeColumnMap) {
+                    easting = activeColumnMap.easting ? row[activeColumnMap.easting] : undefined;
+                    northing = activeColumnMap.northing ? row[activeColumnMap.northing] : undefined;
+                    latVal = activeColumnMap.lat ? row[activeColumnMap.lat] : undefined;
+                    lngVal = activeColumnMap.lng ? row[activeColumnMap.lng] : undefined;
+                    dateStr = activeColumnMap.date ? row[activeColumnMap.date] : undefined;
+                    timeStr = activeColumnMap.time ? row[activeColumnMap.time] : undefined;
+                } else {
+                    // Fallback heuristics
+                    easting = row.Easting ?? row.easting ?? row.EASTING;
+                    northing = row.Northing ?? row.northing ?? row.NORTHING;
+                    latVal = row.Lat ?? row.lat ?? row.LAT ?? row.Latitude ?? row.latitude;
+                    lngVal = row.Long ?? row.long ?? row.LONG ?? row.Longitude ?? row.longitude ?? row.Lng ?? row.lng;
+                    dateStr = row.Date ?? row.date ?? row.DATE;
+                    timeStr = row.Time ?? row.time ?? row.TIME;
+                }
 
                 let finalLat = null, finalLng = null;
 
-                if (latVal !== undefined && lngVal !== undefined) {
+                if (latVal !== undefined && lngVal !== undefined && latVal !== null && lngVal !== null) {
                     finalLat = parseFloat(latVal);
                     finalLng = parseFloat(lngVal);
-                } else if (easting !== undefined && northing !== undefined) {
+                } else if (easting !== undefined && northing !== undefined && easting !== null && northing !== null) {
                     try {
                         const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
                         finalLng = coords[0];
@@ -796,7 +1151,12 @@
                     let nextEnd = currEnd + step;
                     if (nextEnd > dateRange.max) { slider.noUiSlider.set([currStart, dateRange.max]); togglePlayback(); return; }
                     slider.noUiSlider.set([nextEnd - (currEnd - currStart), nextEnd]);
-                    updateMap(autoSnap); 
+                    
+                    if (currentView === '3d') {
+                        update3D();
+                    } else {
+                        updateMap(autoSnap); 
+                    }
                 }, 50);
             }
         }
@@ -817,6 +1177,7 @@
                 } else if (currentView === 'clusters') {
                     filtered.forEach((d) => {
                         const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
+                        m.options.entity = d.entity;
                         clusterLayer.addLayer(m);
                     });
                 } else if (currentView === 'heat') { heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map); }
@@ -899,17 +1260,29 @@
             renderResults(sorted, "Top 12 Most Active Locations");
         }
 
-        function detectCoLocation() {
+        function detectCoLocation(targetA, targetB) {
             const maxDist = parseFloat(document.getElementById('coLocationDist').value);
             const maxTimeMs = parseFloat(document.getElementById('coLocationTime').value) * 60000;
             const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
             
-            if (uniqueEntities.size < 2) return;
+            let filtered;
+            const specificTargets = (typeof targetA === 'string' && typeof targetB === 'string');
+            if (specificTargets) {
+                filtered = allData.filter(d => d.ts >= start && d.ts <= end && (d.entity === targetA || d.entity === targetB));
+            } else {
+                filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            }
+            
             const entityGroups = {};
             filtered.forEach(p => { if (!entityGroups[p.entity]) entityGroups[p.entity] = []; entityGroups[p.entity].push(p); });
             
             const entityList = Object.keys(entityGroups);
+            if (specificTargets && entityList.length < 2) {
+                 renderResults([], "Entity Co-location Detections");
+                 return;
+            }
+            if (!specificTargets && uniqueEntities.size < 2) return;
+
             const intersections = [];
             for (let i = 0; i < entityList.length; i++) {
                 for (let j = i + 1; j < entityList.length; j++) {
@@ -954,12 +1327,104 @@
             initMap(); map.invalidateSize();
         }
 
-        document.getElementById('csvFile').onchange = e => { if (e.target.files[0]) { Papa.parse(e.target.files[0], { header: true, dynamicTyping: true, skipEmptyLines: true, complete: (r) => { pendingCsvData = r.data; document.getElementById('entityModal').classList.remove('hidden'); document.getElementById('entityNameInput').focus(); } }); } };
+        document.getElementById('csvFile').onchange = e => { 
+            if (e.target.files[0]) { 
+                Papa.parse(e.target.files[0], { 
+                    header: true, 
+                    dynamicTyping: true, 
+                    skipEmptyLines: true, 
+                    complete: (r) => { 
+                        pendingCsvData = r.data;
+                        const headers = r.meta.fields;
+                        const autoMap = detectColumns(headers);
+                        
+                        if (autoMap) {
+                            activeColumnMap = autoMap;
+                            document.getElementById('entityModal').classList.remove('hidden'); 
+                            document.getElementById('entityNameInput').focus(); 
+                        } else {
+                            populateMappingDropdowns(headers);
+                            document.getElementById('columnMappingModal').classList.remove('hidden');
+                        }
+                    } 
+                }); 
+            } 
+        };
 
         document.getElementById('btnConfirmEntity').onclick = () => {
             const nameInput = document.getElementById('entityNameInput'), name = nameInput.value.trim();
             if (name && pendingCsvData) { processData(pendingCsvData, name); document.getElementById('entityModal').classList.add('hidden'); nameInput.value = ''; pendingCsvData = null; }
             else { nameInput.classList.add('border-rose-500'); setTimeout(() => nameInput.classList.remove('border-rose-500'), 1000); }
+        };
+
+        // New Helper Functions for Mapping
+        function detectColumns(headers) {
+            const lowerHeaders = headers.map(h => h.toString().toLowerCase());
+            const map = { date: null, time: null, lat: null, lng: null, easting: null, northing: null };
+            
+            // Find candidates
+            const find = (keywords) => {
+                for (let k of keywords) {
+                    const idx = lowerHeaders.indexOf(k);
+                    if (idx !== -1) return headers[idx];
+                    const partial = lowerHeaders.find(h => h.includes(k));
+                    if (partial) return headers[lowerHeaders.indexOf(partial)];
+                }
+                return null;
+            };
+
+            map.date = find(['date', 'timestamp', 'dt']);
+            map.time = find(['time']);
+            map.lat = find(['lat', 'latitude']);
+            map.lng = find(['lng', 'long', 'longitude']);
+            map.easting = find(['easting', 'east']);
+            map.northing = find(['northing', 'north']);
+
+            // Strict check: Needs Date AND (Lat/Lng OR East/North) to auto-approve
+            const hasGeo = (map.lat && map.lng) || (map.easting && map.northing);
+            if (map.date && hasGeo) return map;
+            return null;
+        }
+
+        function populateMappingDropdowns(headers) {
+            const ids = ['mapDate', 'mapTime', 'mapLat', 'mapLng', 'mapEasting', 'mapNorthing'];
+            ids.forEach(id => {
+                const sel = document.getElementById(id);
+                sel.innerHTML = '<option value="">-- Select Column --</option>';
+                headers.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h;
+                    opt.innerText = h;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        document.getElementById('btnConfirmMapping').onclick = () => {
+            const map = {
+                date: document.getElementById('mapDate').value,
+                time: document.getElementById('mapTime').value,
+                lat: document.getElementById('mapLat').value,
+                lng: document.getElementById('mapLng').value,
+                easting: document.getElementById('mapEasting').value,
+                northing: document.getElementById('mapNorthing').value
+            };
+
+            const hasGeo = (map.lat && map.lng) || (map.easting && map.northing);
+            
+            if (!map.date) { alert("Date column is required."); return; }
+            if (!hasGeo) { alert("Please map either Latitude/Longitude OR Easting/Northing."); return; }
+
+            activeColumnMap = map;
+            document.getElementById('columnMappingModal').classList.add('hidden');
+            document.getElementById('entityModal').classList.remove('hidden');
+            document.getElementById('entityNameInput').focus();
+        };
+
+        document.getElementById('btnCancelMapping').onclick = () => {
+            document.getElementById('columnMappingModal').classList.add('hidden');
+            document.getElementById('csvFile').value = ''; // Reset file input
+            pendingCsvData = null;
         };
 
         document.getElementById('btnStartDrawing').onclick = (e) => {
@@ -979,22 +1444,453 @@
         document.getElementById('viewClusters').onclick = () => setView('clusters', 'viewClusters');
         document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
         document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
+        document.getElementById('view3D').onclick = () => setView('3d', 'view3D');
+
         document.getElementById('btnDetectTransport').onclick = () => detectEntities(TRANSPORT_HUBS, 'transportRadius', 'Airports & Seaports Detections');
         document.getElementById('btnDetectRail').onclick = () => detectEntities(RAIL_NETWORK_WAYPOINTS, 'railRadius', 'Rail Corridor Journey Detections');
         document.getElementById('btnDetectPrisons').onclick = () => detectEntities(PRISONS, 'prisonRadius', 'Correctional Facility Detections');
         document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections');
         document.getElementById('btnMostActive').onclick = detectMostActive;
         document.getElementById('btnDetectCarJourneys').onclick = detectCarJourneys;
-        document.getElementById('btnDetectCoLocation').onclick = detectCoLocation;
+        
+        document.getElementById('btnDetectCoLocation').onclick = () => {
+             if (uniqueEntities.size < 2) {
+                 alert("Need at least 2 entities loaded to perform co-location analysis.");
+                 return;
+             }
+             const selA = document.getElementById('colocEntityA');
+             const selB = document.getElementById('colocEntityB');
+             selA.innerHTML = '';
+             selB.innerHTML = '';
+             uniqueEntities.forEach(e => {
+                 selA.add(new Option(e, e));
+                 selB.add(new Option(e, e));
+             });
+             if (selB.options.length > 1) selB.selectedIndex = 1;
+             document.getElementById('coLocationModal').classList.remove('hidden');
+        };
+
+        document.getElementById('btnRunCoLocation').onclick = () => {
+             const a = document.getElementById('colocEntityA').value;
+             const b = document.getElementById('colocEntityB').value;
+             if (a === b) { alert("Please select two different entities."); return; }
+             document.getElementById('coLocationModal').classList.add('hidden');
+             detectCoLocation(a, b);
+        };
+        
+        document.getElementById('btnCancelCoLocation').onclick = () => {
+             document.getElementById('coLocationModal').classList.add('hidden');
+        };
 
         function setView(type, btnId) {
             currentView = type;
-            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath'].forEach(id => { const b = document.getElementById(id); if (b) b.className = id === btnId ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"; });
-            updateMap();
+            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath', 'view3D'].forEach(id => { 
+                const b = document.getElementById(id); 
+                if (b) b.className = id === btnId 
+                    ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" 
+                    : (id === 'view3D' ? "col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"); 
+            });
+            
+            if (type === '3d') {
+                document.getElementById('map').classList.add('hidden');
+                document.getElementById('view-3d').classList.remove('hidden');
+                init3D();
+            } else {
+                document.getElementById('map').classList.remove('hidden');
+                document.getElementById('view-3d').classList.add('hidden');
+                updateMap();
+            }
         }
 
-        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); } };
-        document.getElementById('btnZoomToFit').onclick = () => { const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); zoomToFit(allData.filter(d => d.ts >= s && d.ts <= e)); };
+        function init3D() {
+            if (is3DInitialized) { update3D(); return; }
+            
+            const container = document.getElementById('view-3d');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.FogExp2(0x0f172a, 0.002);
+
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+            camera.position.set(100, 100, 100);
+            camera.lookAt(0, 50, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(50, 200, 100);
+            scene.add(dirLight);
+
+            // Camera State
+            let theta = Math.PI / 4; 
+            let phi = Math.PI / 3; 
+            let radius = 180;
+            let cameraOffset = new THREE.Vector3(0, 50, 0);
+
+            function updateCameraPosition() {
+                camera.position.x = cameraOffset.x + radius * Math.sin(phi) * Math.cos(theta);
+                camera.position.y = cameraOffset.y + radius * Math.cos(phi);
+                camera.position.z = cameraOffset.z + radius * Math.sin(phi) * Math.sin(theta);
+                camera.lookAt(cameraOffset);
+            }
+
+            // Mouse Interaction Logic
+            let isMouseDragging = false;
+            let mouseStartX, mouseStartY;
+
+            // Zoom (Scroll Wheel)
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                radius += e.deltaY * zoomIntensity;
+                radius = Math.max(2, Math.min(800, radius)); // Adjusted min from 20 to 2 for street level zoom
+                updateCameraPosition();
+            }, { passive: false });
+
+            // Rotate (Middle Mouse Drag)
+            container.addEventListener('mousedown', (e) => {
+                if (e.button === 1) { // Middle Mouse Button
+                    isMouseDragging = true;
+                    mouseStartX = e.clientX;
+                    mouseStartY = e.clientY;
+                    container.style.cursor = 'grabbing';
+                    e.preventDefault();
+                }
+            });
+
+            // Joystick Logic
+            const joystick = document.getElementById('nav-joystick');
+            let isJoystickDragging = false;
+            let joyStartX, joyStartY;
+
+            joystick.onmousedown = (e) => {
+                isJoystickDragging = true;
+                joyStartX = e.clientX;
+                joyStartY = e.clientY;
+                joystick.style.cursor = 'grabbing';
+                e.preventDefault(); 
+            };
+
+            window.onmouseup = () => { 
+                isJoystickDragging = false; 
+                isMouseDragging = false;
+                joystick.style.cursor = 'grab'; 
+                container.style.cursor = 'auto';
+            };
+            
+            window.onmousemove = (e) => {
+                // Handle Joystick Drag (Rotate)
+                if (isJoystickDragging) {
+                    const deltaX = (e.clientX - joyStartX) * 0.005;
+                    const deltaY = (e.clientY - joyStartY) * 0.005;
+
+                    theta -= deltaX; 
+                    phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, phi + deltaY)); 
+
+                    joyStartX = e.clientX;
+                    joyStartY = e.clientY;
+                    updateCameraPosition();
+                }
+
+                // Handle Middle Mouse Drag (Pan)
+                if (isMouseDragging) {
+                    // Improved Pan Speed
+                    const panSpeed = Math.max(0.2, radius * 0.002);
+                    const dx = (e.clientX - mouseStartX) * panSpeed;
+                    const dy = (e.clientY - mouseStartY) * panSpeed;
+
+                    const localRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+                    const localUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+
+                    cameraOffset.addScaledVector(localRight, -dx);
+                    cameraOffset.addScaledVector(localUp, dy);
+
+                    mouseStartX = e.clientX;
+                    mouseStartY = e.clientY;
+                    updateCameraPosition();
+                }
+            };
+
+            // Optimization variables to prevent GC
+            const _tempMatrix = new THREE.Matrix4();
+            const _tempPos = new THREE.Vector3();
+            const _tempScale = new THREE.Vector3();
+            const _tempQuat = new THREE.Quaternion(); 
+
+            const animate = function () {
+                animationId = requestAnimationFrame(animate);
+                
+                if (scene && currentView === '3d') {
+                    // Adaptive Scaling: constant screen size approximation
+                    const scaleVal = Math.max(0.2, radius * 0.005); 
+                    
+                    // Spatial Culling Logic
+                    // Only cull when zoomed in (radius < 100)
+                    // Visible range scales with zoom (radius)
+                    const checkCulling = radius < 100;
+                    const cullDistSq = (radius * 1.0) ** 2; // Visibility bubble squared
+
+                    scene.children.forEach(child => {
+                        if (child.isInstancedMesh) {
+                            let needsUpdate = false;
+                            
+                            for (let i = 0; i < child.count; i++) {
+                                child.getMatrixAt(i, _tempMatrix);
+                                _tempPos.setFromMatrixPosition(_tempMatrix);
+                                
+                                // Calculate distance to camera target (XZ plane)
+                                const dx = _tempPos.x - cameraOffset.x;
+                                const dz = _tempPos.z - cameraOffset.z;
+                                const distSq = dx*dx + dz*dz;
+                                
+                                let s = scaleVal;
+                                
+                                // If zoomed in and outside visible bubble, scale to 0 (hide)
+                                if (checkCulling && distSq > cullDistSq) {
+                                    s = 0;
+                                }
+
+                                // Apply Scale
+                                _tempScale.set(s, s, s);
+                                _tempMatrix.compose(_tempPos, _tempQuat, _tempScale);
+                                child.setMatrixAt(i, _tempMatrix);
+                                needsUpdate = true;
+                            }
+                            
+                            if(needsUpdate) child.instanceMatrix.needsUpdate = true;
+                        }
+                    });
+                }
+
+                renderer.render(scene, camera);
+            };
+            animate();
+            
+            is3DInitialized = true;
+            update3D();
+            updateCameraPosition(); 
+            
+            // Resize handler
+            window.addEventListener('resize', () => {
+                if(currentView === '3d') {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+        }
+
+        // Helper functions for Map Tiles
+        function lon2tile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
+        function lat2tile(lat, zoom) { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
+        function tile2long(x, z) { return (x / Math.pow(2, z) * 360 - 180); }
+        function tile2lat(y, z) { var n = Math.PI - 2 * Math.PI * y / Math.pow(2, z); return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))); }
+
+        function update3D() {
+            if (!scene) return;
+            
+            // 1. CLEAR DYNAMIC DATA ONLY
+            // We iterate backwards and only remove Points and Lines (Data), preserving MapGroup and Lights
+            for(let i = scene.children.length - 1; i >= 0; i--) { 
+                const obj = scene.children[i];
+                // Remove Lines, Points (Data), and InstancedMesh (Spheres)
+                // Keep 'Group' (Map Tiles), lights, and grid helpers (if any distinct check needed)
+                if (obj.type === "Line" || obj.type === "Points" || obj.type === "InstancedMesh" || (obj.type === "Mesh" && obj !== mapGroup && !obj.isMapTile)) {
+                    scene.remove(obj); 
+                }
+            }
+
+            const slider = document.getElementById('date-slider');
+            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
+            
+            // Filter Data
+            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+
+            // 2. BUILD WORLD & MAP (Run Once or on Data Load)
+            // We use allData bounds to define the stable coordinate system
+            if (!mapGroup || mapGroup.children.length === 0) {
+                // Clean up any old map group
+                if (mapGroup) scene.remove(mapGroup);
+                
+                // Calculate Global Bounds based on ALL data (not just filtered)
+                const lats = allData.map(d => d.lat);
+                const lngs = allData.map(d => d.lng);
+                
+                if (lats.length === 0) return;
+
+                const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+                const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+                
+                // Store World Scale Factors
+                worldScale.minLat = minLat;
+                worldScale.minLng = minLng;
+                worldScale.latRange = maxLat - minLat || 0.0001;
+                worldScale.lngRange = maxLng - minLng || 0.0001;
+                worldScale.minTime = dateRange.min;
+                worldScale.timeRange = dateRange.max - dateRange.min || 1;
+
+                // Fix Aspect Ratio (Geospatial Scaling)
+                const meanLatRad = (minLat + maxLat) / 2 * (Math.PI / 180);
+                const aspectRatio = (worldScale.lngRange * Math.cos(meanLatRad)) / worldScale.latRange;
+                
+                if (aspectRatio > 1) {
+                    worldScale.scaleX = 100 * aspectRatio;
+                    worldScale.scaleZ = 100;
+                } else {
+                    worldScale.scaleX = 100;
+                    worldScale.scaleZ = 100 / aspectRatio;
+                }
+
+                // Generate Map Tiles
+                mapGroup = new THREE.Group();
+                const loader = new THREE.TextureLoader();
+                loader.crossOrigin = 'anonymous';
+
+                const zoom = Math.min(15, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 2));
+                const minTileX = lon2tile(worldScale.minLng, zoom) - 1;
+                const maxTileX = lon2tile(maxLng, zoom) + 1; // Use local var maxLng or recalculate
+                const minTileY = lat2tile(maxLat, zoom) - 1;
+                const maxTileY = lat2tile(worldScale.minLat, zoom) + 1;
+
+                for (let tx = minTileX; tx <= maxTileX; tx++) {
+                    for (let ty = minTileY; ty <= maxTileY; ty++) {
+                        const url = `https://a.basemaps.cartocdn.com/rastertiles/voyager/${zoom}/${tx}/${ty}.png`;
+                        
+                        const tileWest = tile2long(tx, zoom);
+                        const tileEast = tile2long(tx + 1, zoom);
+                        const tileNorth = tile2lat(ty, zoom);
+                        const tileSouth = tile2lat(ty + 1, zoom);
+
+                        const x1 = ((tileWest - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                        const x2 = ((tileEast - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                        const z1 = -(((tileNorth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
+                        const z2 = -(((tileSouth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
+
+                        const w = Math.abs(x2 - x1);
+                        const h = Math.abs(z2 - z1);
+                        const cx = (x1 + x2) / 2;
+                        const cz = (z1 + z2) / 2;
+
+                        // Slight overlap (1.05) and opaque material to fix grid lines
+                        const geometry = new THREE.PlaneGeometry(w * 1.05, h * 1.05);
+                        const texture = loader.load(url);
+                        texture.minFilter = THREE.LinearFilter;
+                        
+                        // Opaque material prevents background bleed-through
+                        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false, depthWrite: true });
+                        const plane = new THREE.Mesh(geometry, material);
+                        plane.position.set(cx, 0, cz);
+                        plane.rotation.x = -Math.PI / 2;
+                        plane.isMapTile = true; // Tag for cleanup logic
+                        mapGroup.add(plane);
+                    }
+                }
+                scene.add(mapGroup);
+                
+                // Re-add Grid Helper on top
+                const gridHelper = new THREE.GridHelper(500, 50, 0x94a3b8, 0x1e293b);
+                gridHelper.position.y = 0.1; 
+                gridHelper.material.opacity = 0.1;
+                gridHelper.material.transparent = true;
+                scene.add(gridHelper);
+            }
+
+            if (filtered.length === 0) return;
+
+            const HEIGHT = 100;
+            const entityGroups = {};
+            let centerSumX = 0, centerSumZ = 0;
+            
+            filtered.forEach(d => {
+                // Use stored World Scale
+                const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                const y = ((d.ts - worldScale.minTime) / worldScale.timeRange) * HEIGHT;
+
+                if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
+                entityGroups[d.entity].points.push({x, y, z});
+                
+                centerSumX += x;
+                centerSumZ += z;
+            });
+
+            // 3. AUTO-SNAP LOGIC
+            if (autoSnap && filtered.length > 0) {
+                const centerX = centerSumX / filtered.length;
+                const centerZ = centerSumZ / filtered.length;
+                // Move camera offset to center of active data
+                cameraOffset.x = centerX;
+                cameraOffset.z = centerZ;
+                // Keep Y offset or adjust? Let's keep Y relative.
+                updateCameraPosition();
+            }
+
+            Object.values(entityGroups).forEach(group => {
+                // Instanced Spheres
+                const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
+                const sphereMat = new THREE.MeshLambertMaterial({ color: group.color });
+                const iMesh = new THREE.InstancedMesh(sphereGeo, sphereMat, group.points.length);
+                const dummy = new THREE.Object3D();
+
+                group.points.forEach((p, i) => {
+                    dummy.position.set(p.x, p.y, p.z);
+                    dummy.updateMatrix();
+                    iMesh.setMatrixAt(i, dummy.matrix);
+                });
+                iMesh.instanceMatrix.needsUpdate = true;
+                scene.add(iMesh);
+                
+                // Drop lines
+                group.points.forEach((p, idx) => {
+                    if (idx % 10 === 0 || idx === 0 || idx === group.points.length - 1) {
+                        const dropPoints = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, 0, p.z)];
+                        const dropGeo = new THREE.BufferGeometry().setFromPoints(dropPoints);
+                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: 0.2, transparent: true });
+                        scene.add(new THREE.Line(dropGeo, dropMat));
+                    }
+                });
+            });
+        }
+
+        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); if(currentView === '3d') update3D(); } };
+        document.getElementById('btnZoomToFit').onclick = () => { 
+            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); 
+            const filtered = allData.filter(d => d.ts >= s && d.ts <= e);
+            zoomToFit(filtered); 
+            
+            // Add zoom logic for 3D
+            if(currentView === '3d' && filtered.length > 0) {
+                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+                 
+                 // Calculate bounds of filtered data in 3D space
+                 filtered.forEach(d => {
+                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                    if(x < minX) minX = x;
+                    if(x > maxX) maxX = x;
+                    if(z < minZ) minZ = z;
+                    if(z > maxZ) maxZ = z;
+                 });
+                 
+                 if (minX !== Infinity) {
+                     const cx = (minX + maxX) / 2;
+                     const cz = (minZ + maxZ) / 2;
+                     const width = maxX - minX;
+                     const depth = maxZ - minZ;
+                     const maxDim = Math.max(width, depth);
+                     
+                     // Center camera on data
+                     cameraOffset.set(cx, 50, cz); 
+                     // Adjust radius to fit bounds (with some padding)
+                     radius = Math.max(30, maxDim * 2.0); 
+                     updateCameraPosition();
+                 }
+            }
+        };
         
         document.getElementById('btnResetAll').onclick = () => { 
             if (isPlaying) togglePlayback(); 
@@ -1005,9 +1901,14 @@
             }
             document.getElementById('analysis-results').classList.add('hidden');
             document.getElementById('results-grid').innerHTML = '';
+            
+            // Force map regeneration on full reset if needed, or just update data
+            // mapGroup = null; // Uncomment if we want to rebuild map on reset
+            
             updateMap();
-            updateUserMarkersOnMap(); // Ensure user markers persist visually
+            updateUserMarkersOnMap(); 
             zoomToFit();
+            if (currentView === '3d') update3D();
         };
         
         document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels; this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
@@ -1015,10 +1916,14 @@
         
         document.getElementById('btnToggleExpand').onclick = function() {
             const mapEl = document.getElementById('map');
+            const view3dEl = document.getElementById('view-3d');
             const expandIcon = document.getElementById('expandIcon');
             const collapseIcon = document.getElementById('collapseIcon');
             const btnSpan = this.querySelector('span');
+            
             mapEl.classList.toggle('map-expanded');
+            view3dEl.classList.toggle('map-expanded');
+            
             if (mapEl.classList.contains('map-expanded')) {
                 expandIcon.classList.add('hidden');
                 collapseIcon.classList.remove('hidden');
@@ -1028,11 +1933,10 @@
                 collapseIcon.classList.add('hidden');
                 btnSpan.innerText = "Expand map";
             }
-            setTimeout(() => { map.invalidateSize(); }, 300);
+            setTimeout(() => { map.invalidateSize(); if(renderer) { renderer.setSize(view3dEl.clientWidth, view3dEl.clientHeight); camera.aspect = view3dEl.clientWidth / view3dEl.clientHeight; camera.updateProjectionMatrix(); } }, 300);
         };
 
         window.onload = initMap;
     </script>
 </body>
 </html>
-
