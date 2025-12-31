@@ -273,6 +273,30 @@
         </div>
     </div>
 
+    <!-- Map Context Menu -->
+    <div id="mapContextMenu" class="hidden absolute z-[9999] bg-white rounded-xl shadow-2xl border border-slate-100 w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <button id="ctxTagLocation" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border-b border-slate-50 transition-colors flex items-center gap-2">
+            <span>📍</span> Tag Location
+        </button>
+        <button id="ctxLookupPostcode" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2">
+            <span>📮</span> Lookup Postcode
+        </button>
+    </div>
+
+    <!-- Help Info Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10002]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 id="helpModalTitle" class="text-lg font-bold text-slate-800">Help</h2>
+            </div>
+            <p id="helpModalText" class="text-sm text-slate-600 leading-relaxed mb-6"></p>
+            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-all">Close</button>
+        </div>
+    </div>
+
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
         <div class="flex items-center gap-2">
             <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg">
@@ -307,7 +331,10 @@
                 <div class="lg:col-span-6 space-y-5">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Timeline</label>
+                            <div class="flex items-center gap-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Timeline</label>
+                                <button onclick="openHelp('timeline')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                            </div>
                             <span id="range-display" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">--</span>
                         </div>
                         <div id="date-slider" class="custom-slider mx-2"></div>
@@ -333,7 +360,10 @@
                 <div class="lg:col-span-6 flex flex-col gap-6 lg:border-l lg:pl-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Visualisation Style</label>
+                            <div class="flex items-center gap-1 mb-2">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Visualisation Style</label>
+                                <button onclick="openHelp('visualisation')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                            </div>
                             <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
                                 <button id="viewMarkers" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
                                 <button id="viewClusters" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Clusters</button>
@@ -383,6 +413,10 @@
 
             <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
                 <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-1 mr-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Map Tools</span>
+                        <button onclick="openHelp('maptools')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                    </div>
                     <button id="toggleLabels" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
                         Show Labels: <span class="text-blue-600">Off</span>
                     </button>
@@ -430,7 +464,30 @@
                 </div>
             </div>
             <h3 class="text-slate-800 font-bold mb-2 text-lg font-['Montserrat']">Ready to Visualise</h3>
-            <p class="text-sm max-w-xs text-center px-4">Upload a CSV file with "Date", "Time", "Easting/Northing" or "Lat/Long" to begin.</p>
+            <p class="text-sm max-w-xs text-center px-4 mb-6">Upload a CSV file to begin.</p>
+
+            <!-- Collapsible Instructions -->
+            <details class="group mb-2 max-w-md w-full px-4 text-center cursor-pointer">
+                <summary class="list-none text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    Upload Instructions & Requirements
+                </summary>
+                <div class="mt-3 text-left bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-600 space-y-2 shadow-sm animate-in slide-in-from-top-2 cursor-default">
+                    <p class="font-bold text-slate-800 border-b border-slate-200 pb-1 mb-2">File Requirements</p>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li>File Format: <strong>.CSV</strong> (Comma Separated Values) only.</li>
+                        <li><strong>Date Column:</strong> Required (e.g., DD/MM/YYYY).</li>
+                        <li><strong>Time Column:</strong> Recommended for timeline analysis.</li>
+                        <li><strong>Location Columns:</strong> Must contain either:
+                            <ul class="list-circle pl-4 mt-1 text-slate-500">
+                                <li>Latitude & Longitude</li>
+                                <li>Easting & Northing (UK Grid)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p class="mt-2 italic text-[10px] text-slate-400">Note: If columns are not automatically detected, you will be prompted to map them manually.</p>
+                </div>
+            </details>
         </div>
 
         <div id="map-container" class="relative hidden">
@@ -466,7 +523,10 @@
         <!-- Analysis Section -->
         <div id="analysis-section" class="hidden space-y-4">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-4">Analytical Intelligence</label>
+                <div class="flex items-center gap-2 mb-4">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Analytical Intelligence</label>
+                    <button onclick="openHelp('analysis')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                </div>
                 
                 <div class="flex flex-col gap-6">
                     <!-- Prominent Hero Button -->
@@ -477,8 +537,11 @@
 
                     <!-- Entity Detection Grid -->
                     <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Key location detector</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="flex items-center gap-1 mb-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Key location detector</label>
+                            <button onclick="openHelp('keylocations')" class="text-slate-400 hover:text-blue-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                             <!-- Transport -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
@@ -511,12 +574,32 @@
                                 </div>
                                 <button id="btnDetectService" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Services</button>
                             </div>
+                            <!-- Misc Locations -->
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-slate-600 uppercase">Misc (km)</span>
+                                    <input type="number" id="miscRadius" value="0.5" step="0.1" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
+                                </div>
+                                <p class="text-[9px] text-slate-400 leading-tight">Hospitals, Stadiums, Shopping, Unis, Theme Parks</p>
+                                <button id="btnDetectMisc" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Misc</button>
+                            </div>
+                            <!-- Maritime Harbours -->
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-slate-600 uppercase">Harbour (km)</span>
+                                    <input type="number" id="harbourRadius" value="0.5" step="0.1" class="w-12 text-xs border border-slate-200 rounded p-1 font-bold outline-none">
+                                </div>
+                                <button id="btnDetectHarbours" class="w-full bg-cyan-700 hover:bg-cyan-800 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Maritime</button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Advanced Analysis -->
                     <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Advanced Pattern Analysis</label>
+                        <div class="flex items-center gap-1 mb-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Advanced Pattern Analysis</label>
+                            <button onclick="openHelp('advanced')" class="text-slate-400 hover:text-blue-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Journeys -->
                             <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col gap-3">
@@ -797,6 +880,134 @@
             { name: "Donington Park (M1/A50)", lat: 52.842, lng: -1.348 }
         ];
 
+        const MISC_KEY_LOCATIONS = [
+            { name: "Queen Elizabeth Hospital Birmingham", lat: 52.452, lng: -1.942 },
+            { name: "Royal London Hospital", lat: 51.519, lng: -0.059 },
+            { name: "Addenbrooke's Hospital (Cambridge)", lat: 52.175, lng: 0.140 },
+            { name: "Manchester Royal Infirmary", lat: 53.463, lng: -2.229 },
+            { name: "Royal Infirmary of Edinburgh", lat: 55.922, lng: -3.136 },
+            { name: "University Hospital of Wales (Cardiff)", lat: 51.506, lng: -3.192 },
+            { name: "Queen Elizabeth University Hospital (Glasgow)", lat: 55.861, lng: -4.343 },
+            { name: "St James's University Hospital (Leeds)", lat: 53.806, lng: -1.520 },
+            { name: "Trafford Centre (Manchester)", lat: 53.467, lng: -2.348 },
+            { name: "Bluewater (Kent)", lat: 51.439, lng: 0.269 },
+            { name: "Westfield Stratford City", lat: 51.543, lng: -0.007 },
+            { name: "Westfield London (Shepherd's Bush)", lat: 51.507, lng: -0.221 },
+            { name: "Metrocentre (Gateshead)", lat: 54.958, lng: -1.666 },
+            { name: "Bullring (Birmingham)", lat: 52.478, lng: -1.895 },
+            { name: "Meadowhall (Sheffield)", lat: 53.414, lng: -1.411 },
+            { name: "St James Quarter (Edinburgh)", lat: 55.956, lng: -3.189 },
+            { name: "Wembley Stadium", lat: 51.556, lng: -0.279 },
+            { name: "Old Trafford (Manchester)", lat: 53.463, lng: -2.291 },
+            { name: "Tottenham Hotspur Stadium", lat: 51.604, lng: -0.066 },
+            { name: "Emirates Stadium", lat: 51.555, lng: -0.108 },
+            { name: "Anfield (Liverpool)", lat: 53.431, lng: -2.961 },
+            { name: "Celtic Park (Glasgow)", lat: 55.849, lng: -4.205 },
+            { name: "Ibrox Stadium (Glasgow)", lat: 55.853, lng: -4.309 },
+            { name: "Principality Stadium (Cardiff)", lat: 51.478, lng: -3.182 },
+            { name: "Murrayfield (Edinburgh)", lat: 55.942, lng: -3.240 },
+            { name: "Twickenham Stadium", lat: 51.456, lng: -0.341 },
+            { name: "University of Oxford (Main)", lat: 51.753, lng: -1.254 },
+            { name: "University of Cambridge (Main)", lat: 52.204, lng: 0.117 },
+            { name: "UCL (London)", lat: 51.524, lng: -0.134 },
+            { name: "Imperial College London", lat: 51.498, lng: -0.174 },
+            { name: "University of Edinburgh", lat: 55.944, lng: -3.189 },
+            { name: "University of Manchester", lat: 53.466, lng: -2.233 },
+            { name: "University of Birmingham", lat: 52.450, lng: -1.930 },
+            { name: "University of Glasgow", lat: 55.872, lng: -4.288 },
+            { name: "Alton Towers", lat: 52.987, lng: -1.894 },
+            { name: "Thorpe Park", lat: 51.404, lng: -0.514 },
+            { name: "Blackpool Pleasure Beach", lat: 53.790, lng: -3.056 },
+            { name: "Legoland Windsor", lat: 51.463, lng: -0.651 },
+            { name: "Chessington World of Adventures", lat: 51.348, lng: -0.316 }
+        ];
+
+        const MARITIME_HARBOURS = [
+            // South Coast (Solent/Hampshire/Sussex)
+            { name: "Portsmouth Harbour (Gunwharf/Gosport)", lat: 50.795, lng: -1.113 },
+            { name: "Port Solent Marina", lat: 50.844, lng: -1.099 },
+            { name: "Southampton (Ocean Village)", lat: 50.896, lng: -1.393 },
+            { name: "Southampton (Shamrock Quay)", lat: 50.912, lng: -1.383 },
+            { name: "Hamble Point Marina", lat: 50.849, lng: -1.316 },
+            { name: "Mercury Yacht Harbour (Hamble)", lat: 50.865, lng: -1.312 },
+            { name: "Swanwick Marina (Hamble)", lat: 50.879, lng: -1.297 },
+            { name: "Lymington Yacht Haven", lat: 50.751, lng: -1.524 },
+            { name: "Berthon Lymington Marina", lat: 50.757, lng: -1.536 },
+            { name: "Beaulieu River (Buckler's Hard)", lat: 50.798, lng: -1.423 },
+            { name: "Cowes Harbour (Isle of Wight)", lat: 50.763, lng: -1.297 },
+            { name: "East Cowes Marina", lat: 50.752, lng: -1.285 },
+            { name: "Yarmouth Harbour (Isle of Wight)", lat: 50.706, lng: -1.501 },
+            { name: "Bembridge Harbour", lat: 50.693, lng: -1.097 },
+            { name: "Chichester Marina", lat: 50.811, lng: -0.863 },
+            { name: "Birdham Pool", lat: 50.805, lng: -0.861 },
+            { name: "Sparkes Marina (Hayling Island)", lat: 50.793, lng: -0.938 },
+            { name: "Northney Marina (Hayling Island)", lat: 50.831, lng: -0.963 },
+            { name: "Brighton Marina", lat: 50.812, lng: -0.103 },
+            { name: "Newhaven Marina", lat: 50.787, lng: 0.054 },
+            { name: "Sovereign Harbour (Eastbourne)", lat: 50.792, lng: 0.324 },
+            { name: "Littlehampton Harbour", lat: 50.806, lng: -0.546 },
+            { name: "Shoreham Port", lat: 50.831, lng: -0.239 },
+            // South West (Dorset/Devon/Cornwall)
+            { name: "Poole Harbour (Salterns)", lat: 50.707, lng: -1.944 },
+            { name: "Poole Quay Boat Haven", lat: 50.712, lng: -1.985 },
+            { name: "Cobbs Quay Marina (Poole)", lat: 50.723, lng: -2.001 },
+            { name: "Portland Marina", lat: 50.574, lng: -2.453 },
+            { name: "Weymouth Harbour", lat: 50.608, lng: -2.453 },
+            { name: "Exmouth Marina", lat: 50.622, lng: -3.421 },
+            { name: "Torquay Harbour", lat: 50.458, lng: -3.528 },
+            { name: "Brixham Marina", lat: 50.400, lng: -3.513 },
+            { name: "Dartmouth (Dart Marina)", lat: 50.355, lng: -3.580 },
+            { name: "Salcombe Harbour", lat: 50.238, lng: -3.771 },
+            { name: "Plymouth (Queen Anne's Battery)", lat: 50.364, lng: -4.133 },
+            { name: "Plymouth (Sutton Harbour)", lat: 50.368, lng: -4.132 },
+            { name: "Plymouth (Mayflower Marina)", lat: 50.367, lng: -4.167 },
+            { name: "Fowey Harbour", lat: 50.337, lng: -4.636 },
+            { name: "Falmouth Harbour (Port Pendennis)", lat: 50.153, lng: -5.066 },
+            { name: "Mylor Yacht Harbour", lat: 50.183, lng: -5.056 },
+            { name: "Penzance Harbour", lat: 50.117, lng: -5.531 },
+            { name: "Newlyn Harbour", lat: 50.102, lng: -5.545 },
+            { name: "Padstow Harbour", lat: 50.541, lng: -4.935 },
+            // South East (Kent/London)
+            { name: "Dover Marina", lat: 51.121, lng: 1.317 },
+            { name: "Ramsgate Royal Harbour", lat: 51.332, lng: 1.421 },
+            { name: "Chatham Maritime Marina", lat: 51.401, lng: 0.534 },
+            { name: "Gillingham Marina", lat: 51.394, lng: 0.569 },
+            { name: "St Katharine Docks (London)", lat: 51.507, lng: -0.073 },
+            { name: "Limehouse Basin", lat: 51.511, lng: -0.038 },
+            { name: "South Dock Marina (Surrey Quays)", lat: 51.493, lng: -0.035 },
+            // East Coast
+            { name: "Burnham Yacht Harbour", lat: 51.628, lng: 0.809 },
+            { name: "Titchmarsh Marina (Walton-on-the-Naze)", lat: 51.866, lng: 1.251 },
+            { name: "Woolverstone Marina (Ipswich)", lat: 52.003, lng: 1.196 },
+            { name: "Neptune Marina (Ipswich)", lat: 52.052, lng: 1.155 },
+            { name: "Shotley Marina", lat: 51.964, lng: 1.272 },
+            { name: "Lowestoft Haven Marina", lat: 52.476, lng: 1.733 },
+            // Other Key Locations
+            { name: "Penarth Marina (Cardiff)", lat: 51.442, lng: -3.178 },
+            { name: "Portishead Marina (Bristol)", lat: 51.488, lng: -2.761 },
+            { name: "Bristol Harbour (Floating Harbour)", lat: 51.449, lng: -2.603 },
+            { name: "Milford Haven (Milford Marina)", lat: 51.711, lng: -5.036 },
+            { name: "Conwy Marina", lat: 53.292, lng: -3.843 },
+            { name: "Liverpool Marina", lat: 53.388, lng: -2.986 },
+            { name: "Whitehaven Marina", lat: 54.550, lng: -3.593 },
+            { name: "Maryport Marina", lat: 54.715, lng: -3.504 },
+            // Scotland (Local to Burnmouth & Major)
+            { name: "Burnmouth Harbour", lat: 55.839, lng: -2.073 },
+            { name: "Eyemouth Harbour", lat: 55.872, lng: -2.088 },
+            { name: "St Abbs Harbour", lat: 55.900, lng: -2.128 },
+            { name: "Berwick-upon-Tweed Dock", lat: 55.764, lng: -1.999 },
+            { name: "Dunbar Harbour", lat: 56.004, lng: -2.513 },
+            { name: "North Berwick Harbour", lat: 56.061, lng: -2.716 },
+            { name: "Leith (Edinburgh Marina)", lat: 55.983, lng: -3.181 },
+            { name: "Granton Harbour", lat: 55.987, lng: -3.223 },
+            { name: "Port Edgar (South Queensferry)", lat: 55.993, lng: -3.411 },
+            { name: "Troon Yacht Haven", lat: 55.548, lng: -4.668 },
+            { name: "Largs Yacht Haven", lat: 55.780, lng: -4.862 },
+            { name: "Kip Marina (Inverkip)", lat: 55.908, lng: -4.876 },
+            { name: "Rhu Marina", lat: 56.012, lng: -4.767 },
+            { name: "Oban Marina", lat: 56.423, lng: -5.498 }
+        ];
+
         proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
 
         let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
@@ -816,6 +1027,32 @@
         let activeColumnMap = null;
         let currentEditingEntity = null;
         
+        // Context Menu State
+        let contextMenuLatLng = null;
+        
+        // Help Text Data
+        const helpData = {
+            timeline: "Control the time range of your data. Drag the blue handles on the slider to narrow down the specific date and time window. You can also manually input start and end times below. The 'Apply' button updates the map.",
+            visualisation: "Choose how to view your data: 'Markers' shows individual points, 'Clusters' groups them for clarity, 'Heatmap' shows density, 'Path' draws lines between points in time order, and '3D' opens the Space-Time Cube.",
+            maptools: "Toggle labels on/off, enable 'Auto-Snap' to follow data during playback, or use 'Tag Location' to drop your own markers. 'Clear Filters' resets all views, selections, and time ranges.",
+            analysis: "Use 'Show top locations' to automatically identify and list the top 12 most visited coordinates in your dataset, enriched with nearest postcode data.",
+            keylocations: "Automatically scan your data for proximity to known sensitive locations such as Transport Hubs, Prisons, Hospitals, and Harbours. You can adjust the search radius (km) for each category.",
+            advanced: "Detect complex patterns: 'Detect Journeys' identifies sustained movements over distance. 'Detect Co-location' finds instances where two entities (or an entity and a tag) were in the same place at the same time."
+        };
+
+        function openHelp(key) {
+            const info = helpData[key];
+            if (info) {
+                document.getElementById('helpModalTitle').innerText = key === 'timeline' ? 'Timeline Controls' : 
+                    key === 'visualisation' ? 'Visualisation Styles' :
+                    key === 'maptools' ? 'Map Tools' :
+                    key === 'analysis' ? 'Analytical Intelligence' :
+                    key === 'keylocations' ? 'Key Location Detectors' : 'Advanced Analysis';
+                document.getElementById('helpModalText').innerText = info;
+                document.getElementById('helpModal').classList.remove('hidden');
+            }
+        }
+
         // 3D Variables
         let scene, camera, renderer, animationId;
         let is3DInitialized = false;
@@ -915,12 +1152,67 @@
             }).addTo(map);
 
             map.on('click', (e) => {
+                document.getElementById('mapContextMenu').classList.add('hidden');
                 if (isPlacementMode) {
                     togglePlacementMode(false);
                     openUserMarkerModal(null, e.latlng.lat, e.latlng.lng);
                 }
             });
+            
+            // Context Menu Logic
+            map.on('contextmenu', (e) => {
+                const menu = document.getElementById('mapContextMenu');
+                contextMenuLatLng = e.latlng;
+                
+                // Position menu at mouse cursor
+                menu.style.left = e.originalEvent.pageX + 'px';
+                menu.style.top = e.originalEvent.pageY + 'px';
+                menu.classList.remove('hidden');
+            });
+            
+            map.on('movestart', () => document.getElementById('mapContextMenu').classList.add('hidden'));
         }
+
+        // Context Menu Action Handlers
+        document.getElementById('ctxTagLocation').onclick = () => {
+            document.getElementById('mapContextMenu').classList.add('hidden');
+            if (contextMenuLatLng) {
+                openUserMarkerModal(null, contextMenuLatLng.lat, contextMenuLatLng.lng);
+            }
+        };
+
+        document.getElementById('ctxLookupPostcode').onclick = async () => {
+            const menu = document.getElementById('mapContextMenu');
+            menu.classList.add('hidden');
+            if (!contextMenuLatLng) return;
+
+            // Show loading popup
+            const popup = L.popup()
+                .setLatLng(contextMenuLatLng)
+                .setContent('<div class="text-xs text-slate-500 font-bold">Scanning...</div>')
+                .openOn(map);
+
+            try {
+                const response = await fetch(`https://api.postcodes.io/postcodes?lon=${contextMenuLatLng.lng}&lat=${contextMenuLatLng.lat}`);
+                const data = await response.json();
+                
+                if (data.status === 200 && data.result && data.result.length > 0) {
+                    const pc = data.result[0].postcode;
+                    popup.setContent(`<div class="text-xs font-bold text-slate-800">📍 ${pc}</div>`);
+                } else {
+                    popup.setContent(`<div class="text-xs font-bold text-slate-400">No postcode found</div>`);
+                }
+            } catch (e) {
+                popup.setContent(`<div class="text-xs font-bold text-rose-500">Error</div>`);
+            }
+        };
+        
+        // Close menu on global click
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('mapContextMenu').contains(e.target)) {
+                document.getElementById('mapContextMenu').classList.add('hidden');
+            }
+        });
 
         function togglePlacementMode(force) {
             isPlacementMode = typeof force === 'boolean' ? force : !isPlacementMode;
@@ -1505,49 +1797,109 @@
             const maxTimeMs = parseFloat(document.getElementById('coLocationTime').value) * 60000;
             const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
             
-            let filtered;
-            const specificTargets = (typeof targetA === 'string' && typeof targetB === 'string');
-            if (specificTargets) {
-                filtered = allData.filter(d => d.ts >= start && d.ts <= end && (d.entity === targetA || d.entity === targetB));
-            } else {
-                filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            }
-            
-            const entityGroups = {};
-            filtered.forEach(p => { if (!entityGroups[p.entity]) entityGroups[p.entity] = []; entityGroups[p.entity].push(p); });
-            
-            const entityList = Object.keys(entityGroups);
-            if (specificTargets && entityList.length < 2) {
-                 renderResults([], "Entity Co-location Detections");
-                 return;
-            }
-            if (!specificTargets && uniqueEntities.size < 2) return;
+            // Helper to parse input values (e.g. "entity:Name" or "tag:123")
+            const parseTarget = (val) => {
+                if (val.startsWith('tag:')) {
+                    const id = parseInt(val.split(':')[1]);
+                    const tag = userMarkers.find(m => m.id === id);
+                    return { type: 'tag', data: tag, name: tag ? tag.label : 'Unknown Tag' };
+                }
+                return { type: 'entity', name: val.replace('entity:', '') };
+            };
 
-            const intersections = [];
-            for (let i = 0; i < entityList.length; i++) {
-                for (let j = i + 1; j < entityList.length; j++) {
-                    const e1 = entityGroups[entityList[i]]; const e2 = entityGroups[entityList[j]];
-                    e1.forEach(p1 => {
-                        e2.forEach(p2 => {
-                            const timeDiff = Math.abs(p1.ts - p2.ts);
-                            if (timeDiff <= maxTimeMs) {
-                                const dist = getDistance(p1.lat, p1.lng, p2.lat, p2.lng);
-                                if (dist <= maxDist) {
-                                    intersections.push({
-                                        entity: { name: `Intersection: ${p1.entity} & ${p2.entity}`, lat: p1.lat, lng: p1.lng },
-                                        matches: [p1, p2],
-                                        areaDescription: getAreaDescription(p1.lat, p1.lng),
-                                        temporalSummary: `Time gap: ${(timeDiff / 60000).toFixed(1)} mins<br>Spatial gap: ${dist.toFixed(2)} km`,
-                                        duration: new Date(p1.ts).toLocaleString('en-GB')
-                                    });
-                                }
+            const objA = parseTarget(targetA);
+            const objB = parseTarget(targetB);
+            
+            const results = [];
+
+            // Case 1: Entity vs Entity
+            if (objA.type === 'entity' && objB.type === 'entity') {
+                const filteredA = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objA.name);
+                const filteredB = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objB.name);
+                
+                filteredA.forEach(p1 => {
+                    filteredB.forEach(p2 => {
+                        const timeDiff = Math.abs(p1.ts - p2.ts);
+                        if (timeDiff <= maxTimeMs) {
+                            const dist = getDistance(p1.lat, p1.lng, p2.lat, p2.lng);
+                            if (dist <= maxDist) {
+                                results.push({
+                                    entity: { name: `Intersection: ${objA.name} & ${objB.name}`, lat: p1.lat, lng: p1.lng },
+                                    matches: [p1, p2],
+                                    areaDescription: getAreaDescription(p1.lat, p1.lng),
+                                    temporalSummary: `Time gap: ${(timeDiff / 60000).toFixed(1)} mins<br>Spatial gap: ${dist.toFixed(2)} km`,
+                                    duration: new Date(p1.ts).toLocaleString('en-GB')
+                                });
                             }
-                        });
+                        }
+                    });
+                });
+            }
+            // Case 2: Entity vs Tag (or Tag vs Entity)
+            else if (objA.type !== objB.type) {
+                const entityObj = objA.type === 'entity' ? objA : objB;
+                const tagObj = objA.type === 'tag' ? objA : objB;
+                
+                if (!tagObj.data) return; // Tag deleted?
+
+                const filtered = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === entityObj.name);
+                
+                // Group points into "visits"
+                let currentVisit = [];
+                
+                filtered.forEach(p => {
+                    const dist = getDistance(p.lat, p.lng, tagObj.data.lat, tagObj.data.lng);
+                    if (dist <= maxDist) {
+                        // Check if part of current visit (time gap < maxTimeMs)
+                        if (currentVisit.length > 0 && (p.ts - currentVisit[currentVisit.length-1].ts) > maxTimeMs) {
+                            // Close previous visit
+                            addVisitResult(currentVisit, entityObj.name, tagObj.data.label, dist);
+                            currentVisit = [];
+                        }
+                        currentVisit.push(p);
+                    }
+                });
+                // Add final visit
+                if (currentVisit.length > 0) {
+                    addVisitResult(currentVisit, entityObj.name, tagObj.data.label, getDistance(currentVisit[0].lat, currentVisit[0].lng, tagObj.data.lat, tagObj.data.lng));
+                }
+
+                function addVisitResult(points, entName, tagName, lastDist) {
+                    const startTime = new Date(points[0].ts);
+                    const endTime = new Date(points[points.length-1].ts);
+                    const durationMins = Math.round((points[points.length-1].ts - points[0].ts) / 60000);
+                    
+                    results.push({
+                        entity: { name: `Visit: ${entName} at ${tagName}`, lat: tagObj.data.lat, lng: tagObj.data.lng },
+                        matches: points,
+                        areaDescription: getAreaDescription(tagObj.data.lat, tagObj.data.lng),
+                        temporalSummary: `Arrived: ${startTime.toLocaleTimeString()}<br>Duration: ${durationMins} mins`,
+                        duration: startTime.toLocaleDateString()
                     });
                 }
             }
-            const uniqueIntersections = intersections.filter((v, i, a) => a.findIndex(t => (t.matches[0].ts === v.matches[0].ts && t.matches[1].ts === v.matches[1].ts)) === i);
-            renderResults(uniqueIntersections, "Entity Co-location Detections");
+            // Case 3: Tag vs Tag
+            else if (objA.type === 'tag' && objB.type === 'tag') {
+                 if (objA.data && objB.data) {
+                     const dist = getDistance(objA.data.lat, objA.data.lng, objB.data.lat, objB.data.lng);
+                     if (dist <= maxDist) {
+                         results.push({
+                             entity: { name: `Proximity: ${objA.name} & ${objB.name}`, lat: objA.data.lat, lng: objA.data.lng },
+                             matches: [], // Static
+                             areaDescription: `Distance: ${dist.toFixed(2)} km`,
+                             temporalSummary: "Static Location Proximity",
+                             duration: "N/A"
+                         });
+                     }
+                 }
+            }
+
+            // Deduplicate logic (mostly for entity-entity)
+            const uniqueResults = results.filter((v, i, a) => a.findIndex(t => 
+                (t.matches[0]?.ts === v.matches[0]?.ts && t.entity.name === v.entity.name)
+            ) === i);
+            
+            renderResults(uniqueResults, "Co-location / Visit Detections");
         }
 
         async function detectEntities(list, radiusId, title, btnId) {
@@ -1788,30 +2140,54 @@
         document.getElementById('btnDetectRail').onclick = () => detectEntities(RAIL_NETWORK_WAYPOINTS, 'railRadius', 'Rail Corridor Journey Detections', 'btnDetectRail');
         document.getElementById('btnDetectPrisons').onclick = () => detectEntities(PRISONS, 'prisonRadius', 'Correctional Facility Detections', 'btnDetectPrisons');
         document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections', 'btnDetectService');
+        document.getElementById('btnDetectMisc').onclick = () => detectEntities(MISC_KEY_LOCATIONS, 'miscRadius', 'Key Location Detections (Misc)', 'btnDetectMisc');
+        document.getElementById('btnDetectHarbours').onclick = () => detectEntities(MARITIME_HARBOURS, 'harbourRadius', 'Maritime Harbour/Marina Detections', 'btnDetectHarbours');
         document.getElementById('btnMostActive').onclick = detectMostActive;
         document.getElementById('btnDetectCarJourneys').onclick = detectCarJourneys;
         
         document.getElementById('btnDetectCoLocation').onclick = () => {
-             if (uniqueEntities.size < 2) {
-                 alert("Need at least 2 entities loaded to perform co-location analysis.");
-                 return;
-             }
+             // Populate Dropdowns with Entities AND Tags
              const selA = document.getElementById('colocEntityA');
              const selB = document.getElementById('colocEntityB');
              selA.innerHTML = '';
              selB.innerHTML = '';
-             uniqueEntities.forEach(e => {
-                 selA.add(new Option(e, e));
-                 selB.add(new Option(e, e));
-             });
+             
+             // Helper for groups
+             const addGroup = (label, items, prefix) => {
+                 if (items.length === 0) return;
+                 const group = document.createElement('optgroup');
+                 group.label = label;
+                 items.forEach(item => {
+                     // Handle both string entities and object tags
+                     const name = item.label || item;
+                     const val = prefix + (item.id || item);
+                     const opt = document.createElement('option');
+                     opt.value = val;
+                     opt.innerText = name;
+                     group.appendChild(opt);
+                 });
+                 selA.appendChild(group.cloneNode(true));
+                 selB.appendChild(group.cloneNode(true));
+             };
+
+             if (uniqueEntities.size > 0) addGroup("Entities", Array.from(uniqueEntities), "entity:");
+             if (userMarkers.length > 0) addGroup("Tagged Locations", userMarkers, "tag:");
+
+             if (selA.options.length === 0) {
+                 alert("No entities or tags available for analysis.");
+                 return;
+             }
+             
+             // Default selection logic
              if (selB.options.length > 1) selB.selectedIndex = 1;
+             
              document.getElementById('coLocationModal').classList.remove('hidden');
         };
 
         document.getElementById('btnRunCoLocation').onclick = () => {
              const a = document.getElementById('colocEntityA').value;
              const b = document.getElementById('colocEntityB').value;
-             if (a === b) { alert("Please select two different entities."); return; }
+             if (a === b) { alert("Please select two different targets."); return; }
              document.getElementById('coLocationModal').classList.add('hidden');
              detectCoLocation(a, b);
         };
@@ -1857,12 +2233,15 @@
             scene.background = new THREE.Color(0x0f172a);
             scene.fog = new THREE.FogExp2(0x0f172a, 0.002);
 
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+            // Adjusted Near Plane to 0.01 to allow extreme close-ups without clipping
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 2000);
             camera.position.set(100, 100, 100);
             camera.lookAt(0, 50, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
+            // Enable better pixel interpolation
+            renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
             // Lighting
@@ -1981,8 +2360,10 @@
                     const deltaX = (e.clientX - joyStartX) * 0.005;
                     const deltaY = (e.clientY - joyStartY) * 0.005;
 
-                    theta -= deltaX; 
-                    phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, phi + deltaY)); 
+                    // Flipped Orientation: Left goes Right
+                    theta += deltaX; 
+                    // Flipped Orientation: Up tilts Down (Camera moves lower/phi increases)
+                    phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, phi - deltaY)); 
 
                     joyStartX = e.clientX;
                     joyStartY = e.clientY;
@@ -2108,8 +2489,8 @@
                 const px = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
                 const pz = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
                 
-                // Use Dynamic Time Scaling
-                const py = ((d.ts - currentMinTime) / currentTimeRange) * 100;
+                // Use Dynamic Time Scaling (Inverted: Early at Top/100, Late at Bottom/0)
+                const py = 100 - (((d.ts - currentMinTime) / currentTimeRange) * 100);
                 
                 tempV.set(px, py, pz);
                 tempV.project(camera);
@@ -2163,7 +2544,7 @@
             
             // 4. Update Views
             updateMap();
-            if (currentView === '3d') update3D();
+            if (currentView === '3d') update3D(); // This will now trigger a high-res map rebuild
             
             // 5. Zoom 2D Map
             zoomToFit(subset);
@@ -2180,8 +2561,7 @@
                  subset.forEach(d => {
                     const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
                     const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                    // Dynamic Y based on the new focused range
-                    const y = ((d.ts - currentMinTime) / currentTimeRange) * 100;
+                    const y = 100 - (((d.ts - currentMinTime) / currentTimeRange) * 100);
 
                     if(x < minX) minX = x;
                     if(x > maxX) maxX = x;
@@ -2204,11 +2584,263 @@
                      
                      cameraOffset.set(cx, cy, cz); 
                      
-                     // Allow camera to zoom in much closer (0.1 min) for small selections
-                     radius = Math.max(0.1, maxDim * 1.5); 
+                     // Allow very close zoom
+                     radius = Math.max(0.1, maxDim * 1.1); 
                      updateCameraPosition();
                  }
             }
+        };
+
+        function update3D() {
+            if (!scene) return;
+            
+            // 1. CLEAR DYNAMIC DATA
+            for(let i = scene.children.length - 1; i >= 0; i--) { 
+                const obj = scene.children[i];
+                if (obj.type === "Line" || obj.type === "Points" || obj.type === "InstancedMesh" || (obj.type === "Mesh" && obj !== mapGroup && !obj.isMapTile)) {
+                    scene.remove(obj); 
+                }
+            }
+
+            const slider = document.getElementById('date-slider');
+            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
+            
+            // Update Time Axis
+            document.getElementById('time-axis-end').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time-axis-start').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+            // Filter Data
+            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+            if (activeSelectionFilter) {
+                filtered = filtered.filter(d => activeSelectionFilter.has(d));
+            }
+
+            // 2. DYNAMIC WORLD GENERATION
+            // Calculate target bounds based on VISIBLE data (allows street level zoom)
+            // If no data visible, fallback to all data
+            const boundsData = filtered.length > 0 ? filtered : allData;
+            
+            const lats = boundsData.map(d => d.lat);
+            const lngs = boundsData.map(d => d.lng);
+            
+            if (lats.length === 0) return;
+
+            const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+            
+            // Check if we need to rebuild the map (if bounds changed significantly)
+            const tolerance = 0.00001; 
+            const needsRebuild = !mapGroup || 
+                                 Math.abs(minLat - worldScale.minLat) > tolerance || 
+                                 Math.abs(maxLat - (worldScale.minLat + worldScale.latRange)) > tolerance ||
+                                 Math.abs(minLng - worldScale.minLng) > tolerance;
+
+            if (needsRebuild) {
+                if (mapGroup) scene.remove(mapGroup);
+                
+                worldScale.minLat = minLat;
+                worldScale.minLng = minLng;
+                worldScale.latRange = maxLat - minLat || 0.00001;
+                worldScale.lngRange = maxLng - minLng || 0.00001;
+
+                const meanLatRad = (minLat + maxLat) / 2 * (Math.PI / 180);
+                const aspectRatio = (worldScale.lngRange * Math.cos(meanLatRad)) / worldScale.latRange;
+                
+                if (aspectRatio > 1) {
+                    worldScale.scaleX = 100 * aspectRatio;
+                    worldScale.scaleZ = 100;
+                } else {
+                    worldScale.scaleX = 100;
+                    worldScale.scaleZ = 100 / aspectRatio;
+                }
+
+                mapGroup = new THREE.Group();
+                const loader = new THREE.TextureLoader();
+                loader.crossOrigin = 'anonymous';
+
+                // Aggressive Zoom Calculation: +5 bias to ensure high res, capped at 19
+                const zoom = Math.min(19, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 5));
+                
+                const minTileX = lon2tile(worldScale.minLng, zoom) - 1;
+                const maxTileX = lon2tile(maxLng, zoom) + 1;
+                const minTileY = lat2tile(maxLat, zoom) - 1;
+                const maxTileY = lat2tile(worldScale.minLat, zoom) + 1;
+
+                // Limit tile count to prevent crashing if range is huge but zoom calc failed
+                if ((maxTileX - minTileX) * (maxTileY - minTileY) < 100) {
+                    for (let tx = minTileX; tx <= maxTileX; tx++) {
+                        for (let ty = minTileY; ty <= maxTileY; ty++) {
+                            // Switched to OpenStreetMap Standard for higher street-level detail (house numbers, etc.)
+                            const url = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
+                            
+                            const tileWest = tile2long(tx, zoom);
+                            const tileEast = tile2long(tx + 1, zoom);
+                            const tileNorth = tile2lat(ty, zoom);
+                            const tileSouth = tile2lat(ty + 1, zoom);
+
+                            const x1 = ((tileWest - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                            const x2 = ((tileEast - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                            const z1 = -(((tileNorth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
+                            const z2 = -(((tileSouth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
+
+                            const w = Math.abs(x2 - x1);
+                            const h = Math.abs(z2 - z1);
+                            const cx = (x1 + x2) / 2;
+                            const cz = (z1 + z2) / 2;
+
+                            const geometry = new THREE.PlaneGeometry(w * 1.02, h * 1.02); // Slight overlap
+                            const texture = loader.load(url);
+                            
+                            // High Quality Texture Filtering
+                            texture.minFilter = THREE.LinearFilter;
+                            texture.magFilter = THREE.LinearFilter;
+                            texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max Sharpness at angles
+                            
+                            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false, depthWrite: true });
+                            const plane = new THREE.Mesh(geometry, material);
+                            plane.position.set(cx, 0, cz);
+                            plane.rotation.x = -Math.PI / 2;
+                            plane.isMapTile = true; 
+                            mapGroup.add(plane);
+                        }
+                    }
+                }
+                scene.add(mapGroup);
+                
+                // Re-add Grid
+                const gridHelper = new THREE.GridHelper(500, 50, 0x94a3b8, 0x1e293b);
+                gridHelper.position.y = 0.1; 
+                gridHelper.material.opacity = 0.1;
+                gridHelper.material.transparent = true;
+                scene.add(gridHelper);
+            }
+
+            if (filtered.length === 0) return;
+
+            const HEIGHT = 100;
+            const entityGroups = {};
+            let centerSumX = 0, centerSumZ = 0;
+            
+            const currentMinTime = start;
+            const currentTimeRange = end - start || 1;
+
+            filtered.forEach(d => {
+                const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                const y = HEIGHT - (((d.ts - currentMinTime) / currentTimeRange) * HEIGHT);
+
+                if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
+                entityGroups[d.entity].points.push({x, y, z, data: d});
+                
+                centerSumX += x;
+                centerSumZ += z;
+            });
+
+            // Auto-Snap
+            if (autoSnap && filtered.length > 0) {
+                const centerX = centerSumX / filtered.length;
+                const centerZ = centerSumZ / filtered.length;
+                cameraOffset.x = centerX;
+                cameraOffset.z = centerZ;
+                updateCameraPosition();
+            }
+
+            Object.values(entityGroups).forEach(group => {
+                const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
+                const sphereMat = new THREE.MeshLambertMaterial({ color: 0xffffff }); 
+                const iMesh = new THREE.InstancedMesh(sphereGeo, sphereMat, group.points.length);
+                const dummy = new THREE.Object3D();
+                const _color = new THREE.Color();
+
+                group.points.forEach((p, i) => {
+                    dummy.position.set(p.x, p.y, p.z);
+                    dummy.updateMatrix();
+                    iMesh.setMatrixAt(i, dummy.matrix);
+                    
+                    if (pendingSelection.has(p.data)) {
+                        _color.setHex(0xffff00); 
+                    } else if (pendingSelection.size > 0) {
+                        _color.set(group.color).multiplyScalar(0.3); 
+                    } else {
+                        _color.set(group.color); 
+                    }
+                    iMesh.setColorAt(i, _color);
+                });
+                iMesh.instanceMatrix.needsUpdate = true;
+                if(iMesh.instanceColor) iMesh.instanceColor.needsUpdate = true;
+                scene.add(iMesh);
+                
+                group.points.forEach((p, idx) => {
+                    if (idx % 10 === 0 || idx === 0 || idx === group.points.length - 1) {
+                        const dropPoints = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, 0, p.z)];
+                        const dropGeo = new THREE.BufferGeometry().setFromPoints(dropPoints);
+                        
+                        let lineOpacity = 0.2;
+                        if (pendingSelection.size > 0 && !pendingSelection.has(p.data)) lineOpacity = 0.05;
+                        
+                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: lineOpacity, transparent: true });
+                        scene.add(new THREE.Line(dropGeo, dropMat));
+                    }
+                });
+            });
+        }
+
+        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); if(currentView === '3d') update3D(); } };
+        document.getElementById('btnZoomToFit').onclick = () => { 
+            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); 
+            const filtered = allData.filter(d => d.ts >= s && d.ts <= e);
+            zoomToFit(filtered); 
+            
+            // Add zoom logic for 3D
+            if(currentView === '3d' && filtered.length > 0) {
+                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+                 
+                 // Calculate bounds of filtered data in 3D space
+                 filtered.forEach(d => {
+                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
+                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
+                    if(x < minX) minX = x;
+                    if(x > maxX) maxX = x;
+                    if(z < minZ) minZ = z;
+                    if(z > maxZ) maxZ = z;
+                 });
+                 
+                 if (minX !== Infinity) {
+                     const cx = (minX + maxX) / 2;
+                     const cz = (minZ + maxZ) / 2;
+                     const width = maxX - minX;
+                     const depth = maxZ - minZ;
+                     const maxDim = Math.max(width, depth);
+                     
+                     cameraOffset.set(cx, 50, cz); 
+                     radius = Math.max(5, maxDim * 1.2); 
+                     updateCameraPosition();
+                 }
+            }
+        };
+        
+        document.getElementById('btnResetAll').onclick = () => { 
+            if (isPlaying) togglePlayback(); 
+            uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
+            
+            // Clear Selection
+            activeSelectionFilter = null;
+            pendingSelection.clear();
+            document.getElementById('btnFitSelected').classList.add('hidden');
+            
+            updateEntityCheckboxes();
+            if (document.getElementById('date-slider').noUiSlider) {
+                document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
+            }
+            document.getElementById('analysis-results').classList.add('hidden');
+            document.getElementById('results-grid').innerHTML = '';
+            
+            updateMap();
+            updateUserMarkersOnMap(); 
+            
+            // Order Fixed: Update 3D World (Rebuilds map based on allData) -> THEN Zoom Camera
+            if (currentView === '3d') update3D();
+            zoomToFit();
         };
 
         function update3D() {
@@ -2225,9 +2857,9 @@
             const slider = document.getElementById('date-slider');
             const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
             
-            // Update Time Axis Labels
-            document.getElementById('time-axis-start').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-            document.getElementById('time-axis-end').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            // Update Time Axis Labels (Swapped: Start Date is Top, End Date is Bottom)
+            document.getElementById('time-axis-end').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time-axis-start').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
             // Filter Data
             let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
@@ -2331,8 +2963,11 @@
                 const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
                 const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
                 
-                // Dynamic Y Calculation: 0 is start of slider, 100 is end of slider
-                const y = ((d.ts - currentMinTime) / currentTimeRange) * HEIGHT;
+                // Dynamic Y Calculation: Inverted. 0 is start of slider (TOP, HEIGHT), 100 is end of slider (BOTTOM, 0)
+                // actually wait, HEIGHT=100.
+                // d.ts = currentMinTime -> val=0 -> y = HEIGHT (Top)
+                // d.ts = end -> val=1 -> y = 0 (Bottom)
+                const y = HEIGHT - (((d.ts - currentMinTime) / currentTimeRange) * HEIGHT);
 
                 if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
                 entityGroups[d.entity].points.push({x, y, z, data: d});
@@ -2419,8 +3054,8 @@
                      
                      // Center camera on data
                      cameraOffset.set(cx, 50, cz); 
-                     // Adjust radius to fit bounds (with some padding)
-                     radius = Math.max(30, maxDim * 2.0); 
+                     // Tighter zoom for general fit (1.2x instead of 2.0x) and lower floor (5 instead of 30)
+                     radius = Math.max(5, maxDim * 1.2); 
                      updateCameraPosition();
                  }
             }
