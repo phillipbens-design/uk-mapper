@@ -4,22 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Burnmouth - Geospatial tool kit</title>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Proj4js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
-    <!-- Three.js for 3D View -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Google Fonts: Montserrat -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
-    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- noUiSlider -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <style>
@@ -123,7 +115,6 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 flex flex-col min-h-screen">
 
-    <!-- Entity Assignment Modal -->
     <div id="entityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-200">
             <div class="mb-6 text-center">
@@ -145,7 +136,6 @@
         </div>
     </div>
 
-    <!-- User Marker Modal -->
     <div id="userMarkerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-200">
             <div class="mb-4 text-center">
@@ -172,7 +162,6 @@
         </div>
     </div>
 
-    <!-- Column Mapping Modal -->
     <div id="columnMappingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10000]">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-in zoom-in duration-200 flex flex-col max-h-[90vh]">
             <div class="mb-4 text-center">
@@ -225,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Co-location Selection Modal -->
     <div id="coLocationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10000]">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in duration-200">
             <div class="mb-4 text-center">
@@ -249,7 +237,6 @@
         </div>
     </div>
 
-    <!-- Edit Entity Modal -->
     <div id="editEntityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10001]">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in duration-200">
             <h2 class="text-lg font-bold text-slate-800 mb-4">Edit Entity</h2>
@@ -273,7 +260,6 @@
         </div>
     </div>
 
-    <!-- Map Context Menu -->
     <div id="mapContextMenu" class="hidden absolute z-[9999] bg-white rounded-xl shadow-2xl border border-slate-100 w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
         <button id="ctxTagLocation" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border-b border-slate-50 transition-colors flex items-center gap-2">
             <span>📍</span> Tag Location
@@ -283,7 +269,6 @@
         </button>
     </div>
 
-    <!-- Help Info Modal -->
     <div id="helpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10002]">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
             <div class="flex items-center gap-3 mb-4">
@@ -301,9 +286,7 @@
         <div class="flex items-center gap-2">
             <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Water Drop Base -->
                     <path d="M12 22C16.4183 22 20 18.4183 20 14C20 9 13 2 12 2C11 2 4 9 4 14C4 18.4183 7.58172 22 12 22Z" fill="#3B82F6"/>
-                    <!-- Fire Core mixing in -->
                     <path d="M12 19.5C14.4853 19.5 16.5 17.4853 16.5 15C16.5 12.5 14.5 9 14.5 9C14.5 9 13.5 12 12 12C10.5 12 9.5 10 9.5 10C9.5 10 7.5 12.5 7.5 15C7.5 17.4853 9.51472 19.5 12 19.5Z" fill="#F97316"/>
                 </svg>
             </div>
@@ -325,7 +308,6 @@
     </nav>
 
     <main class="p-4 md:p-6 max-w-7xl mx-auto space-y-4 flex-grow">
-        <!-- Top Controls -->
         <div id="controls" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 hidden animate-in fade-in duration-500">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-6 space-y-5">
@@ -446,18 +428,14 @@
             </div>
         </div>
 
-        <!-- Map Section -->
         <div id="empty-state" class="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 bg-white rounded-3xl border-2 border-dashed border-slate-200">
             <div class="mb-8 relative group cursor-default">
-                <!-- Stylized Flame/Water Border Effect -->
                 <div class="absolute -inset-1 bg-gradient-to-br from-blue-500 via-transparent to-orange-500 rounded-full blur opacity-60 group-hover:opacity-80 transition duration-500"></div>
                 
                 <div class="relative w-48 h-48 rounded-full p-1.5 bg-gradient-to-br from-blue-500 via-white to-orange-500 shadow-2xl">
                     <div class="w-full h-full rounded-full border-[3px] border-white overflow-hidden bg-slate-50 relative shadow-inner flex items-center justify-center p-8">
                         <svg class="w-full h-full drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Water Drop Base -->
                             <path d="M12 22C16.4183 22 20 18.4183 20 14C20 9 13 2 12 2C11 2 4 9 4 14C4 18.4183 7.58172 22 12 22Z" fill="#3B82F6"/>
-                            <!-- Fire Core mixing in -->
                             <path d="M12 19.5C14.4853 19.5 16.5 17.4853 16.5 15C16.5 12.5 14.5 9 14.5 9C14.5 9 13.5 12 12 12C10.5 12 9.5 10 9.5 10C9.5 10 7.5 12.5 7.5 15C7.5 17.4853 9.51472 19.5 12 19.5Z" fill="#F97316"/>
                         </svg>
                     </div>
@@ -466,7 +444,6 @@
             <h3 class="text-slate-800 font-bold mb-2 text-lg font-['Montserrat']">Ready to Visualise</h3>
             <p class="text-sm max-w-xs text-center px-4 mb-6">Upload a CSV file to begin.</p>
 
-            <!-- Collapsible Instructions -->
             <details class="group mb-2 max-w-md w-full px-4 text-center cursor-pointer">
                 <summary class="list-none text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
                     <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -489,7 +466,6 @@
                 </div>
             </details>
 
-            <!-- Collapsible Privacy Notice -->
             <details class="group max-w-md w-full px-4 text-center cursor-pointer">
                 <summary class="list-none text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
                     <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -513,7 +489,6 @@
         </div>
 
         <div id="map-container" class="relative hidden">
-            <!-- Expand Button Overlay -->
             <button id="btnToggleExpand" class="absolute top-4 left-14 z-[1000] bg-white border border-slate-200 p-2 rounded-lg shadow-md hover:bg-slate-50 transition-all text-slate-600 flex items-center gap-2 text-xs font-bold">
                 <svg id="expandIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                 <svg id="collapseIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0h4m-4 0v4m11 1l5-5m0 0h-4m4 0v4m-11 11l-5-5m0 0v4m0-4h4m11 5l5-5m0 0v-4m0 4h-4"></path></svg>
@@ -521,13 +496,10 @@
             </button>
             <div id="map" class="shadow-xl border border-slate-200"></div>
             
-            <!-- 3D Container -->
             <div id="view-3d" class="shadow-xl border border-slate-200 hidden">
-                <!-- Navigation Joysticks -->
                 <div id="nav-joystick" title="Click & Drag to Navigate"></div>
                 <div id="nav-joystick-top" title="Click & Drag to Navigate"></div>
                 
-                <!-- Time Axis Overlay -->
                 <div id="time-axis-display" class="absolute right-6 top-8 bottom-24 flex flex-col justify-between text-right pointer-events-none z-10 hidden">
                     <div class="relative">
                         <span id="time-axis-end" class="text-[10px] font-bold text-green-400 bg-slate-900/50 px-1 rounded shadow-sm backdrop-blur-sm">--</span>
@@ -542,7 +514,6 @@
             </div>
         </div>
 
-        <!-- Analysis Section -->
         <div id="analysis-section" class="hidden space-y-4">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-2 mb-4">
@@ -551,20 +522,17 @@
                 </div>
                 
                 <div class="flex flex-col gap-6">
-                    <!-- Prominent Hero Button -->
                     <button id="btnMostActive" class="w-full bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-xl text-sm font-bold uppercase tracking-widest transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Show top locations
                     </button>
 
-                    <!-- Entity Detection Grid -->
                     <div>
                         <div class="flex items-center gap-1 mb-2">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Key location detector</label>
                             <button onclick="openHelp('keylocations')" class="text-slate-400 hover:text-blue-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-                            <!-- Transport -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Hubs (km)</span>
@@ -572,7 +540,6 @@
                                 </div>
                                 <button id="btnDetectTransport" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Airport/Seaport</button>
                             </div>
-                            <!-- Rail -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Rail (km)</span>
@@ -580,7 +547,6 @@
                                 </div>
                                 <button id="btnDetectRail" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Rail</button>
                             </div>
-                            <!-- Prisons -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Prisons (km)</span>
@@ -588,7 +554,6 @@
                                 </div>
                                 <button id="btnDetectPrisons" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Prisons</button>
                             </div>
-                            <!-- Services -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Services (km)</span>
@@ -596,7 +561,6 @@
                                 </div>
                                 <button id="btnDetectService" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Services</button>
                             </div>
-                            <!-- Misc Locations -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Misc (km)</span>
@@ -605,7 +569,6 @@
                                 <p class="text-[9px] text-slate-400 leading-tight">Hospitals, Stadiums, Shopping, Unis, Theme Parks</p>
                                 <button id="btnDetectMisc" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-[10px] font-bold uppercase transition">Detect Misc</button>
                             </div>
-                            <!-- Maritime Harbours -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-slate-600 uppercase">Harbour (km)</span>
@@ -616,14 +579,12 @@
                         </div>
                     </div>
 
-                    <!-- Advanced Analysis -->
                     <div>
                         <div class="flex items-center gap-1 mb-2">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Advanced Pattern Analysis</label>
                             <button onclick="openHelp('advanced')" class="text-slate-400 hover:text-blue-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Journeys -->
                             <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col gap-3">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
@@ -641,7 +602,6 @@
                                 </button>
                             </div>
 
-                            <!-- Co-location -->
                             <div class="bg-cyan-50 border border-cyan-100 p-4 rounded-xl flex flex-col gap-3">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
@@ -663,7 +623,6 @@
                 </div>
             </div>
 
-            <!-- Detection Results -->
             <div id="analysis-results" class="hidden animate-in slide-in-from-bottom-4 duration-500">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center mb-6">
@@ -687,350 +646,10 @@
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
+    <script src="data.js"></script>
+
     <script>
-        const MAJOR_CITIES = [
-            { name: "London", lat: 51.5074, lng: -0.1278 },
-            { name: "Birmingham", lat: 52.4862, lng: -1.8904 },
-            { name: "Manchester", lat: 53.4808, lng: -2.2426 },
-            { name: "Glasgow", lat: 55.8642, lng: -4.2518 },
-            { name: "Liverpool", lat: 53.4084, lng: -2.9916 },
-            { name: "Newcastle", lat: 54.9783, lng: -1.6178 },
-            { name: "Sheffield", lat: 53.3811, lng: -1.4701 },
-            { name: "Leeds", lat: 53.8008, lng: -1.5491 },
-            { name: "Bristol", lat: 51.4545, lng: -2.5879 },
-            { name: "Edinburgh", lat: 55.9533, lng: -3.1883 },
-            { name: "Leicester", lat: 52.6369, lng: -1.1398 },
-            { name: "Coventry", lat: 52.4068, lng: -1.5197 },
-            { name: "Cardiff", lat: 51.4816, lng: -3.1791 },
-            { name: "Belfast", lat: 54.5973, lng: -5.9301 },
-            { name: "Nottingham", lat: 52.9548, lng: -1.1581 },
-            { name: "Southampton", lat: 50.9097, lng: -1.4044 },
-            { name: "Hull", lat: 53.7443, lng: -0.3325 },
-            { name: "Reading", lat: 51.4543, lng: -0.9781 },
-            { name: "Plymouth", lat: 50.3755, lng: -4.1427 },
-            { name: "Stoke-on-Trent", lat: 53.0027, lng: -2.1794 },
-            { name: "Derby", lat: 52.9225, lng: -1.4761 },
-            { name: "Wolverhampton", lat: 52.5862, lng: -2.1288 },
-            { name: "Swansea", lat: 51.6214, lng: -3.9436 },
-            { name: "Milton Keynes", lat: 52.0406, lng: -0.7594 },
-            { name: "Oxford", lat: 51.7520, lng: -1.2577 },
-            { name: "Cambridge", lat: 52.2053, lng: 0.1218 },
-            { name: "York", lat: 53.9591, lng: -1.0812 },
-            { name: "Norwich", lat: 52.6309, lng: 1.2974 },
-            { name: "Brighton", lat: 50.8225, lng: -0.1372 },
-            { name: "Exeter", lat: 50.7260, lng: -3.5275 },
-            { name: "Inverness", lat: 57.4778, lng: -4.2247 },
-            { name: "Aberdeen", lat: 57.1497, lng: -2.0943 },
-            { name: "Bournemouth", lat: 50.7192, lng: -1.8808 }
-        ];
-
-        const TRANSPORT_HUBS = [
-            { name: "London Heathrow (LHR)", lat: 51.4700, lng: -0.4543 },
-            { name: "London Gatwick (LGW)", lat: 51.1537, lng: -0.1821 },
-            { name: "Manchester Airport (MAN)", lat: 53.3588, lng: -2.2727 },
-            { name: "London Stansted (STN)", lat: 51.8860, lng: 0.2389 },
-            { name: "London Luton (LTN)", lat: 51.8763, lng: -0.3717 },
-            { name: "Edinburgh Airport (EDI)", lat: 55.9508, lng: -3.3615 },
-            { name: "Birmingham Airport (BHX)", lat: 52.4524, lng: -1.7435 },
-            { name: "Glasgow Airport (GLA)", lat: 55.8645, lng: -4.4320 },
-            { name: "Bristol Airport (BRS)", lat: 51.3827, lng: -2.7191 },
-            { name: "Belfast International (BFS)", lat: 54.6575, lng: -6.2158 },
-            { name: "Newcastle Airport (NCL)", lat: 55.0375, lng: -1.6916 },
-            { name: "London City Airport (LCY)", lat: 51.5048, lng: 0.0495 },
-            { name: "Liverpool John Lennon (LPL)", lat: 53.3333, lng: -2.8500 },
-            { name: "Leeds Bradford (LBA)", lat: 53.8659, lng: -1.6610 },
-            { name: "Aberdeen Airport (ABZ)", lat: 57.2019, lng: -2.1978 },
-            { name: "Southampton Airport (SOU)", lat: 50.9503, lng: -1.3567 },
-            { name: "Port of Dover", lat: 51.1272, lng: 1.3283 },
-            { name: "Port of Felixstowe", lat: 51.9540, lng: 1.3110 },
-            { name: "Port of Southampton", lat: 50.9025, lng: -1.4042 },
-            { name: "Port of Liverpool", lat: 53.4406, lng: -3.0034 },
-            { name: "Port of Hull", lat: 53.7436, lng: -0.2886 },
-            { name: "Port of Portsmouth", lat: 50.8126, lng: -1.0880 },
-            { name: "Port of Tyne", lat: 54.9922, lng: -1.4426 },
-            { name: "Port of Belfast", lat: 54.6186, lng: -5.8972 },
-            { name: "Port of Immingham", lat: 53.6288, lng: -0.1915 },
-            { name: "Port of Tilbury", lat: 51.4552, lng: 0.3547 },
-            { name: "Port of Grimsby", lat: 53.5828, lng: -0.0683 },
-            { name: "Port of Teesport", lat: 54.6061, lng: -1.1685 }
-        ];
-
-        const RAIL_NETWORK_WAYPOINTS = [
-            { name: "WCML: London Euston Approach", lat: 51.5305, lng: -0.1340 },
-            { name: "WCML: Wembley Central Corridor", lat: 51.5510, lng: -0.3015 },
-            { name: "WCML: Watford Junction Corridor", lat: 51.6640, lng: -0.3920 },
-            { name: "WCML: Milton Keynes Corridor", lat: 52.0345, lng: -0.7745 },
-            { name: "WCML: Rugby Corridor", lat: 52.3736, lng: -1.2530 },
-            { name: "WCML: Stafford Corridor", lat: 52.8055, lng: -2.1155 },
-            { name: "WCML: Crewe Corridor", lat: 53.0898, lng: -2.4334 },
-            { name: "WCML: Warrington Corridor", lat: 53.3855, lng: -2.6025 },
-            { name: "WCML: Preston Corridor", lat: 53.7554, lng: -2.7073 },
-            { name: "WCML: Lancaster Corridor", lat: 54.0490, lng: -2.8080 },
-            { name: "WCML: Oxenholme Corridor", lat: 54.3060, lng: -2.7190 },
-            { name: "WCML: Carlisle Corridor", lat: 54.8915, lng: -2.9320 },
-            { name: "WCML: Beattock Corridor", lat: 55.3040, lng: -3.4520 },
-            { name: "WCML: Motherwell Corridor", lat: 55.7920, lng: -3.9890 },
-            { name: "WCML: Glasgow Central Approach", lat: 55.8590, lng: -4.2580 },
-            { name: "ECML: London Kings Cross Approach", lat: 51.5320, lng: -0.1235 },
-            { name: "ECML: Stevenage Corridor", lat: 51.9020, lng: -0.2070 },
-            { name: "ECML: Peterborough Corridor", lat: 52.5741, lng: -0.2505 },
-            { name: "ECML: Grantham Corridor", lat: 52.9110, lng: -0.6445 },
-            { name: "ECML: Newark Corridor", lat: 53.0815, lng: -0.8145 },
-            { name: "ECML: Retford Corridor", lat: 53.3210, lng: -0.9495 },
-            { name: "ECML: Doncaster Corridor", lat: 53.5222, lng: -1.1388 },
-            { name: "ECML: York Corridor", lat: 53.9585, lng: -1.0931 },
-            { name: "ECML: Darlington Corridor", lat: 54.5215, lng: -1.5475 },
-            { name: "ECML: Durham Corridor", lat: 54.7795, lng: -1.5830 },
-            { name: "ECML: Newcastle Central Approach", lat: 54.9685, lng: -1.6160 },
-            { name: "ECML: Morpeth Corridor", lat: 55.1630, lng: -1.6910 },
-            { name: "ECML: Alnmouth Corridor", lat: 55.3940, lng: -1.6360 },
-            { name: "ECML: Berwick-upon-Tweed Corridor", lat: 55.7745, lng: -2.0125 },
-            { name: "ECML: Edinburgh Waverley Approach", lat: 55.9520, lng: -3.1895 },
-            { name: "GWML: London Paddington Approach", lat: 51.5175, lng: -0.1775 },
-            { name: "GWML: Slough Corridor", lat: 51.5115, lng: -0.5925 },
-            { name: "GWML: Reading Corridor", lat: 51.4582, lng: -0.9715 },
-            { name: "GWML: Didcot Corridor", lat: 51.6110, lng: -1.2435 },
-            { name: "GWML: Swindon Corridor", lat: 51.5655, lng: -1.7855 },
-            { name: "GWML: Bristol Parkway Corridor", lat: 51.5140, lng: -2.5440 },
-            { name: "GWML: Newport Corridor", lat: 51.5885, lng: -2.9985 },
-            { name: "GWML: Cardiff Central Approach", lat: 51.4760, lng: -3.1785 },
-            { name: "GWML: Bath Spa Corridor", lat: 51.3775, lng: -2.3565 },
-            { name: "MML: London St Pancras Approach", lat: 51.5315, lng: -0.1265 },
-            { name: "MML: Luton Corridor", lat: 51.8815, lng: -0.4155 },
-            { name: "MML: Bedford Corridor", lat: 52.1325, lng: -0.4770 },
-            { name: "MML: Leicester Corridor", lat: 52.6315, lng: -1.1255 },
-            { name: "MML: Nottingham Corridor", lat: 52.9465, lng: -1.1470 },
-            { name: "MML: Derby Corridor", lat: 52.9160, lng: -1.4635 },
-            { name: "MML: Sheffield Midland Approach", lat: 53.3775, lng: -1.4630 },
-            { name: "CrossCountry: Birmingham New St Approach", lat: 52.4775, lng: -1.8995 },
-            { name: "CrossCountry: Cheltenham Corridor", lat: 51.8965, lng: -2.1025 },
-            { name: "CrossCountry: Oxford Corridor", lat: 51.7535, lng: -1.2705 },
-            { name: "CrossCountry: Banbury Corridor", lat: 52.0620, lng: -1.3295 },
-            { name: "South Western: Basingstoke Corridor", lat: 51.2685, lng: -1.0885 },
-            { name: "South Western: Winchester Corridor", lat: 51.0665, lng: -1.3195 },
-            { name: "South Western: Southampton Approach", lat: 50.9080, lng: -1.4075 },
-            { name: "Great Eastern: Colchester Corridor", lat: 51.8985, lng: 0.8935 },
-            { name: "Great Eastern: Ipswich Corridor", lat: 52.0505, lng: 1.1435 },
-            { name: "Great Eastern: Norwich Approach", lat: 52.6275, lng: 1.3065 }
-        ];
-
-        const PRISONS = [
-            { name: "HMP Belmarsh", lat: 51.496, lng: 0.082 },
-            { name: "HMP Frankland", lat: 54.805, lng: -1.568 },
-            { name: "HMP Wakefield", lat: 53.682, lng: -1.512 },
-            { name: "HMP Long Lartin", lat: 52.128, lng: -1.889 },
-            { name: "HMP Whitemoor", lat: 52.571, lng: 0.038 },
-            { name: "HMP Full Sutton", lat: 53.984, lng: -0.871 },
-            { name: "HMP Woodhill", lat: 52.054, lng: -0.814 },
-            { name: "HMP Manchester (Strangeways)", lat: 53.493, lng: -2.247 },
-            { name: "HMP Wandsworth", lat: 51.450, lng: -0.187 },
-            { name: "HMP Pentonville", lat: 51.545, lng: -0.117 },
-            { name: "HMP Wormwood Scrubs", lat: 51.516, lng: -0.238 },
-            { name: "HMP Brixton", lat: 51.454, lng: -0.124 },
-            { name: "HMP Birmingham (Winson Green)", lat: 52.492, lng: -1.933 },
-            { name: "HMP Liverpool (Walton)", lat: 53.456, lng: -2.973 },
-            { name: "HMP Leeds (Armley)", lat: 53.795, lng: -1.583 },
-            { name: "HMP Hull", lat: 53.754, lng: -0.301 },
-            { name: "HMP Durham", lat: 54.777, lng: -1.566 },
-            { name: "HMP Bristol (Horfield)", lat: 51.482, lng: -2.595 },
-            { name: "HMP Cardiff", lat: 51.487, lng: -3.171 },
-            { name: "HMP Swansea", lat: 51.616, lng: -3.947 },
-            { name: "HMP Nottingham", lat: 52.978, lng: -1.132 },
-            { name: "HMP Leicester", lat: 52.634, lng: -1.144 },
-            { name: "HMP Exeter", lat: 50.728, lng: -3.525 },
-            { name: "HMP Norwich", lat: 52.634, lng: 1.312 },
-            { name: "HMP Chelmsford", lat: 51.741, lng: 0.485 },
-            { name: "HMP Lewes", lat: 50.877, lng: 0.001 },
-            { name: "HMP Winchester", lat: 51.066, lng: -1.328 },
-            { name: "HMP High Down", lat: 51.325, lng: -0.228 },
-            { name: "HMP Barlinnie (Glasgow)", lat: 55.867, lng: -4.184 },
-            { name: "HMP Edinburgh (Saughton)", lat: 55.928, lng: -3.268 },
-            { name: "HMP Grampian (Peterhead)", lat: 57.502, lng: -1.802 },
-            { name: "HMP Perth", lat: 56.386, lng: -3.435 },
-            { name: "HMP Low Moss", lat: 55.918, lng: -4.218 },
-            { name: "HMP Addiewell", lat: 55.862, lng: -3.612 },
-            { name: "HMP Shotts", lat: 55.832, lng: -3.821 }
-        ];
-
-        const SERVICE_STATIONS = [
-            { name: "London Gateway (M1)", lat: 51.632, lng: -0.264 },
-            { name: "Watford Gap (M1)", lat: 52.307, lng: -1.124 },
-            { name: "Newport Pagnell (M1)", lat: 52.083, lng: -0.739 },
-            { name: "Leicester Forest East (M1)", lat: 52.621, lng: -1.206 },
-            { name: "Trowell (M1)", lat: 52.959, lng: -1.271 },
-            { name: "Tibshelf (M1)", lat: 53.138, lng: -1.334 },
-            { name: "Woodall (M1)", lat: 53.332, lng: -1.258 },
-            { name: "Woolley Edge (M1)", lat: 53.611, lng: -1.523 },
-            { name: "Corley (M6)", lat: 52.484, lng: -1.518 },
-            { name: "Hilton Park (M6)", lat: 52.645, lng: -2.062 },
-            { name: "Stafford North/South (M6)", lat: 52.846, lng: -2.148 },
-            { name: "Keele (M6)", lat: 52.992, lng: -2.285 },
-            { name: "Sandbach (M6)", lat: 53.146, lng: -2.338 },
-            { name: "Knutsford (M6)", lat: 53.303, lng: -2.408 },
-            { name: "Charnock Richard (M6)", lat: 53.633, lng: -2.712 },
-            { name: "Lancaster (M6)", lat: 53.968, lng: -2.766 },
-            { name: "Tebay (M6)", lat: 54.444, lng: -2.607 },
-            { name: "South Mimms (M25)", lat: 51.693, lng: -0.221 },
-            { name: "Thurrock (M25)", lat: 51.487, lng: 0.274 },
-            { name: "Clacket Lane (M25)", lat: 51.272, lng: 0.016 },
-            { name: "Cobham (M25)", lat: 51.325, lng: -0.422 },
-            { name: "Heston (M4)", lat: 51.488, lng: -0.384 },
-            { name: "Reading (M4)", lat: 51.425, lng: -0.993 },
-            { name: "Membury (M4)", lat: 51.482, lng: -1.547 },
-            { name: "Leigh Delamere (M4)", lat: 51.503, lng: -2.174 },
-            { name: "Magor (M4)", lat: 51.574, lng: -2.822 },
-            { name: "Frankley (M5)", lat: 52.417, lng: -2.008 },
-            { name: "Strensham (M5)", lat: 52.052, lng: -2.128 },
-            { name: "Gloucester (M5)", lat: 51.815, lng: -2.221 },
-            { name: "Michaelwood (M5)", lat: 51.666, lng: -2.414 },
-            { name: "Gordano (M5)", lat: 51.483, lng: -2.723 },
-            { name: "Sedgemoor (M5)", lat: 51.282, lng: -2.923 },
-            { name: "Taunton Deane (M5)", lat: 50.982, lng: -3.142 },
-            { name: "Beaconsfield (M40)", lat: 51.602, lng: -0.662 },
-            { name: "Oxford (M40)", lat: 51.745, lng: -1.096 },
-            { name: "Cherwell Valley (M40)", lat: 51.942, lng: -1.212 },
-            { name: "Warwick (M40)", lat: 52.203, lng: -1.503 },
-            { name: "Birch (M62)", lat: 53.562, lng: -2.223 },
-            { name: "Hartshead Moor (M62)", lat: 53.716, lng: -1.742 },
-            { name: "Ferrybridge (M62)", lat: 53.715, lng: -1.278 },
-            { name: "Baldock (A1M)", lat: 51.983, lng: -0.212 },
-            { name: "Peterborough (A1M)", lat: 52.518, lng: -0.316 },
-            { name: "Doncaster (A1M)", lat: 53.512, lng: -1.082 },
-            { name: "Fleet (M3)", lat: 51.284, lng: -0.832 },
-            { name: "Winchester (M3)", lat: 51.107, lng: -1.282 },
-            { name: "Hopwood Park (M42)", lat: 52.368, lng: -1.942 },
-            { name: "Donington Park (M1/A50)", lat: 52.842, lng: -1.348 }
-        ];
-
-        const MISC_KEY_LOCATIONS = [
-            { name: "Queen Elizabeth Hospital Birmingham", lat: 52.452, lng: -1.942 },
-            { name: "Royal London Hospital", lat: 51.519, lng: -0.059 },
-            { name: "Addenbrooke's Hospital (Cambridge)", lat: 52.175, lng: 0.140 },
-            { name: "Manchester Royal Infirmary", lat: 53.463, lng: -2.229 },
-            { name: "Royal Infirmary of Edinburgh", lat: 55.922, lng: -3.136 },
-            { name: "University Hospital of Wales (Cardiff)", lat: 51.506, lng: -3.192 },
-            { name: "Queen Elizabeth University Hospital (Glasgow)", lat: 55.861, lng: -4.343 },
-            { name: "St James's University Hospital (Leeds)", lat: 53.806, lng: -1.520 },
-            { name: "Trafford Centre (Manchester)", lat: 53.467, lng: -2.348 },
-            { name: "Bluewater (Kent)", lat: 51.439, lng: 0.269 },
-            { name: "Westfield Stratford City", lat: 51.543, lng: -0.007 },
-            { name: "Westfield London (Shepherd's Bush)", lat: 51.507, lng: -0.221 },
-            { name: "Metrocentre (Gateshead)", lat: 54.958, lng: -1.666 },
-            { name: "Bullring (Birmingham)", lat: 52.478, lng: -1.895 },
-            { name: "Meadowhall (Sheffield)", lat: 53.414, lng: -1.411 },
-            { name: "St James Quarter (Edinburgh)", lat: 55.956, lng: -3.189 },
-            { name: "Wembley Stadium", lat: 51.556, lng: -0.279 },
-            { name: "Old Trafford (Manchester)", lat: 53.463, lng: -2.291 },
-            { name: "Tottenham Hotspur Stadium", lat: 51.604, lng: -0.066 },
-            { name: "Emirates Stadium", lat: 51.555, lng: -0.108 },
-            { name: "Anfield (Liverpool)", lat: 53.431, lng: -2.961 },
-            { name: "Celtic Park (Glasgow)", lat: 55.849, lng: -4.205 },
-            { name: "Ibrox Stadium (Glasgow)", lat: 55.853, lng: -4.309 },
-            { name: "Principality Stadium (Cardiff)", lat: 51.478, lng: -3.182 },
-            { name: "Murrayfield (Edinburgh)", lat: 55.942, lng: -3.240 },
-            { name: "Twickenham Stadium", lat: 51.456, lng: -0.341 },
-            { name: "University of Oxford (Main)", lat: 51.753, lng: -1.254 },
-            { name: "University of Cambridge (Main)", lat: 52.204, lng: 0.117 },
-            { name: "UCL (London)", lat: 51.524, lng: -0.134 },
-            { name: "Imperial College London", lat: 51.498, lng: -0.174 },
-            { name: "University of Edinburgh", lat: 55.944, lng: -3.189 },
-            { name: "University of Manchester", lat: 53.466, lng: -2.233 },
-            { name: "University of Birmingham", lat: 52.450, lng: -1.930 },
-            { name: "University of Glasgow", lat: 55.872, lng: -4.288 },
-            { name: "Alton Towers", lat: 52.987, lng: -1.894 },
-            { name: "Thorpe Park", lat: 51.404, lng: -0.514 },
-            { name: "Blackpool Pleasure Beach", lat: 53.790, lng: -3.056 },
-            { name: "Legoland Windsor", lat: 51.463, lng: -0.651 },
-            { name: "Chessington World of Adventures", lat: 51.348, lng: -0.316 }
-        ];
-
-        const MARITIME_HARBOURS = [
-            // South Coast (Solent/Hampshire/Sussex)
-            { name: "Portsmouth Harbour (Gunwharf/Gosport)", lat: 50.795, lng: -1.113 },
-            { name: "Port Solent Marina", lat: 50.844, lng: -1.099 },
-            { name: "Southampton (Ocean Village)", lat: 50.896, lng: -1.393 },
-            { name: "Southampton (Shamrock Quay)", lat: 50.912, lng: -1.383 },
-            { name: "Hamble Point Marina", lat: 50.849, lng: -1.316 },
-            { name: "Mercury Yacht Harbour (Hamble)", lat: 50.865, lng: -1.312 },
-            { name: "Swanwick Marina (Hamble)", lat: 50.879, lng: -1.297 },
-            { name: "Lymington Yacht Haven", lat: 50.751, lng: -1.524 },
-            { name: "Berthon Lymington Marina", lat: 50.757, lng: -1.536 },
-            { name: "Beaulieu River (Buckler's Hard)", lat: 50.798, lng: -1.423 },
-            { name: "Cowes Harbour (Isle of Wight)", lat: 50.763, lng: -1.297 },
-            { name: "East Cowes Marina", lat: 50.752, lng: -1.285 },
-            { name: "Yarmouth Harbour (Isle of Wight)", lat: 50.706, lng: -1.501 },
-            { name: "Bembridge Harbour", lat: 50.693, lng: -1.097 },
-            { name: "Chichester Marina", lat: 50.811, lng: -0.863 },
-            { name: "Birdham Pool", lat: 50.805, lng: -0.861 },
-            { name: "Sparkes Marina (Hayling Island)", lat: 50.793, lng: -0.938 },
-            { name: "Northney Marina (Hayling Island)", lat: 50.831, lng: -0.963 },
-            { name: "Brighton Marina", lat: 50.812, lng: -0.103 },
-            { name: "Newhaven Marina", lat: 50.787, lng: 0.054 },
-            { name: "Sovereign Harbour (Eastbourne)", lat: 50.792, lng: 0.324 },
-            { name: "Littlehampton Harbour", lat: 50.806, lng: -0.546 },
-            { name: "Shoreham Port", lat: 50.831, lng: -0.239 },
-            // South West (Dorset/Devon/Cornwall)
-            { name: "Poole Harbour (Salterns)", lat: 50.707, lng: -1.944 },
-            { name: "Poole Quay Boat Haven", lat: 50.712, lng: -1.985 },
-            { name: "Cobbs Quay Marina (Poole)", lat: 50.723, lng: -2.001 },
-            { name: "Portland Marina", lat: 50.574, lng: -2.453 },
-            { name: "Weymouth Harbour", lat: 50.608, lng: -2.453 },
-            { name: "Exmouth Marina", lat: 50.622, lng: -3.421 },
-            { name: "Torquay Harbour", lat: 50.458, lng: -3.528 },
-            { name: "Brixham Marina", lat: 50.400, lng: -3.513 },
-            { name: "Dartmouth (Dart Marina)", lat: 50.355, lng: -3.580 },
-            { name: "Salcombe Harbour", lat: 50.238, lng: -3.771 },
-            { name: "Plymouth (Queen Anne's Battery)", lat: 50.364, lng: -4.133 },
-            { name: "Plymouth (Sutton Harbour)", lat: 50.368, lng: -4.132 },
-            { name: "Plymouth (Mayflower Marina)", lat: 50.367, lng: -4.167 },
-            { name: "Fowey Harbour", lat: 50.337, lng: -4.636 },
-            { name: "Falmouth Harbour (Port Pendennis)", lat: 50.153, lng: -5.066 },
-            { name: "Mylor Yacht Harbour", lat: 50.183, lng: -5.056 },
-            { name: "Penzance Harbour", lat: 50.117, lng: -5.531 },
-            { name: "Newlyn Harbour", lat: 50.102, lng: -5.545 },
-            { name: "Padstow Harbour", lat: 50.541, lng: -4.935 },
-            // South East (Kent/London)
-            { name: "Dover Marina", lat: 51.121, lng: 1.317 },
-            { name: "Ramsgate Royal Harbour", lat: 51.332, lng: 1.421 },
-            { name: "Chatham Maritime Marina", lat: 51.401, lng: 0.534 },
-            { name: "Gillingham Marina", lat: 51.394, lng: 0.569 },
-            { name: "St Katharine Docks (London)", lat: 51.507, lng: -0.073 },
-            { name: "Limehouse Basin", lat: 51.511, lng: -0.038 },
-            { name: "South Dock Marina (Surrey Quays)", lat: 51.493, lng: -0.035 },
-            // East Coast
-            { name: "Burnham Yacht Harbour", lat: 51.628, lng: 0.809 },
-            { name: "Titchmarsh Marina (Walton-on-the-Naze)", lat: 51.866, lng: 1.251 },
-            { name: "Woolverstone Marina (Ipswich)", lat: 52.003, lng: 1.196 },
-            { name: "Neptune Marina (Ipswich)", lat: 52.052, lng: 1.155 },
-            { name: "Shotley Marina", lat: 51.964, lng: 1.272 },
-            { name: "Lowestoft Haven Marina", lat: 52.476, lng: 1.733 },
-            // Other Key Locations
-            { name: "Penarth Marina (Cardiff)", lat: 51.442, lng: -3.178 },
-            { name: "Portishead Marina (Bristol)", lat: 51.488, lng: -2.761 },
-            { name: "Bristol Harbour (Floating Harbour)", lat: 51.449, lng: -2.603 },
-            { name: "Milford Haven (Milford Marina)", lat: 51.711, lng: -5.036 },
-            { name: "Conwy Marina", lat: 53.292, lng: -3.843 },
-            { name: "Liverpool Marina", lat: 53.388, lng: -2.986 },
-            { name: "Whitehaven Marina", lat: 54.550, lng: -3.593 },
-            { name: "Maryport Marina", lat: 54.715, lng: -3.504 },
-            // Scotland (Local to Burnmouth & Major)
-            { name: "Burnmouth Harbour", lat: 55.839, lng: -2.073 },
-            { name: "Eyemouth Harbour", lat: 55.872, lng: -2.088 },
-            { name: "St Abbs Harbour", lat: 55.900, lng: -2.128 },
-            { name: "Berwick-upon-Tweed Dock", lat: 55.764, lng: -1.999 },
-            { name: "Dunbar Harbour", lat: 56.004, lng: -2.513 },
-            { name: "North Berwick Harbour", lat: 56.061, lng: -2.716 },
-            { name: "Leith (Edinburgh Marina)", lat: 55.983, lng: -3.181 },
-            { name: "Granton Harbour", lat: 55.987, lng: -3.223 },
-            { name: "Port Edgar (South Queensferry)", lat: 55.993, lng: -3.411 },
-            { name: "Troon Yacht Haven", lat: 55.548, lng: -4.668 },
-            { name: "Largs Yacht Haven", lat: 55.780, lng: -4.862 },
-            { name: "Kip Marina (Inverkip)", lat: 55.908, lng: -4.876 },
-            { name: "Rhu Marina", lat: 56.012, lng: -4.767 },
-            { name: "Oban Marina", lat: 56.423, lng: -5.498 }
-        ];
-
-        proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
+        
 
         let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
         let allData = [];
@@ -1042,7 +661,6 @@
         let pendingCsvData = null; 
         let editingUserMarker = null;
         const LABEL_LIMIT = 500;
-        
         let uniqueEntities = new Set();
         let entityColors = {}; 
         let activeEntityFilters = new Set();
@@ -1051,7 +669,6 @@
         
         // Context Menu State
         let contextMenuLatLng = null;
-        
         // Help Text Data
         const helpData = {
             timeline: "Control the time range of your data. Drag the blue handles on the slider to narrow down the specific date and time window. You can also manually input start and end times below. The 'Apply' button updates the map.",
@@ -1079,22 +696,23 @@
         let scene, camera, renderer, animationId;
         let is3DInitialized = false;
         let mapGroup = null; // Store map group globally to avoid rebuilding
-        let worldScale = { x: 100, z: 100, latRange: 1, lngRange: 1, minLat: 0, minLng: 0, minTime: 0, timeRange: 1 }; // Store world scaling factors
+        let worldScale = { x: 100, z: 100, latRange: 1, lngRange: 1, minLat: 0, minLng: 0, minTime: 0, timeRange: 1 };
+        // Store world scaling factors
         
         // 3D Camera State (Global)
         let cameraOffset = new THREE.Vector3(0, 50, 0);
         let theta = Math.PI / 2; // Orient North (Looking from South along Z axis)
-        let phi = Math.PI / 3; 
+        let phi = Math.PI / 3;
         let radius = 180;
 
         // Selection Variables
         let pendingSelection = new Set();
         let activeSelectionFilter = null;
         let isSelecting = false;
-        let selectionStartClient = { x: 0, y: 0 }; // Screen relative
+        let selectionStartClient = { x: 0, y: 0 };
+        // Screen relative
         const selectionBoxEl = document.createElement('div');
         selectionBoxEl.className = 'selection-box';
-
         function updateCameraPosition() {
             if (!camera) return;
             camera.position.x = cameraOffset.x + radius * Math.sin(phi) * Math.cos(theta);
@@ -1109,7 +727,7 @@
         }
 
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
@@ -1142,7 +760,6 @@
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
             userMarkerLayer = L.layerGroup().addTo(map);
-            
             clusterLayer = L.markerClusterGroup({ 
                 disableClusteringAtZoom: 17, 
                 spiderfyOnMaxZoom: true,
@@ -1172,7 +789,6 @@
                     return L.divIcon({ html: html, className: '', iconSize: L.point(40, 40) });
                 }
             }).addTo(map);
-
             map.on('click', (e) => {
                 document.getElementById('mapContextMenu').classList.add('hidden');
                 if (isPlacementMode) {
@@ -1191,7 +807,6 @@
                 menu.style.top = e.originalEvent.pageY + 'px';
                 menu.classList.remove('hidden');
             });
-            
             map.on('movestart', () => document.getElementById('mapContextMenu').classList.add('hidden'));
         }
 
@@ -1213,7 +828,6 @@
                 .setLatLng(contextMenuLatLng)
                 .setContent('<div class="text-xs text-slate-500 font-bold">Scanning...</div>')
                 .openOn(map);
-
             try {
                 const response = await fetch(`https://api.postcodes.io/postcodes?lon=${contextMenuLatLng.lng}&lat=${contextMenuLatLng.lat}`);
                 const data = await response.json();
@@ -1235,7 +849,6 @@
                 document.getElementById('mapContextMenu').classList.add('hidden');
             }
         });
-
         function togglePlacementMode(force) {
             isPlacementMode = typeof force === 'boolean' ? force : !isPlacementMode;
             const mapEl = document.getElementById('map');
@@ -1260,7 +873,6 @@
             
             modal.classList.remove('hidden');
             input.focus();
-            
             if (markerId !== null) {
                 const existing = userMarkers.find(m => m.id === markerId);
                 editingUserMarker = { ...existing };
@@ -1430,1710 +1042,3 @@
                 alert("An entity with this name already exists.");
                 return;
             }
-
-            // Update Data
-            if (newName !== currentEditingEntity) {
-                // Rename logic
-                uniqueEntities.delete(currentEditingEntity);
-                uniqueEntities.add(newName);
-                
-                if (activeEntityFilters.has(currentEditingEntity)) {
-                    activeEntityFilters.delete(currentEditingEntity);
-                    activeEntityFilters.add(newName);
-                }
-                
-                // Move color
-                delete entityColors[currentEditingEntity];
-                
-                // Update allData
-                allData.forEach(d => {
-                    if (d.entity === currentEditingEntity) {
-                        d.entity = newName;
-                        // Update label if it starts with the old entity name
-                        if (d.label.startsWith(currentEditingEntity + ":")) {
-                             d.label = newName + ":" + d.label.substring(currentEditingEntity.length + 1);
-                        }
-                    }
-                });
-            }
-            
-            // Set new color
-            entityColors[newName] = newColor;
-
-            // Clean up
-            document.getElementById('editEntityModal').classList.add('hidden');
-            updateEntityCheckboxes();
-            updateMap(false);
-            
-            // Re-render detection results if any exist to reflect name/color changes
-            const resultsDiv = document.getElementById('analysis-results');
-            if (!resultsDiv.classList.contains('hidden')) {
-                resultsDiv.classList.add('hidden'); // Hide results as they might be stale or broken
-            }
-        };
-
-        document.getElementById('btnDeleteEntity').onclick = () => {
-            if (!confirm(`Are you sure you want to delete "${currentEditingEntity}" and all its data?`)) return;
-
-            uniqueEntities.delete(currentEditingEntity);
-            activeEntityFilters.delete(currentEditingEntity);
-            delete entityColors[currentEditingEntity];
-            
-            allData = allData.filter(d => d.entity !== currentEditingEntity);
-            
-            // Recalc Date Range if needed? 
-            if (allData.length > 0) {
-                 dateRange.min = Math.min(...allData.map(d => d.ts));
-                 dateRange.max = Math.max(...allData.map(d => d.ts));
-                 initSlider(); // Re-init slider with new bounds
-            } else {
-                 document.getElementById('empty-state').classList.remove('hidden');
-                 document.getElementById('controls').classList.add('hidden');
-                 document.getElementById('map-container').classList.add('hidden');
-                 document.getElementById('analysis-section').classList.add('hidden');
-            }
-
-            document.getElementById('editEntityModal').classList.add('hidden');
-            updateEntityCheckboxes();
-            updateMap(false);
-            
-            document.getElementById('analysis-results').classList.add('hidden');
-        };
-
-        document.getElementById('btnCancelEditEntity').onclick = () => {
-             document.getElementById('editEntityModal').classList.add('hidden');
-             currentEditingEntity = null;
-        };
-
-        function processData(data, entityName) {
-            let validDates = [];
-            if (!uniqueEntities.has(entityName)) { entityColors[entityName] = getNextColor(uniqueEntities.size); }
-            uniqueEntities.add(entityName);
-            activeEntityFilters.add(entityName);
-
-            data.forEach(row => {
-                let easting, northing, latVal, lngVal, dateStr, timeStr;
-
-                if (activeColumnMap) {
-                    easting = activeColumnMap.easting ? row[activeColumnMap.easting] : undefined;
-                    northing = activeColumnMap.northing ? row[activeColumnMap.northing] : undefined;
-                    latVal = activeColumnMap.lat ? row[activeColumnMap.lat] : undefined;
-                    lngVal = activeColumnMap.lng ? row[activeColumnMap.lng] : undefined;
-                    dateStr = activeColumnMap.date ? row[activeColumnMap.date] : undefined;
-                    timeStr = activeColumnMap.time ? row[activeColumnMap.time] : undefined;
-                } else {
-                    // Fallback heuristics
-                    easting = row.Easting ?? row.easting ?? row.EASTING;
-                    northing = row.Northing ?? row.northing ?? row.NORTHING;
-                    latVal = row.Lat ?? row.lat ?? row.LAT ?? row.Latitude ?? row.latitude;
-                    lngVal = row.Long ?? row.long ?? row.LONG ?? row.Longitude ?? row.longitude ?? row.Lng ?? row.lng;
-                    dateStr = row.Date ?? row.date ?? row.DATE;
-                    timeStr = row.Time ?? row.time ?? row.TIME;
-                }
-
-                let finalLat = null, finalLng = null;
-
-                if (latVal !== undefined && lngVal !== undefined && latVal !== null && lngVal !== null) {
-                    finalLat = parseFloat(latVal);
-                    finalLng = parseFloat(lngVal);
-                } else if (easting !== undefined && northing !== undefined && easting !== null && northing !== null) {
-                    try {
-                        const coords = proj4("EPSG:27700", "WGS84", [parseFloat(easting), parseFloat(northing)]);
-                        finalLng = coords[0];
-                        finalLat = coords[1];
-                    } catch (e) { }
-                }
-
-                if (finalLat !== null && finalLng !== null && !isNaN(finalLat) && !isNaN(finalLng) && dateStr) {
-                    const ts = parseUKDate(dateStr, timeStr);
-                    if (!isNaN(ts)) {
-                        allData.push({ lat: finalLat, lng: finalLng, ts, dateObj: new Date(ts), label: `${entityName}: ${dateStr} ${timeStr || ''}`.trim(), entity: entityName });
-                        validDates.push(ts);
-                    }
-                }
-            });
-            if (allData.length === 0) return;
-            allData.sort((a, b) => a.ts - b.ts);
-            dateRange.min = Math.min(...allData.map(d => d.ts));
-            dateRange.max = Math.max(...allData.map(d => d.ts));
-            updateEntityCheckboxes();
-            showApp();
-            initSlider();
-            zoomToFit(allData);
-            updateMap(false); 
-        }
-
-        function initSlider() {
-            const slider = document.getElementById('date-slider');
-            const rangeDisplay = document.getElementById('range-display');
-            if (slider.noUiSlider) slider.noUiSlider.destroy();
-            noUiSlider.create(slider, { start: [dateRange.min, dateRange.max], connect: true, behaviour: 'tap-drag', range: { 'min': dateRange.min, 'max': dateRange.max }, step: 1000 });
-            slider.noUiSlider.on('update', (values) => {
-                const s = parseInt(values[0]), e = parseInt(values[1]);
-                document.getElementById('input-start').value = formatToLocalISO(s);
-                document.getElementById('input-end').value = formatToLocalISO(e);
-                rangeDisplay.innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
-            });
-            slider.noUiSlider.on('change', () => { if (isPlaying) togglePlayback(); updateMap(); });
-        }
-
-        function togglePlayback() {
-            const btn = document.getElementById('btnPlay');
-            const playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), slider = document.getElementById('date-slider');
-            if (isPlaying) { clearInterval(playInterval); playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); isPlaying = false; }
-            else {
-                playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); isPlaying = true;
-                playInterval = setInterval(() => {
-                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value), totalRange = dateRange.max - dateRange.min, step = (totalRange / 100) * multiplier; 
-                    const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
-                    let nextEnd = currEnd + step;
-                    if (nextEnd > dateRange.max) { slider.noUiSlider.set([currStart, dateRange.max]); togglePlayback(); return; }
-                    slider.noUiSlider.set([nextEnd - (currEnd - currStart), nextEnd]);
-                    
-                    if (currentView === '3d') {
-                        update3D();
-                    } else {
-                        updateMap(autoSnap); 
-                    }
-                }, 50);
-            }
-        }
-
-        function updateMap(shouldCentre = false) {
-            if (!map || !allData.length) return;
-            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            
-            if (activeSelectionFilter) {
-                filtered = filtered.filter(d => activeSelectionFilter.has(d));
-            }
-
-            document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
-            markerLayer.clearLayers(); pathLayer.clearLayers(); clusterLayer.clearLayers(); if (heatLayer) map.removeLayer(heatLayer);
-            if (filtered.length > 0) {
-                if (currentView === 'markers') {
-                    filtered.forEach((d, idx) => {
-                        const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
-                        if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
-                        m.addTo(markerLayer);
-                    });
-                } else if (currentView === 'clusters') {
-                    filtered.forEach((d) => {
-                        const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
-                        m.options.entity = d.entity;
-                        clusterLayer.addLayer(m);
-                    });
-                } else if (currentView === 'heat') { heatLayer = L.heatLayer(filtered.map(d => [d.lat, d.lng, 0.6]), { radius: 20, blur: 15 }).addTo(map); }
-                else if (currentView === 'path') {
-                    activeEntityFilters.forEach(entity => {
-                        const entityPoints = filtered.filter(p => p.entity === entity);
-                        if (entityPoints.length > 1) {
-                            const latlngs = entityPoints.map(p => [p.lat, p.lng]), color = entityColors[entity] || "#2563eb";
-                            L.polyline(latlngs, { color: color, weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
-                        }
-                    });
-                }
-                if (shouldCentre) {
-                    const lats = filtered.map(p => p.lat), lngs = filtered.map(p => p.lng);
-                    map.panTo([lats.reduce((a, b) => a + b, 0) / lats.length, lngs.reduce((a, b) => a + b, 0) / lngs.length], { animate: true, duration: 0.5 });
-                }
-            }
-        }
-
-        function renderResults(results, title) {
-            document.getElementById('analysis-results').classList.remove('hidden');
-            document.getElementById('results-title').innerText = title;
-            document.getElementById('results-count').innerText = `${results.length} Matches`;
-            const grid = document.getElementById('results-grid');
-            grid.innerHTML = '';
-            document.getElementById('no-results').classList.toggle('hidden', results.length > 0);
-            results.forEach(res => {
-                const card = document.createElement('div'), areaDesc = res.areaDescription || (res.entity.lat ? getAreaDescription(res.entity.lat, res.entity.lng) : '');
-                card.className = "detection-card bg-white border border-slate-100 p-4 rounded-xl shadow-sm cursor-pointer transition-all";
-                card.innerHTML = `<div class="flex justify-between items-start mb-2"><h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight truncate pr-2">${res.entity.name}</h4><span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black flex-shrink-0">X${res.matches.length}</span></div><div class="space-y-1.5 mb-3"><p class="text-[10px] text-slate-700 font-semibold leading-relaxed">${areaDesc}</p>${res.temporalSummary ? `<p class="text-[9px] text-slate-500 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">${res.temporalSummary}</p>` : ''}<p class="text-[10px] text-slate-400">Duration: ${res.duration || 'N/A'}</p></div><div class="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Visualise Journey</div>`;
-                card.onclick = () => {
-                    markerLayer.clearLayers(); pathLayer.clearLayers();
-                    const group = L.featureGroup(), latlngs = [];
-                    res.matches.forEach(p => {
-                        const color = entityColors[p.entity] || "#ef4444";
-                        latlngs.push([p.lat, p.lng]);
-                        L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 }).bindPopup(`<div class="text-[10px]"><strong>Event:</strong> ${p.label}<br><strong>Coords:</strong> ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>`).bindTooltip(p.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] }).addTo(group);
-                    });
-                    if (latlngs.length > 1) { L.polyline(latlngs, { color: entityColors[res.matches[0].entity] || "#ef4444", weight: 4, opacity: 0.8 }).addTo(pathLayer); }
-                    group.addTo(markerLayer); map.fitBounds(group.getBounds(), { padding: [50, 50], animate: true });
-                    window.scrollTo({ top: document.getElementById('map-container').offsetTop - 20, behavior: 'smooth' });
-                };
-                grid.appendChild(card);
-            });
-            window.scrollTo({ top: document.getElementById('analysis-results').offsetTop - 20, behavior: 'smooth' });
-        }
-
-        async function detectCarJourneys() {
-            const btn = document.getElementById('btnDetectCarJourneys');
-            const originalText = btn.innerText;
-            btn.innerText = "Analyzing...";
-            btn.classList.add('opacity-75', 'cursor-wait');
-            btn.disabled = true;
-
-            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            
-            if (filtered.length < 2) {
-                renderResults([], "High-Confidence Journeys");
-                btn.innerText = originalText;
-                btn.classList.remove('opacity-75', 'cursor-wait');
-                btn.disabled = false;
-                return;
-            }
-            
-            // User Inputs
-            const minDispInput = parseFloat(document.getElementById('journeyMinDist').value);
-            const certaintyInput = parseFloat(document.getElementById('journeyCertainty').value);
-            
-            // Map Certainty % to Ratio (50% = ~4.0, 100% = ~1.1, 0% = ~7.0)
-            // Higher certainty requires the total path to be closer to the displacement (straight line)
-            const ratioThreshold = 7 - (certaintyInput / 100 * 5.9);
-            
-            const MIN_DISPLACEMENT = minDispInput; 
-            const MAX_GAP = 2 * 60 * 60 * 1000;
-            const MIN_DURATION = 60 * 60 * 1000; 
-            
-            const journeys = [];
-            let currentJourney = [filtered[0]];
-            for (let i = 1; i < filtered.length; i++) {
-                if (filtered[i].ts - filtered[i-1].ts > MAX_GAP) { processJourney(currentJourney); currentJourney = [filtered[i]]; }
-                else { currentJourney.push(filtered[i]); }
-            }
-            processJourney(currentJourney);
-            function processJourney(jPoints) {
-                if (jPoints.length < 2) return;
-                const duration = jPoints[jPoints.length - 1].ts - jPoints[0].ts;
-                const displacement = getDistance(jPoints[0].lat, jPoints[0].lng, jPoints[jPoints.length - 1].lat, jPoints[jPoints.length - 1].lng);
-                
-                if (duration >= MIN_DURATION && displacement >= MIN_DISPLACEMENT) {
-                    let totalPath = 0; for(let k = 1; k < jPoints.length; k++) { totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng); }
-                    // Use calculated ratio based on certainty
-                    if (totalPath < displacement * ratioThreshold) { journeys.push([...jPoints]); }
-                }
-            }
-            
-            const results = journeys.map((j, idx) => {
-                const durMs = j[j.length-1].ts - j[0].ts, hours = Math.floor(durMs / 3600000), mins = Math.floor((durMs % 3600000) / 60000), disp = getDistance(j[0].lat, j[0].lng, j[j.length-1].lat, j[j.length-1].lng).toFixed(1);
-                return { 
-                    entity: { name: `Journey #${idx+1} (${j[0].entity})`, lat: j[0].lat, lng: j[0].lng }, 
-                    matches: j, 
-                    duration: `${hours}h ${mins}m (${disp}km displacement)`, 
-                    areaDescription: `From ${getAreaDescription(j[0].lat, j[0].lng).split('from ')[1] || 'Start'} to ${getAreaDescription(j[j.length-1].lat, j[j.length-1].lng).split('from ')[1] || 'End'}`, 
-                    temporalSummary: `Started: ${j[0].label} <br> Finished: ${j[j.length-1].label}` 
-                };
-            });
-
-            // Postcode Lookup Logic
-            const enrichmentPromises = results.map(async (item) => {
-                const startPt = item.matches[0];
-                const endPt = item.matches[item.matches.length - 1];
-                let startPC = null, endPC = null;
-
-                try {
-                    const resS = await fetch(`https://api.postcodes.io/postcodes?lon=${startPt.lng}&lat=${startPt.lat}&radius=2000`);
-                    const dataS = await resS.json();
-                    if (dataS.status === 200 && dataS.result && dataS.result.length > 0) startPC = dataS.result[0].postcode;
-                } catch(e) {}
-
-                try {
-                    const resE = await fetch(`https://api.postcodes.io/postcodes?lon=${endPt.lng}&lat=${endPt.lat}&radius=2000`);
-                    const dataE = await resE.json();
-                    if (dataE.status === 200 && dataE.result && dataE.result.length > 0) endPC = dataE.result[0].postcode;
-                } catch(e) {}
-
-                if (startPC || endPC) {
-                    item.areaDescription += `<br><span class="text-orange-500 font-bold mt-1 text-[9px] inline-block">`;
-                    if (startPC) item.areaDescription += `Start: 📍 ${startPC} `;
-                    if (endPC) item.areaDescription += `${startPC ? '| ' : ''}End: 📍 ${endPC}`;
-                    item.areaDescription += `</span>`;
-                }
-                return item;
-            });
-
-            await Promise.all(enrichmentPromises);
-
-            renderResults(results, `High-Confidence Journeys (>${MIN_DISPLACEMENT}km)`);
-            
-            btn.innerText = originalText;
-            btn.classList.remove('opacity-75', 'cursor-wait');
-            btn.disabled = false;
-        }
-
-        async function detectMostActive() {
-            const btn = document.getElementById('btnMostActive');
-            const originalText = btn.innerText;
-            btn.innerText = "Analyzing...";
-            btn.classList.add('opacity-75', 'cursor-wait');
-            btn.disabled = true;
-
-            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity)), clusters = {};
-            
-            filtered.forEach(p => { 
-                const key = `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`; 
-                if (!clusters[key]) { 
-                    clusters[key] = { 
-                        entity: { name: `Hotspot`, lat: p.lat, lng: p.lng }, 
-                        matches: [], 
-                        areaDescription: getAreaDescription(p.lat, p.lng) 
-                    }; 
-                } 
-                clusters[key].matches.push(p); 
-            });
-
-            const sorted = Object.values(clusters).sort((a, b) => b.matches.length - a.matches.length).slice(0, 12);
-            
-            // Enrich with Postcodes
-            const enrichmentPromises = sorted.map(async (item, idx) => {
-                item.entity.name = `Activity Hotspot #${idx + 1}`;
-                try {
-                    // Added radius=2000 to catch postcodes further away in rural areas
-                    const response = await fetch(`https://api.postcodes.io/postcodes?lon=${item.entity.lng}&lat=${item.entity.lat}&radius=2000`);
-                    const data = await response.json();
-                    if (data.status === 200 && data.result && data.result.length > 0) {
-                        const postcode = data.result[0].postcode;
-                        item.areaDescription += `<br><span class="text-orange-500 font-bold mt-1 inline-block">📍 ${postcode}</span>`;
-                    }
-                } catch (e) {
-                    console.warn('Postcode lookup failed for hotspot', idx);
-                }
-                return item;
-            });
-
-            await Promise.all(enrichmentPromises);
-
-            renderResults(sorted, "Top 12 Most Active Locations");
-            
-            btn.innerText = originalText;
-            btn.classList.remove('opacity-75', 'cursor-wait');
-            btn.disabled = false;
-        }
-
-        function detectCoLocation(targetA, targetB) {
-            const maxDist = parseFloat(document.getElementById('coLocationDist').value);
-            const maxTimeMs = parseFloat(document.getElementById('coLocationTime').value) * 60000;
-            const slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            
-            // Helper to parse input values (e.g. "entity:Name" or "tag:123")
-            const parseTarget = (val) => {
-                if (val.startsWith('tag:')) {
-                    const id = parseInt(val.split(':')[1]);
-                    const tag = userMarkers.find(m => m.id === id);
-                    return { type: 'tag', data: tag, name: tag ? tag.label : 'Unknown Tag' };
-                }
-                return { type: 'entity', name: val.replace('entity:', '') };
-            };
-
-            const objA = parseTarget(targetA);
-            const objB = parseTarget(targetB);
-            
-            const results = [];
-
-            // Case 1: Entity vs Entity
-            if (objA.type === 'entity' && objB.type === 'entity') {
-                const filteredA = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objA.name);
-                const filteredB = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objB.name);
-                
-                filteredA.forEach(p1 => {
-                    filteredB.forEach(p2 => {
-                        const timeDiff = Math.abs(p1.ts - p2.ts);
-                        if (timeDiff <= maxTimeMs) {
-                            const dist = getDistance(p1.lat, p1.lng, p2.lat, p2.lng);
-                            if (dist <= maxDist) {
-                                results.push({
-                                    entity: { name: `Intersection: ${objA.name} & ${objB.name}`, lat: p1.lat, lng: p1.lng },
-                                    matches: [p1, p2],
-                                    areaDescription: getAreaDescription(p1.lat, p1.lng),
-                                    temporalSummary: `Time gap: ${(timeDiff / 60000).toFixed(1)} mins<br>Spatial gap: ${dist.toFixed(2)} km`,
-                                    duration: new Date(p1.ts).toLocaleString('en-GB')
-                                });
-                            }
-                        }
-                    });
-                });
-            }
-            // Case 2: Entity vs Tag (or Tag vs Entity)
-            else if (objA.type !== objB.type) {
-                const entityObj = objA.type === 'entity' ? objA : objB;
-                const tagObj = objA.type === 'tag' ? objA : objB;
-                
-                if (!tagObj.data) return; // Tag deleted?
-
-                const filtered = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === entityObj.name);
-                
-                // Group points into "visits"
-                let currentVisit = [];
-                
-                filtered.forEach(p => {
-                    const dist = getDistance(p.lat, p.lng, tagObj.data.lat, tagObj.data.lng);
-                    if (dist <= maxDist) {
-                        // Check if part of current visit (time gap < maxTimeMs)
-                        if (currentVisit.length > 0 && (p.ts - currentVisit[currentVisit.length-1].ts) > maxTimeMs) {
-                            // Close previous visit
-                            addVisitResult(currentVisit, entityObj.name, tagObj.data.label, dist);
-                            currentVisit = [];
-                        }
-                        currentVisit.push(p);
-                    }
-                });
-                // Add final visit
-                if (currentVisit.length > 0) {
-                    addVisitResult(currentVisit, entityObj.name, tagObj.data.label, getDistance(currentVisit[0].lat, currentVisit[0].lng, tagObj.data.lat, tagObj.data.lng));
-                }
-
-                function addVisitResult(points, entName, tagName, lastDist) {
-                    const startTime = new Date(points[0].ts);
-                    const endTime = new Date(points[points.length-1].ts);
-                    const durationMins = Math.round((points[points.length-1].ts - points[0].ts) / 60000);
-                    
-                    results.push({
-                        entity: { name: `Visit: ${entName} at ${tagName}`, lat: tagObj.data.lat, lng: tagObj.data.lng },
-                        matches: points,
-                        areaDescription: getAreaDescription(tagObj.data.lat, tagObj.data.lng),
-                        temporalSummary: `Arrived: ${startTime.toLocaleTimeString()}<br>Duration: ${durationMins} mins`,
-                        duration: startTime.toLocaleDateString()
-                    });
-                }
-            }
-            // Case 3: Tag vs Tag
-            else if (objA.type === 'tag' && objB.type === 'tag') {
-                 if (objA.data && objB.data) {
-                     const dist = getDistance(objA.data.lat, objA.data.lng, objB.data.lat, objB.data.lng);
-                     if (dist <= maxDist) {
-                         results.push({
-                             entity: { name: `Proximity: ${objA.name} & ${objB.name}`, lat: objA.data.lat, lng: objA.data.lng },
-                             matches: [], // Static
-                             areaDescription: `Distance: ${dist.toFixed(2)} km`,
-                             temporalSummary: "Static Location Proximity",
-                             duration: "N/A"
-                         });
-                     }
-                 }
-            }
-
-            // Deduplicate logic (mostly for entity-entity)
-            const uniqueResults = results.filter((v, i, a) => a.findIndex(t => 
-                (t.matches[0]?.ts === v.matches[0]?.ts && t.entity.name === v.entity.name)
-            ) === i);
-            
-            renderResults(uniqueResults, "Co-location / Visit Detections");
-        }
-
-        async function detectEntities(list, radiusId, title, btnId) {
-            let btn = null;
-            let originalText = "";
-            
-            if (btnId) {
-                btn = document.getElementById(btnId);
-                originalText = btn.innerText;
-                btn.innerText = "Scanning...";
-                btn.classList.add('opacity-75', 'cursor-wait');
-                btn.disabled = true;
-            }
-
-            const radius = parseFloat(document.getElementById(radiusId).value), slider = document.getElementById('date-slider'), [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity)), results = [];
-            
-            list.forEach(entity => { 
-                const matches = filtered.filter(p => getDistance(p.lat, p.lng, entity.lat, entity.lng) <= radius); 
-                if (matches.length > 0) results.push({ entity, matches, areaDescription: getAreaDescription(entity.lat, entity.lng) }); 
-            });
-
-            // Enrich with Postcodes
-            const enrichmentPromises = results.map(async (item) => {
-                try {
-                    const response = await fetch(`https://api.postcodes.io/postcodes?lon=${item.entity.lng}&lat=${item.entity.lat}&radius=2000`);
-                    const data = await response.json();
-                    if (data.status === 200 && data.result && data.result.length > 0) {
-                        const postcode = data.result[0].postcode;
-                        item.areaDescription += `<br><span class="text-orange-500 font-bold mt-1 inline-block">📍 ${postcode}</span>`;
-                    }
-                } catch (e) {
-                    console.warn('Postcode lookup failed for entity detection');
-                }
-                return item;
-            });
-
-            await Promise.all(enrichmentPromises);
-
-            renderResults(results, title);
-
-            if (btn) {
-                btn.innerText = originalText;
-                btn.classList.remove('opacity-75', 'cursor-wait');
-                btn.disabled = false;
-            }
-        }
-
-        function zoomToFit(data) {
-            const points = data || allData, filteredPoints = points.filter(p => activeEntityFilters.has(p.entity));
-            if (filteredPoints.length > 0) { map.fitBounds(L.latLngBounds(filteredPoints.map(d => [d.lat, d.lng])), { padding: [40, 40], animate: true }); }
-        }
-
-        function showApp() {
-            document.getElementById('empty-state').classList.add('hidden'); document.getElementById('controls').classList.remove('hidden'); document.getElementById('map-container').classList.remove('hidden'); document.getElementById('analysis-section').classList.remove('hidden');
-            initMap(); map.invalidateSize();
-        }
-
-        async function searchPostcode() {
-            const input = document.getElementById('postcodeInput');
-            const query = input.value.trim();
-            if (!query) return;
-
-            const btn = document.getElementById('btnSearchPostcode');
-            btn.classList.add('animate-spin'); 
-            
-            try {
-                const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (data.status === 200) {
-                    const { latitude, longitude } = data.result;
-                    
-                    if (currentView === '3d' && is3DInitialized) {
-                        // 3D Fly To
-                        const x = ((longitude - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                        const z = -(((latitude - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
-                        
-                        // Animate camera to new location
-                        const duration = 1000;
-                        const startX = cameraOffset.x, startZ = cameraOffset.z;
-                        const startTime = performance.now();
-                        
-                        function animateScroll(currentTime) {
-                            const elapsed = currentTime - startTime;
-                            const progress = Math.min(elapsed / duration, 1);
-                            const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease out
-                            
-                            cameraOffset.x = startX + (x - startX) * ease;
-                            cameraOffset.z = startZ + (z - startZ) * ease;
-                            updateCameraPosition();
-                            
-                            if (progress < 1) requestAnimationFrame(animateScroll);
-                        }
-                        requestAnimationFrame(animateScroll);
-                        
-                    } else {
-                        // Leaflet Fly To
-                        map.flyTo([latitude, longitude], 15);
-                        L.popup({closeButton: false})
-                            .setLatLng([latitude, longitude])
-                            .setContent(`<div class="text-xs font-bold text-slate-700">${query.toUpperCase()}</div>`)
-                            .openOn(map);
-                    }
-                } else {
-                    alert('Postcode not found');
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                btn.classList.remove('animate-spin');
-            }
-        }
-
-        document.getElementById('btnSearchPostcode').onclick = searchPostcode;
-        document.getElementById('postcodeInput').onkeypress = (e) => { if (e.key === 'Enter') searchPostcode(); };
-
-        document.getElementById('csvFile').onchange = e => { 
-            if (e.target.files[0]) { 
-                Papa.parse(e.target.files[0], { 
-                    header: true, 
-                    dynamicTyping: true, 
-                    skipEmptyLines: true, 
-                    complete: (r) => { 
-                        pendingCsvData = r.data;
-                        const headers = r.meta.fields;
-                        const autoMap = detectColumns(headers);
-                        
-                        if (autoMap) {
-                            activeColumnMap = autoMap;
-                            document.getElementById('entityModal').classList.remove('hidden'); 
-                            document.getElementById('entityNameInput').focus(); 
-                        } else {
-                            populateMappingDropdowns(headers);
-                            document.getElementById('columnMappingModal').classList.remove('hidden');
-                        }
-                    } 
-                }); 
-            } 
-        };
-
-        document.getElementById('btnConfirmEntity').onclick = () => {
-            const nameInput = document.getElementById('entityNameInput'), name = nameInput.value.trim();
-            if (name && pendingCsvData) { processData(pendingCsvData, name); document.getElementById('entityModal').classList.add('hidden'); nameInput.value = ''; pendingCsvData = null; }
-            else { nameInput.classList.add('border-rose-500'); setTimeout(() => nameInput.classList.remove('border-rose-500'), 1000); }
-        };
-
-        // New Helper Functions for Mapping
-        function detectColumns(headers) {
-            const lowerHeaders = headers.map(h => h.toString().toLowerCase());
-            const map = { date: null, time: null, lat: null, lng: null, easting: null, northing: null };
-            
-            // Find candidates
-            const find = (keywords) => {
-                for (let k of keywords) {
-                    const idx = lowerHeaders.indexOf(k);
-                    if (idx !== -1) return headers[idx];
-                    const partial = lowerHeaders.find(h => h.includes(k));
-                    if (partial) return headers[lowerHeaders.indexOf(partial)];
-                }
-                return null;
-            };
-
-            map.date = find(['date', 'timestamp', 'dt']);
-            map.time = find(['time']);
-            map.lat = find(['lat', 'latitude']);
-            map.lng = find(['lng', 'long', 'longitude']);
-            map.easting = find(['easting', 'east']);
-            map.northing = find(['northing', 'north']);
-
-            // Strict check: Needs Date AND (Lat/Lng OR East/North) to auto-approve
-            const hasGeo = (map.lat && map.lng) || (map.easting && map.northing);
-            if (map.date && hasGeo) return map;
-            return null;
-        }
-
-        function populateMappingDropdowns(headers) {
-            const ids = ['mapDate', 'mapTime', 'mapLat', 'mapLng', 'mapEasting', 'mapNorthing'];
-            ids.forEach(id => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = '<option value="">-- Select Column --</option>';
-                headers.forEach(h => {
-                    const opt = document.createElement('option');
-                    opt.value = h;
-                    opt.innerText = h;
-                    sel.appendChild(opt);
-                });
-            });
-        }
-
-        document.getElementById('btnConfirmMapping').onclick = () => {
-            const map = {
-                date: document.getElementById('mapDate').value,
-                time: document.getElementById('mapTime').value,
-                lat: document.getElementById('mapLat').value,
-                lng: document.getElementById('mapLng').value,
-                easting: document.getElementById('mapEasting').value,
-                northing: document.getElementById('mapNorthing').value
-            };
-
-            const hasGeo = (map.lat && map.lng) || (map.easting && map.northing);
-            
-            if (!map.date) { alert("Date column is required."); return; }
-            if (!hasGeo) { alert("Please map either Latitude/Longitude OR Easting/Northing."); return; }
-
-            activeColumnMap = map;
-            document.getElementById('columnMappingModal').classList.add('hidden');
-            document.getElementById('entityModal').classList.remove('hidden');
-            document.getElementById('entityNameInput').focus();
-        };
-
-        document.getElementById('btnCancelMapping').onclick = () => {
-            document.getElementById('columnMappingModal').classList.add('hidden');
-            document.getElementById('csvFile').value = ''; // Reset file input
-            pendingCsvData = null;
-        };
-
-        document.getElementById('btnStartDrawing').onclick = (e) => {
-            L.DomEvent.stopPropagation(e);
-            togglePlacementMode();
-        };
-        
-        document.getElementById('btnSaveUserMarker').onclick = saveUserMarker;
-        document.getElementById('btnDeleteUserMarker').onclick = deleteUserMarker;
-        document.getElementById('btnCancelUserMarker').onclick = () => {
-            document.getElementById('userMarkerModal').classList.add('hidden');
-            editingUserMarker = null;
-        };
-
-        document.getElementById('btnPlay').onclick = togglePlayback;
-        document.getElementById('viewMarkers').onclick = () => setView('markers', 'viewMarkers');
-        document.getElementById('viewClusters').onclick = () => setView('clusters', 'viewClusters');
-        document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
-        document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
-        document.getElementById('view3D').onclick = () => setView('3d', 'view3D');
-
-        document.getElementById('btnDetectTransport').onclick = () => detectEntities(TRANSPORT_HUBS, 'transportRadius', 'Airports & Seaports Detections', 'btnDetectTransport');
-        document.getElementById('btnDetectRail').onclick = () => detectEntities(RAIL_NETWORK_WAYPOINTS, 'railRadius', 'Rail Corridor Journey Detections', 'btnDetectRail');
-        document.getElementById('btnDetectPrisons').onclick = () => detectEntities(PRISONS, 'prisonRadius', 'Correctional Facility Detections', 'btnDetectPrisons');
-        document.getElementById('btnDetectService').onclick = () => detectEntities(SERVICE_STATIONS, 'serviceRadius', 'Service Station Detections', 'btnDetectService');
-        document.getElementById('btnDetectMisc').onclick = () => detectEntities(MISC_KEY_LOCATIONS, 'miscRadius', 'Key Location Detections (Misc)', 'btnDetectMisc');
-        document.getElementById('btnDetectHarbours').onclick = () => detectEntities(MARITIME_HARBOURS, 'harbourRadius', 'Maritime Harbour/Marina Detections', 'btnDetectHarbours');
-        document.getElementById('btnMostActive').onclick = detectMostActive;
-        document.getElementById('btnDetectCarJourneys').onclick = detectCarJourneys;
-        
-        document.getElementById('btnDetectCoLocation').onclick = () => {
-             // Populate Dropdowns with Entities AND Tags
-             const selA = document.getElementById('colocEntityA');
-             const selB = document.getElementById('colocEntityB');
-             selA.innerHTML = '';
-             selB.innerHTML = '';
-             
-             // Helper for groups
-             const addGroup = (label, items, prefix) => {
-                 if (items.length === 0) return;
-                 const group = document.createElement('optgroup');
-                 group.label = label;
-                 items.forEach(item => {
-                     // Handle both string entities and object tags
-                     const name = item.label || item;
-                     const val = prefix + (item.id || item);
-                     const opt = document.createElement('option');
-                     opt.value = val;
-                     opt.innerText = name;
-                     group.appendChild(opt);
-                 });
-                 selA.appendChild(group.cloneNode(true));
-                 selB.appendChild(group.cloneNode(true));
-             };
-
-             if (uniqueEntities.size > 0) addGroup("Entities", Array.from(uniqueEntities), "entity:");
-             if (userMarkers.length > 0) addGroup("Tagged Locations", userMarkers, "tag:");
-
-             if (selA.options.length === 0) {
-                 alert("No entities or tags available for analysis.");
-                 return;
-             }
-             
-             // Default selection logic
-             if (selB.options.length > 1) selB.selectedIndex = 1;
-             
-             document.getElementById('coLocationModal').classList.remove('hidden');
-        };
-
-        document.getElementById('btnRunCoLocation').onclick = () => {
-             const a = document.getElementById('colocEntityA').value;
-             const b = document.getElementById('colocEntityB').value;
-             if (a === b) { alert("Please select two different targets."); return; }
-             document.getElementById('coLocationModal').classList.add('hidden');
-             detectCoLocation(a, b);
-        };
-        
-        document.getElementById('btnCancelCoLocation').onclick = () => {
-             document.getElementById('coLocationModal').classList.add('hidden');
-        };
-
-        function setView(type, btnId) {
-            currentView = type;
-            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath', 'view3D'].forEach(id => { 
-                const b = document.getElementById(id); 
-                if (b) b.className = id === btnId 
-                    ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" 
-                    : (id === 'view3D' ? "col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"); 
-            });
-            
-            if (type === '3d') {
-                document.getElementById('map').classList.add('hidden');
-                document.getElementById('view-3d').classList.remove('hidden');
-                document.getElementById('time-axis-display').classList.remove('hidden');
-                init3D();
-            } else {
-                document.getElementById('map').classList.remove('hidden');
-                document.getElementById('view-3d').classList.add('hidden');
-                document.getElementById('time-axis-display').classList.add('hidden');
-                
-                // Fix: Invalidate map size to ensure tiles render correctly after being hidden
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                    updateMap();
-                }, 100);
-            }
-        }
-
-        function init3D() {
-            if (is3DInitialized) { update3D(); return; }
-            
-            const container = document.getElementById('view-3d');
-            container.appendChild(selectionBoxEl); // Append selection box to 3D view
-
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a);
-            scene.fog = new THREE.FogExp2(0x0f172a, 0.002);
-
-            // Adjusted Near Plane to 0.01 to allow extreme close-ups without clipping
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 2000);
-            camera.position.set(100, 100, 100);
-            camera.lookAt(0, 50, 0);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            // Enable better pixel interpolation
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(50, 200, 100);
-            scene.add(dirLight);
-
-            // Mouse Interaction Logic
-            let isMouseDragging = false;
-            let mouseStartX, mouseStartY;
-
-            // Zoom (Scroll Wheel)
-            container.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoomIntensity = 0.1;
-                radius += e.deltaY * zoomIntensity;
-                // Allow zooming much closer (0.1) for street level inspection
-                radius = Math.max(0.1, Math.min(800, radius)); 
-                updateCameraPosition();
-            }, { passive: false });
-
-            // Rotate (Middle Mouse Drag)
-            container.addEventListener('mousedown', (e) => {
-                if (e.button === 1) { // Middle Mouse Button
-                    isMouseDragging = true;
-                    mouseStartX = e.clientX;
-                    mouseStartY = e.clientY;
-                    container.style.cursor = 'grabbing';
-                    e.preventDefault();
-                }
-                
-                // Box Selection Logic (Left Click)
-                // Ensure we aren't clicking the joysticks
-                if (e.button === 0 && 
-                    !document.getElementById('nav-joystick').contains(e.target) && 
-                    !document.getElementById('nav-joystick-top').contains(e.target)) {
-                    
-                    isSelecting = true;
-                    selectionStartClient.x = e.clientX;
-                    selectionStartClient.y = e.clientY;
-                    
-                    // Calculate visual offset relative to container
-                    const rect = container.getBoundingClientRect();
-                    const relX = e.clientX - rect.left;
-                    const relY = e.clientY - rect.top;
-                    
-                    selectionBoxEl.style.display = 'block';
-                    selectionBoxEl.style.left = relX + 'px';
-                    selectionBoxEl.style.top = relY + 'px';
-                    selectionBoxEl.style.width = '0px';
-                    selectionBoxEl.style.height = '0px';
-                }
-            });
-
-            // Joystick Logic (Bottom)
-            const joystick = document.getElementById('nav-joystick');
-            // Joystick Logic (Top)
-            const joystickTop = document.getElementById('nav-joystick-top');
-            
-            let isJoystickDragging = false;
-            let joyStartX, joyStartY;
-
-            const startJoystick = (e) => {
-                isJoystickDragging = true;
-                joyStartX = e.clientX;
-                joyStartY = e.clientY;
-                e.target.style.cursor = 'grabbing';
-                e.preventDefault(); 
-            };
-
-            joystick.onmousedown = startJoystick;
-            joystickTop.onmousedown = startJoystick;
-
-            window.onmouseup = () => { 
-                isJoystickDragging = false; 
-                isMouseDragging = false;
-                joystick.style.cursor = 'grab'; 
-                joystickTop.style.cursor = 'grab'; 
-                container.style.cursor = 'auto';
-                
-                if (isSelecting) {
-                    isSelecting = false;
-                    selectionBoxEl.style.display = 'none';
-                    
-                    // Calculate Selection if box was drawn
-                    if (Math.abs(window.event.clientX - selectionStartClient.x) > 5 || Math.abs(window.event.clientY - selectionStartClient.y) > 5) {
-                        calculateSelection(selectionStartClient.x, selectionStartClient.y, window.event.clientX, window.event.clientY);
-                    }
-                }
-            };
-            
-            window.onmousemove = (e) => {
-                // Handle Selection Box
-                if (isSelecting) {
-                    const rect = container.getBoundingClientRect();
-                    const currentX = e.clientX - rect.left;
-                    const currentY = e.clientY - rect.top;
-                    const startX = selectionStartClient.x - rect.left;
-                    const startY = selectionStartClient.y - rect.top;
-                    
-                    const width = Math.abs(currentX - startX);
-                    const height = Math.abs(currentY - startY);
-                    const left = Math.min(currentX, startX);
-                    const top = Math.min(currentY, startY);
-                    
-                    selectionBoxEl.style.width = width + 'px';
-                    selectionBoxEl.style.height = height + 'px';
-                    selectionBoxEl.style.left = left + 'px';
-                    selectionBoxEl.style.top = top + 'px';
-                }
-
-                // Handle Joystick Drag (Rotate)
-                if (isJoystickDragging) {
-                    const deltaX = (e.clientX - joyStartX) * 0.005;
-                    const deltaY = (e.clientY - joyStartY) * 0.005;
-
-                    // Flipped Orientation: Left goes Right
-                    theta += deltaX; 
-                    // Flipped Orientation: Up tilts Down (Camera moves lower/phi increases)
-                    phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, phi - deltaY)); 
-
-                    joyStartX = e.clientX;
-                    joyStartY = e.clientY;
-                    updateCameraPosition();
-                }
-
-                // Handle Middle Mouse Drag (Pan)
-                if (isMouseDragging) {
-                    // Improved Pan Speed: Lower floor (0.01) allows precision at high zoom
-                    const panSpeed = Math.max(0.01, radius * 0.002);
-                    const dx = (e.clientX - mouseStartX) * panSpeed;
-                    const dy = (e.clientY - mouseStartY) * panSpeed;
-
-                    const localRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-                    const localUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-
-                    cameraOffset.addScaledVector(localRight, -dx);
-                    cameraOffset.addScaledVector(localUp, dy);
-
-                    mouseStartX = e.clientX;
-                    mouseStartY = e.clientY;
-                    updateCameraPosition();
-                }
-            };
-
-            // Optimization variables to prevent GC
-            const _tempMatrix = new THREE.Matrix4();
-            const _tempPos = new THREE.Vector3();
-            const _tempScale = new THREE.Vector3();
-            const _tempQuat = new THREE.Quaternion(); 
-
-            const animate = function () {
-                animationId = requestAnimationFrame(animate);
-                
-                if (scene && currentView === '3d') {
-                    // Adaptive Scaling: constant screen size approximation
-                    const scaleVal = Math.max(0.2, radius * 0.005); 
-                    
-                    // Spatial Culling Logic
-                    // Only cull when zoomed in (radius < 100)
-                    // Visible range scales with zoom (radius)
-                    const checkCulling = radius < 100;
-                    const cullDistSq = (radius * 1.0) ** 2; // Visibility bubble squared
-
-                    scene.children.forEach(child => {
-                        if (child.isInstancedMesh) {
-                            let needsUpdate = false;
-                            
-                            for (let i = 0; i < child.count; i++) {
-                                child.getMatrixAt(i, _tempMatrix);
-                                _tempPos.setFromMatrixPosition(_tempMatrix);
-                                
-                                // Calculate distance to camera target (XZ plane)
-                                const dx = _tempPos.x - cameraOffset.x;
-                                const dz = _tempPos.z - cameraOffset.z;
-                                const distSq = dx*dx + dz*dz;
-                                
-                                let s = scaleVal;
-                                
-                                // If zoomed in and outside visible bubble, scale to 0 (hide)
-                                if (checkCulling && distSq > cullDistSq) {
-                                    s = 0;
-                                }
-
-                                // Apply Scale
-                                _tempScale.set(s, s, s);
-                                _tempMatrix.compose(_tempPos, _tempQuat, _tempScale);
-                                child.setMatrixAt(i, _tempMatrix);
-                                needsUpdate = true;
-                            }
-                            
-                            if(needsUpdate) child.instanceMatrix.needsUpdate = true;
-                        }
-                    });
-                }
-
-                renderer.render(scene, camera);
-            };
-            animate();
-            
-            is3DInitialized = true;
-            update3D();
-            updateCameraPosition(); 
-            
-            // Resize handler
-            window.addEventListener('resize', () => {
-                if(currentView === '3d') {
-                    camera.aspect = container.clientWidth / container.clientHeight;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(container.clientWidth, container.clientHeight);
-                }
-            });
-        }
-
-        // Helper functions for Map Tiles
-        function lon2tile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
-        function lat2tile(lat, zoom) { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
-        function tile2long(x, z) { return (x / Math.pow(2, z) * 360 - 180); }
-        function tile2lat(y, z) { var n = Math.PI - 2 * Math.PI * y / Math.pow(2, z); return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))); }
-
-        function calculateSelection(x1, y1, x2, y2) {
-            const minX = Math.min(x1, x2);
-            const maxX = Math.max(x1, x2);
-            const minY = Math.min(y1, y2);
-            const maxY = Math.max(y1, y2);
-            
-            pendingSelection.clear();
-            
-            // Get currently visible data
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
-            const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            
-            const tempV = new THREE.Vector3();
-            const rect = renderer.domElement.getBoundingClientRect();
-            
-            // Dynamic Time Scale for Selection Calculation
-            const currentMinTime = start;
-            const currentTimeRange = end - start || 1;
-
-            filtered.forEach(d => {
-                // Normalize 3D Pos
-                const px = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                const pz = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                
-                // Use Dynamic Time Scaling (Inverted: Early at Top/100, Late at Bottom/0)
-                const py = 100 - (((d.ts - currentMinTime) / currentTimeRange) * 100);
-                
-                tempV.set(px, py, pz);
-                tempV.project(camera);
-                
-                // Map to screen space
-                const sx = (tempV.x * .5 + .5) * rect.width;
-                const sy = (tempV.y * -.5 + .5) * rect.height;
-                
-                const absX = sx + rect.left;
-                const absY = sy + rect.top;
-
-                if (absX >= minX && absX <= maxX && absY >= minY && absY <= maxY) {
-                    pendingSelection.add(d);
-                }
-            });
-            
-            // Re-render to show highlights
-            if(currentView === '3d') update3D();
-
-            const btn = document.getElementById('btnFitSelected');
-            if (pendingSelection.size > 0) {
-                btn.classList.remove('hidden');
-                btn.innerText = `Fit Selected (${pendingSelection.size})`;
-            } else {
-                btn.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('btnFitSelected').onclick = () => {
-            if (pendingSelection.size === 0) return;
-            
-            // 1. Convert Set to Array
-            const subset = Array.from(pendingSelection);
-            
-            // 2. Update Slider to match selected Time Range
-            const timestamps = subset.map(d => d.ts);
-            const minTs = Math.min(...timestamps);
-            const maxTs = Math.max(...timestamps);
-            
-            // Apply new time range to slider
-            const slider = document.getElementById('date-slider');
-            if (slider.noUiSlider) {
-                slider.noUiSlider.set([minTs, maxTs]);
-            }
-
-            // 3. Set Active Filter
-            activeSelectionFilter = new Set(pendingSelection);
-            
-            document.getElementById('btnFitSelected').classList.add('hidden');
-            pendingSelection.clear();
-            
-            // 4. Update Views
-            updateMap();
-            if (currentView === '3d') update3D(); // This will now trigger a high-res map rebuild
-            
-            // 5. Zoom 2D Map
-            zoomToFit(subset);
-            
-            // 6. Zoom 3D Camera (Space & Time)
-            if(currentView === '3d') {
-                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-                 let minY = Infinity, maxY = -Infinity;
-
-                 // Use the new subset time range for zooming calculation
-                 const currentMinTime = minTs;
-                 const currentTimeRange = maxTs - minTs || 1;
-
-                 subset.forEach(d => {
-                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                    const y = 100 - (((d.ts - currentMinTime) / currentTimeRange) * 100);
-
-                    if(x < minX) minX = x;
-                    if(x > maxX) maxX = x;
-                    if(z < minZ) minZ = z;
-                    if(z > maxZ) maxZ = z;
-                    if(y < minY) minY = y;
-                    if(y > maxY) maxY = y;
-                 });
-                 
-                 if (minX !== Infinity) {
-                     const cx = (minX + maxX) / 2;
-                     const cz = (minZ + maxZ) / 2;
-                     const cy = (minY + maxY) / 2; 
-
-                     const width = maxX - minX;
-                     const depth = maxZ - minZ;
-                     const height = maxY - minY;
-                     
-                     const maxDim = Math.max(width, depth, height);
-                     
-                     cameraOffset.set(cx, cy, cz); 
-                     
-                     // Allow very close zoom
-                     radius = Math.max(0.1, maxDim * 1.1); 
-                     updateCameraPosition();
-                 }
-            }
-        };
-
-        function update3D() {
-            if (!scene) return;
-            
-            // 1. CLEAR DYNAMIC DATA
-            for(let i = scene.children.length - 1; i >= 0; i--) { 
-                const obj = scene.children[i];
-                if (obj.type === "Line" || obj.type === "Points" || obj.type === "InstancedMesh" || (obj.type === "Mesh" && obj !== mapGroup && !obj.isMapTile)) {
-                    scene.remove(obj); 
-                }
-            }
-
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
-            
-            // Update Time Axis
-            document.getElementById('time-axis-end').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-            document.getElementById('time-axis-start').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-
-            // Filter Data
-            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            if (activeSelectionFilter) {
-                filtered = filtered.filter(d => activeSelectionFilter.has(d));
-            }
-
-            // 2. DYNAMIC WORLD GENERATION
-            // Calculate target bounds based on VISIBLE data (allows street level zoom)
-            // If no data visible, fallback to all data
-            const boundsData = filtered.length > 0 ? filtered : allData;
-            
-            const lats = boundsData.map(d => d.lat);
-            const lngs = boundsData.map(d => d.lng);
-            
-            if (lats.length === 0) return;
-
-            const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-            const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-            
-            // Check if we need to rebuild the map (if bounds changed significantly)
-            const tolerance = 0.00001; 
-            const needsRebuild = !mapGroup || 
-                                 Math.abs(minLat - worldScale.minLat) > tolerance || 
-                                 Math.abs(maxLat - (worldScale.minLat + worldScale.latRange)) > tolerance ||
-                                 Math.abs(minLng - worldScale.minLng) > tolerance;
-
-            if (needsRebuild) {
-                if (mapGroup) scene.remove(mapGroup);
-                
-                worldScale.minLat = minLat;
-                worldScale.minLng = minLng;
-                worldScale.latRange = maxLat - minLat || 0.00001;
-                worldScale.lngRange = maxLng - minLng || 0.00001;
-
-                const meanLatRad = (minLat + maxLat) / 2 * (Math.PI / 180);
-                const aspectRatio = (worldScale.lngRange * Math.cos(meanLatRad)) / worldScale.latRange;
-                
-                if (aspectRatio > 1) {
-                    worldScale.scaleX = 100 * aspectRatio;
-                    worldScale.scaleZ = 100;
-                } else {
-                    worldScale.scaleX = 100;
-                    worldScale.scaleZ = 100 / aspectRatio;
-                }
-
-                mapGroup = new THREE.Group();
-                const loader = new THREE.TextureLoader();
-                loader.crossOrigin = 'anonymous';
-
-                // Aggressive Zoom Calculation: +5 bias to ensure high res, capped at 19
-                const zoom = Math.min(19, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 5));
-                
-                const minTileX = lon2tile(worldScale.minLng, zoom) - 1;
-                const maxTileX = lon2tile(maxLng, zoom) + 1;
-                const minTileY = lat2tile(maxLat, zoom) - 1;
-                const maxTileY = lat2tile(worldScale.minLat, zoom) + 1;
-
-                // Limit tile count to prevent crashing if range is huge but zoom calc failed
-                if ((maxTileX - minTileX) * (maxTileY - minTileY) < 100) {
-                    for (let tx = minTileX; tx <= maxTileX; tx++) {
-                        for (let ty = minTileY; ty <= maxTileY; ty++) {
-                            // Switched to OpenStreetMap Standard for higher street-level detail (house numbers, etc.)
-                            const url = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
-                            
-                            const tileWest = tile2long(tx, zoom);
-                            const tileEast = tile2long(tx + 1, zoom);
-                            const tileNorth = tile2lat(ty, zoom);
-                            const tileSouth = tile2lat(ty + 1, zoom);
-
-                            const x1 = ((tileWest - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                            const x2 = ((tileEast - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                            const z1 = -(((tileNorth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
-                            const z2 = -(((tileSouth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
-
-                            const w = Math.abs(x2 - x1);
-                            const h = Math.abs(z2 - z1);
-                            const cx = (x1 + x2) / 2;
-                            const cz = (z1 + z2) / 2;
-
-                            const geometry = new THREE.PlaneGeometry(w * 1.02, h * 1.02); // Slight overlap
-                            const texture = loader.load(url);
-                            
-                            // High Quality Texture Filtering
-                            texture.minFilter = THREE.LinearFilter;
-                            texture.magFilter = THREE.LinearFilter;
-                            texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max Sharpness at angles
-                            
-                            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false, depthWrite: true });
-                            const plane = new THREE.Mesh(geometry, material);
-                            plane.position.set(cx, 0, cz);
-                            plane.rotation.x = -Math.PI / 2;
-                            plane.isMapTile = true; 
-                            mapGroup.add(plane);
-                        }
-                    }
-                }
-                scene.add(mapGroup);
-                
-                // Re-add Grid
-                const gridHelper = new THREE.GridHelper(500, 50, 0x94a3b8, 0x1e293b);
-                gridHelper.position.y = 0.1; 
-                gridHelper.material.opacity = 0.1;
-                gridHelper.material.transparent = true;
-                scene.add(gridHelper);
-            }
-
-            if (filtered.length === 0) return;
-
-            const HEIGHT = 100;
-            const entityGroups = {};
-            let centerSumX = 0, centerSumZ = 0;
-            
-            const currentMinTime = start;
-            const currentTimeRange = end - start || 1;
-
-            filtered.forEach(d => {
-                const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                const y = HEIGHT - (((d.ts - currentMinTime) / currentTimeRange) * HEIGHT);
-
-                if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
-                entityGroups[d.entity].points.push({x, y, z, data: d});
-                
-                centerSumX += x;
-                centerSumZ += z;
-            });
-
-            // Auto-Snap
-            if (autoSnap && filtered.length > 0) {
-                const centerX = centerSumX / filtered.length;
-                const centerZ = centerSumZ / filtered.length;
-                cameraOffset.x = centerX;
-                cameraOffset.z = centerZ;
-                updateCameraPosition();
-            }
-
-            Object.values(entityGroups).forEach(group => {
-                const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
-                const sphereMat = new THREE.MeshLambertMaterial({ color: 0xffffff }); 
-                const iMesh = new THREE.InstancedMesh(sphereGeo, sphereMat, group.points.length);
-                const dummy = new THREE.Object3D();
-                const _color = new THREE.Color();
-
-                group.points.forEach((p, i) => {
-                    dummy.position.set(p.x, p.y, p.z);
-                    dummy.updateMatrix();
-                    iMesh.setMatrixAt(i, dummy.matrix);
-                    
-                    if (pendingSelection.has(p.data)) {
-                        _color.setHex(0xffff00); 
-                    } else if (pendingSelection.size > 0) {
-                        _color.set(group.color).multiplyScalar(0.3); 
-                    } else {
-                        _color.set(group.color); 
-                    }
-                    iMesh.setColorAt(i, _color);
-                });
-                iMesh.instanceMatrix.needsUpdate = true;
-                if(iMesh.instanceColor) iMesh.instanceColor.needsUpdate = true;
-                scene.add(iMesh);
-                
-                group.points.forEach((p, idx) => {
-                    if (idx % 10 === 0 || idx === 0 || idx === group.points.length - 1) {
-                        const dropPoints = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, 0, p.z)];
-                        const dropGeo = new THREE.BufferGeometry().setFromPoints(dropPoints);
-                        
-                        let lineOpacity = 0.2;
-                        if (pendingSelection.size > 0 && !pendingSelection.has(p.data)) lineOpacity = 0.05;
-                        
-                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: lineOpacity, transparent: true });
-                        scene.add(new THREE.Line(dropGeo, dropMat));
-                    }
-                });
-            });
-        }
-
-        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); if(currentView === '3d') update3D(); } };
-        document.getElementById('btnZoomToFit').onclick = () => { 
-            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); 
-            const filtered = allData.filter(d => d.ts >= s && d.ts <= e);
-            zoomToFit(filtered); 
-            
-            // Add zoom logic for 3D
-            if(currentView === '3d' && filtered.length > 0) {
-                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-                 
-                 // Calculate bounds of filtered data in 3D space
-                 filtered.forEach(d => {
-                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                    if(x < minX) minX = x;
-                    if(x > maxX) maxX = x;
-                    if(z < minZ) minZ = z;
-                    if(z > maxZ) maxZ = z;
-                 });
-                 
-                 if (minX !== Infinity) {
-                     const cx = (minX + maxX) / 2;
-                     const cz = (minZ + maxZ) / 2;
-                     const width = maxX - minX;
-                     const depth = maxZ - minZ;
-                     const maxDim = Math.max(width, depth);
-                     
-                     cameraOffset.set(cx, 50, cz); 
-                     radius = Math.max(5, maxDim * 1.2); 
-                     updateCameraPosition();
-                 }
-            }
-        };
-        
-        document.getElementById('btnResetAll').onclick = () => { 
-            if (isPlaying) togglePlayback(); 
-            uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
-            
-            // Clear Selection
-            activeSelectionFilter = null;
-            pendingSelection.clear();
-            document.getElementById('btnFitSelected').classList.add('hidden');
-            
-            updateEntityCheckboxes();
-            if (document.getElementById('date-slider').noUiSlider) {
-                document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
-            }
-            document.getElementById('analysis-results').classList.add('hidden');
-            document.getElementById('results-grid').innerHTML = '';
-            
-            updateMap();
-            updateUserMarkersOnMap(); 
-            
-            // Order Fixed: Update 3D World (Rebuilds map based on allData) -> THEN Zoom Camera
-            if (currentView === '3d') update3D();
-            zoomToFit();
-        };
-
-        function update3D() {
-            if (!scene) return;
-            
-            // 1. CLEAR DYNAMIC DATA ONLY
-            for(let i = scene.children.length - 1; i >= 0; i--) { 
-                const obj = scene.children[i];
-                if (obj.type === "Line" || obj.type === "Points" || obj.type === "InstancedMesh" || (obj.type === "Mesh" && obj !== mapGroup && !obj.isMapTile)) {
-                    scene.remove(obj); 
-                }
-            }
-
-            const slider = document.getElementById('date-slider');
-            const [start, end] = slider.noUiSlider ? slider.noUiSlider.get().map(v => parseInt(v)) : [dateRange.min, dateRange.max];
-            
-            // Update Time Axis Labels (Swapped: Start Date is Top, End Date is Bottom)
-            document.getElementById('time-axis-end').innerText = new Date(start).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-            document.getElementById('time-axis-start').innerText = new Date(end).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-
-            // Filter Data
-            let filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-            
-            // Apply Selection Filter
-            if (activeSelectionFilter) {
-                filtered = filtered.filter(d => activeSelectionFilter.has(d));
-            }
-
-            // 2. BUILD WORLD & MAP (Run Once or on Data Load)
-            if (!mapGroup || mapGroup.children.length === 0) {
-                if (mapGroup) scene.remove(mapGroup);
-                
-                const lats = allData.map(d => d.lat);
-                const lngs = allData.map(d => d.lng);
-                
-                if (lats.length === 0) return;
-
-                const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-                const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-                
-                worldScale.minLat = minLat;
-                worldScale.minLng = minLng;
-                worldScale.latRange = maxLat - minLat || 0.0001;
-                worldScale.lngRange = maxLng - minLng || 0.0001;
-                // Note: We DO NOT store Time Scaling here anymore, it is dynamic.
-
-                const meanLatRad = (minLat + maxLat) / 2 * (Math.PI / 180);
-                const aspectRatio = (worldScale.lngRange * Math.cos(meanLatRad)) / worldScale.latRange;
-                
-                if (aspectRatio > 1) {
-                    worldScale.scaleX = 100 * aspectRatio;
-                    worldScale.scaleZ = 100;
-                } else {
-                    worldScale.scaleX = 100;
-                    worldScale.scaleZ = 100 / aspectRatio;
-                }
-
-                mapGroup = new THREE.Group();
-                const loader = new THREE.TextureLoader();
-                loader.crossOrigin = 'anonymous';
-
-                // Increased Max Zoom to 19 to support street level details on small datasets
-                const zoom = Math.min(19, Math.max(4, Math.floor(Math.log2(360 / worldScale.lngRange)) + 2));
-                const minTileX = lon2tile(worldScale.minLng, zoom) - 1;
-                const maxTileX = lon2tile(maxLng, zoom) + 1;
-                const minTileY = lat2tile(maxLat, zoom) - 1;
-                const maxTileY = lat2tile(worldScale.minLat, zoom) + 1;
-
-                for (let tx = minTileX; tx <= maxTileX; tx++) {
-                    for (let ty = minTileY; ty <= maxTileY; ty++) {
-                        const url = `https://a.basemaps.cartocdn.com/rastertiles/voyager/${zoom}/${tx}/${ty}.png`;
-                        
-                        const tileWest = tile2long(tx, zoom);
-                        const tileEast = tile2long(tx + 1, zoom);
-                        const tileNorth = tile2lat(ty, zoom);
-                        const tileSouth = tile2lat(ty + 1, zoom);
-
-                        const x1 = ((tileWest - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                        const x2 = ((tileEast - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                        const z1 = -(((tileNorth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
-                        const z2 = -(((tileSouth - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2));
-
-                        const w = Math.abs(x2 - x1);
-                        const h = Math.abs(z2 - z1);
-                        const cx = (x1 + x2) / 2;
-                        const cz = (z1 + z2) / 2;
-
-                        const geometry = new THREE.PlaneGeometry(w * 1.05, h * 1.05);
-                        const texture = loader.load(url);
-                        texture.minFilter = THREE.LinearFilter;
-                        
-                        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: false, depthWrite: true });
-                        const plane = new THREE.Mesh(geometry, material);
-                        plane.position.set(cx, 0, cz);
-                        plane.rotation.x = -Math.PI / 2;
-                        plane.isMapTile = true; 
-                        mapGroup.add(plane);
-                    }
-                }
-                scene.add(mapGroup);
-                
-                const gridHelper = new THREE.GridHelper(500, 50, 0x94a3b8, 0x1e293b);
-                gridHelper.position.y = 0.1; 
-                gridHelper.material.opacity = 0.1;
-                gridHelper.material.transparent = true;
-                scene.add(gridHelper);
-            }
-
-            if (filtered.length === 0) return;
-
-            const HEIGHT = 100;
-            const entityGroups = {};
-            let centerSumX = 0, centerSumZ = 0;
-            
-            // Dynamic Time Scaling Variables
-            const currentMinTime = start;
-            const currentTimeRange = end - start || 1;
-
-            filtered.forEach(d => {
-                const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                
-                // Dynamic Y Calculation: Inverted. 0 is start of slider (TOP, HEIGHT), 100 is end of slider (BOTTOM, 0)
-                // actually wait, HEIGHT=100.
-                // d.ts = currentMinTime -> val=0 -> y = HEIGHT (Top)
-                // d.ts = end -> val=1 -> y = 0 (Bottom)
-                const y = HEIGHT - (((d.ts - currentMinTime) / currentTimeRange) * HEIGHT);
-
-                if (!entityGroups[d.entity]) entityGroups[d.entity] = { points: [], color: entityColors[d.entity] || '#ffffff' };
-                entityGroups[d.entity].points.push({x, y, z, data: d});
-                
-                centerSumX += x;
-                centerSumZ += z;
-            });
-
-            // 3. AUTO-SNAP LOGIC
-            if (autoSnap && filtered.length > 0) {
-                const centerX = centerSumX / filtered.length;
-                const centerZ = centerSumZ / filtered.length;
-                cameraOffset.x = centerX;
-                cameraOffset.z = centerZ;
-                updateCameraPosition();
-            }
-
-            Object.values(entityGroups).forEach(group => {
-                const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
-                const sphereMat = new THREE.MeshLambertMaterial({ color: 0xffffff }); 
-                const iMesh = new THREE.InstancedMesh(sphereGeo, sphereMat, group.points.length);
-                const dummy = new THREE.Object3D();
-                const _color = new THREE.Color();
-
-                group.points.forEach((p, i) => {
-                    dummy.position.set(p.x, p.y, p.z);
-                    dummy.updateMatrix();
-                    iMesh.setMatrixAt(i, dummy.matrix);
-                    
-                    if (pendingSelection.has(p.data)) {
-                        _color.setHex(0xffff00); 
-                    } else if (pendingSelection.size > 0) {
-                        _color.set(group.color).multiplyScalar(0.3); 
-                    } else {
-                        _color.set(group.color); 
-                    }
-                    iMesh.setColorAt(i, _color);
-                });
-                iMesh.instanceMatrix.needsUpdate = true;
-                if(iMesh.instanceColor) iMesh.instanceColor.needsUpdate = true;
-                scene.add(iMesh);
-                
-                group.points.forEach((p, idx) => {
-                    if (idx % 10 === 0 || idx === 0 || idx === group.points.length - 1) {
-                        const dropPoints = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, 0, p.z)];
-                        const dropGeo = new THREE.BufferGeometry().setFromPoints(dropPoints);
-                        
-                        let lineOpacity = 0.2;
-                        if (pendingSelection.size > 0 && !pendingSelection.has(p.data)) lineOpacity = 0.05;
-                        
-                        const dropMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: lineOpacity, transparent: true });
-                        scene.add(new THREE.Line(dropGeo, dropMat));
-                    }
-                });
-            });
-        }
-
-        document.getElementById('btnApplyFilter').onclick = () => { const s = new Date(document.getElementById('input-start').value).getTime(), e = new Date(document.getElementById('input-end').value).getTime(); if (!isNaN(s) && !isNaN(e)) { document.getElementById('date-slider').noUiSlider.set([s, e]); updateMap(); if(currentView === '3d') update3D(); } };
-        document.getElementById('btnZoomToFit').onclick = () => { 
-            const [s, e] = document.getElementById('date-slider').noUiSlider.get().map(v => parseInt(v)); 
-            const filtered = allData.filter(d => d.ts >= s && d.ts <= e);
-            zoomToFit(filtered); 
-            
-            // Add zoom logic for 3D
-            if(currentView === '3d' && filtered.length > 0) {
-                 let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-                 
-                 // Calculate bounds of filtered data in 3D space
-                 filtered.forEach(d => {
-                    const x = ((d.lng - worldScale.minLng) / worldScale.lngRange) * worldScale.scaleX - (worldScale.scaleX/2);
-                    const z = -(((d.lat - worldScale.minLat) / worldScale.latRange) * worldScale.scaleZ - (worldScale.scaleZ/2)); 
-                    if(x < minX) minX = x;
-                    if(x > maxX) maxX = x;
-                    if(z < minZ) minZ = z;
-                    if(z > maxZ) maxZ = z;
-                 });
-                 
-                 if (minX !== Infinity) {
-                     const cx = (minX + maxX) / 2;
-                     const cz = (minZ + maxZ) / 2;
-                     const width = maxX - minX;
-                     const depth = maxZ - minZ;
-                     const maxDim = Math.max(width, depth);
-                     
-                     // Center camera on data
-                     cameraOffset.set(cx, 50, cz); 
-                     // Tighter zoom for general fit (1.2x instead of 2.0x) and lower floor (5 instead of 30)
-                     radius = Math.max(5, maxDim * 1.2); 
-                     updateCameraPosition();
-                 }
-            }
-        };
-        
-        document.getElementById('btnResetAll').onclick = () => { 
-            if (isPlaying) togglePlayback(); 
-            uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
-            
-            // Clear Selection
-            activeSelectionFilter = null;
-            pendingSelection.clear();
-            document.getElementById('btnFitSelected').classList.add('hidden');
-            
-            updateEntityCheckboxes();
-            if (document.getElementById('date-slider').noUiSlider) {
-                document.getElementById('date-slider').noUiSlider.set([dateRange.min, dateRange.max]);
-            }
-            document.getElementById('analysis-results').classList.add('hidden');
-            document.getElementById('results-grid').innerHTML = '';
-            
-            // Force map regeneration on full reset if needed, or just update data
-            // mapGroup = null; // Uncomment if we want to rebuild map on reset
-            
-            updateMap();
-            updateUserMarkersOnMap(); 
-            zoomToFit();
-            if (currentView === '3d') update3D();
-        };
-        
-        document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels; this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
-        document.getElementById('toggleAutoSnap').onclick = function() { autoSnap = !autoSnap; this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`; };
-        
-        document.getElementById('btnToggleExpand').onclick = function() {
-            const mapEl = document.getElementById('map');
-            const view3dEl = document.getElementById('view-3d');
-            const expandIcon = document.getElementById('expandIcon');
-            const collapseIcon = document.getElementById('collapseIcon');
-            const btnSpan = this.querySelector('span');
-            
-            mapEl.classList.toggle('map-expanded');
-            view3dEl.classList.toggle('map-expanded');
-            
-            if (mapEl.classList.contains('map-expanded')) {
-                expandIcon.classList.add('hidden');
-                collapseIcon.classList.remove('hidden');
-                btnSpan.innerText = "Normal View";
-            } else {
-                expandIcon.classList.remove('hidden');
-                collapseIcon.classList.add('hidden');
-                btnSpan.innerText = "Expand map";
-            }
-            setTimeout(() => { map.invalidateSize(); if(renderer) { renderer.setSize(view3dEl.clientWidth, view3dEl.clientHeight); camera.aspect = view3dEl.clientWidth / view3dEl.clientHeight; camera.updateProjectionMatrix(); } }, 300);
-        };
-
-        window.onload = initMap;
-    </script>
-</body>
-</html>
