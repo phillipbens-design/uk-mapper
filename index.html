@@ -68,7 +68,7 @@
         .selection-box {
             position: absolute; border: 2px dashed #3b82f6;
             background-color: rgba(59, 130, 246, 0.2);
-            pointer-events: none; z-index: 20; display: none;
+            pointer-events: none; z-index: 2000; display: none;
         }
     </style>
 </head>
@@ -247,6 +247,19 @@
         </button>
     </div>
 
+    <div id="helpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10002]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 id="helpModalTitle" class="text-lg font-bold text-slate-800">Help</h2>
+            </div>
+            <p id="helpModalText" class="text-sm text-slate-600 leading-relaxed mb-6"></p>
+            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-all">Close</button>
+        </div>
+    </div>
+
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
         <div class="flex items-center gap-2">
             <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg">
@@ -258,11 +271,6 @@
             <h1 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase" style="font-family: 'Montserrat', sans-serif;">Burnmouth <span class="text-slate-400 font-semibold normal-case tracking-normal">- Geospatial tool kit</span></h1>
         </div>
         <div class="flex gap-3 items-center">
-            <!-- User Guide Button (Nav) -->
-            <a href="user_guide.html" target="_blank" class="text-slate-500 hover:text-blue-600 font-bold text-xs flex items-center gap-1 transition-colors mr-2 border border-slate-200 rounded-lg px-3 py-2 bg-white shadow-sm hover:shadow-md h-[42px]">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                User Guide
-            </a>
             <div class="relative">
                 <input type="text" id="postcodeInput" placeholder="Postcode..." class="pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-32 focus:w-48 transition-all shadow-sm">
                 <button id="btnSearchPostcode" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1">
@@ -375,15 +383,14 @@
                     <button id="toggleAutoSnap" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
                         Auto-Snap: <span class="text-blue-600">Off</span>
                     </button>
+                    <button id="btnBoxSelect" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        Select Area
+                    </button>
                     <button id="btnStartDrawing" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Tag Location
                     </button>
-                    <!-- New 2D Selection Button -->
-                    <button id="btnSelectArea" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2" onclick="toggle2DSelection()">
-                        <span>⛝</span> Select Area
-                    </button>
-
                     <!-- Report Builder Buttons -->
                     <button id="btnCapture" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2">
                         <span>📸</span> Capture
@@ -425,13 +432,7 @@
                 </div>
             </div>
             <h3 class="text-slate-800 font-bold mb-2 text-lg font-['Montserrat']">Ready to Visualise</h3>
-            <p class="text-sm max-w-xs text-center px-4 mb-4">Upload a CSV file to begin.</p>
-
-            <!-- User Guide Button (Empty State) -->
-            <a href="user_guide.html" target="_blank" class="mb-6 text-xs font-bold text-slate-600 hover:text-blue-600 bg-white border border-slate-200 hover:border-blue-200 shadow-sm hover:shadow-md px-5 py-2.5 rounded-xl transition-all inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                Open User Guide
-            </a>
+            <p class="text-sm max-w-xs text-center px-4 mb-6">Upload a CSV file to begin.</p>
 
             <details class="group mb-2 max-w-md w-full px-4 text-center cursor-pointer">
                 <summary class="list-none text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
@@ -671,26 +672,30 @@
         let activeColumnMap = null;
         let currentEditingEntity = null;
         
-        // 2D Selection State
-        let is2DSelectionMode = false;
-        let selectionStartLatLng = null;
-        let selectionRect = null;
-        
         // Context Menu State
         let contextMenuLatLng = null;
 
+        // Help Text Data
+        const helpData = {
+            timeline: "Control the time range of your data. Drag the blue handles on the slider to narrow down the specific date and time window. You can also manually input start and end times below. The 'Apply' button updates the map.",
+            visualisation: "Choose how to view your data: 'Markers' shows individual points, 'Clusters' groups them for clarity, 'Heatmap' shows density, 'Path' draws lines between points in time order, and '3D' opens the Space-Time Cube.",
+            maptools: "Toggle labels on/off, enable 'Auto-Snap' to follow data during playback, or use 'Tag Location' to drop your own markers. 'Clear Filters' resets all views, selections, and time ranges.",
+            analysis: "Use 'Show top locations' to automatically identify and list the top 12 most visited coordinates in your dataset, enriched with nearest postcode data.",
+            keylocations: "Automatically scan your data for proximity to known sensitive locations such as Transport Hubs, Prisons, Hospitals, and Harbours. You can adjust the search radius (km) for each category.",
+            advanced: "Detect complex patterns: 'Detect Journeys' identifies sustained movements over distance. 'Detect Co-location' finds instances where two entities (or an entity and a tag) were in the same place at the same time."
+        };
+
         function openHelp(key) {
-            // Maps internal keys to the IDs in the new user_guide.html
-            const map = {
-                'timeline': 'timeline',
-                'visualisation': 'visualisation',
-                'maptools': 'maptools',
-                'analysis': 'analysis',
-                'keylocations': 'analysis', // Maps to the general analysis section
-                'advanced': 'analysis'
-            };
-            const section = map[key] || 'intro';
-            window.open('user_guide.html#' + section, '_blank');
+            const info = helpData[key];
+            if (info) {
+                document.getElementById('helpModalTitle').innerText = key === 'timeline' ? 'Timeline Controls' : 
+                    key === 'visualisation' ? 'Visualisation Styles' :
+                    key === 'maptools' ? 'Map Tools' :
+                    key === 'analysis' ? 'Analytical Intelligence' :
+                    key === 'keylocations' ? 'Key Location Detectors' : 'Advanced Analysis';
+                document.getElementById('helpModalText').innerText = info;
+                document.getElementById('helpModal').classList.remove('hidden');
+            }
         }
 
         // 3D Variables
@@ -747,22 +752,6 @@
             return `Region of ${closest.name}`;
         }
 
-        function toggle2DSelection() {
-            is2DSelectionMode = !is2DSelectionMode;
-            const btn = document.getElementById('btnSelectArea');
-            if (is2DSelectionMode) {
-                map.dragging.disable();
-                map.getContainer().style.cursor = 'crosshair';
-                btn.classList.add('ring-4', 'ring-blue-400', 'bg-slate-50');
-                btn.innerHTML = `<span class="animate-pulse">⛝</span> Drag to Select`;
-            } else {
-                map.dragging.enable();
-                map.getContainer().style.cursor = '';
-                btn.classList.remove('ring-4', 'ring-blue-400', 'bg-slate-50');
-                btn.innerHTML = `<span>⛝</span> Select Area`; 
-            }
-        }
-
         function initMap() {
             if (map) return;
             const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap, &copy; CARTO' });
@@ -812,59 +801,6 @@
                     togglePlacementMode(false);
                     openUserMarkerModal(null, e.latlng.lat, e.latlng.lng);
                 }
-            });
-            
-            // 2D Selection Events
-            map.on('mousedown', (e) => {
-                if (!is2DSelectionMode || e.originalEvent.button !== 0) return;
-                map.dragging.disable();
-                selectionStartLatLng = e.latlng;
-                if (selectionRect) map.removeLayer(selectionRect);
-                selectionRect = null;
-                L.DomEvent.preventDefault(e.originalEvent);
-            });
-
-            map.on('mousemove', (e) => {
-                if (!is2DSelectionMode || !selectionStartLatLng) return;
-                const bounds = L.latLngBounds(selectionStartLatLng, e.latlng);
-                if (!selectionRect) {
-                    selectionRect = L.rectangle(bounds, {color: "#3b82f6", weight: 2, dashArray: '5, 5', fillOpacity: 0.2}).addTo(map);
-                } else {
-                    selectionRect.setBounds(bounds);
-                }
-            });
-
-            map.on('mouseup', (e) => {
-                if (!is2DSelectionMode || !selectionStartLatLng) return;
-                
-                const bounds = selectionRect ? selectionRect.getBounds() : L.latLngBounds(selectionStartLatLng, e.latlng);
-                const slider = document.getElementById('date-slider');
-                const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
-                const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
-                
-                pendingSelection.clear();
-                filtered.forEach(d => {
-                    if (bounds.contains([d.lat, d.lng])) {
-                        pendingSelection.add(d);
-                    }
-                });
-
-                const btn = document.getElementById('btnFitSelected');
-                if (pendingSelection.size > 0) {
-                    btn.classList.remove('hidden');
-                    btn.innerText = `Fit Selected (${pendingSelection.size})`;
-                } else {
-                    btn.classList.add('hidden');
-                }
-
-                // Remove the blue box immediately to keep map clean
-                if (selectionRect) {
-                    map.removeLayer(selectionRect);
-                    selectionRect = null;
-                }
-
-                selectionStartLatLng = null;
-                toggle2DSelection(); // Auto-exit mode
             });
             
             // Context Menu Logic
@@ -1056,7 +992,8 @@
             const pad = (n) => String(n).padStart(2, '0');
             return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
-function updateEntityCheckboxes() {
+
+        function updateEntityCheckboxes() {
             const container = document.getElementById('entityCheckboxList');
             container.innerHTML = '';
             if (uniqueEntities.size === 0) {
@@ -2261,7 +2198,6 @@ async function detectCarJourneys() {
             uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
             activeSelectionFilter = null;
             pendingSelection.clear();
-            if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
             document.getElementById('btnFitSelected').classList.add('hidden');
             updateEntityCheckboxes();
             if (document.getElementById('date-slider').noUiSlider) {
@@ -2276,9 +2212,110 @@ async function detectCarJourneys() {
         };
         
         document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels;
-            this.innerHTML = `Show Labels: <span class=\"text-blue-600\">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
+            this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
         document.getElementById('toggleAutoSnap').onclick = function() { autoSnap = !autoSnap;
-            this.innerHTML = `Auto-Snap: <span class=\"text-blue-600\">${autoSnap ? 'On' : 'Off'}</span>`; };
+            this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`; };
+        
+        // 2D Box Selection Logic
+        let isBoxSelect2D = false;
+        const mapContainer = document.getElementById('map');
+        const mapSelBox = document.createElement('div');
+        mapSelBox.className = 'selection-box';
+        mapContainer.appendChild(mapSelBox);
+        let startSelPoint = null;
+
+        document.getElementById('btnBoxSelect').onclick = () => {
+            isBoxSelect2D = !isBoxSelect2D;
+            const btn = document.getElementById('btnBoxSelect');
+            if (isBoxSelect2D) {
+                btn.classList.add('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerText = "Drag to Select";
+                mapContainer.style.cursor = 'crosshair';
+                map.dragging.disable(); 
+            } else {
+                btn.classList.remove('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Select Area`;
+                mapContainer.style.cursor = '';
+                map.dragging.enable();
+                mapSelBox.style.display = 'none';
+            }
+        };
+
+        mapContainer.addEventListener('mousedown', (e) => {
+            if (!isBoxSelect2D || e.button !== 0) return;
+            // Only trigger if clicking directly on map container or Leaflet pane (avoid buttons)
+            if (e.target.closest('.leaflet-control-container')) return; 
+            
+            const rect = mapContainer.getBoundingClientRect();
+            startSelPoint = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            mapSelBox.style.left = startSelPoint.x + 'px';
+            mapSelBox.style.top = startSelPoint.y + 'px';
+            mapSelBox.style.width = '0px';
+            mapSelBox.style.height = '0px';
+            mapSelBox.style.display = 'block';
+            // Stop propagation to prevent map zoom/pan if dragging happened to be enabled
+            e.stopPropagation(); 
+        });
+
+        mapContainer.addEventListener('mousemove', (e) => {
+            if (!isBoxSelect2D || !startSelPoint) return;
+            const rect = mapContainer.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            const width = Math.abs(currentX - startSelPoint.x);
+            const height = Math.abs(currentY - startSelPoint.y);
+            const left = Math.min(currentX, startSelPoint.x);
+            const top = Math.min(currentY, startSelPoint.y);
+
+            mapSelBox.style.width = width + 'px';
+            mapSelBox.style.height = height + 'px';
+            mapSelBox.style.left = left + 'px';
+            mapSelBox.style.top = top + 'px';
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (!isBoxSelect2D || !startSelPoint) return;
+            
+            mapSelBox.style.display = 'none';
+            const rect = mapContainer.getBoundingClientRect();
+            const endX = e.clientX - rect.left;
+            const endY = e.clientY - rect.top;
+            
+            const minX = Math.min(startSelPoint.x, endX);
+            const maxX = Math.max(startSelPoint.x, endX);
+            const minY = Math.min(startSelPoint.y, endY);
+            const maxY = Math.max(startSelPoint.y, endY);
+
+            if (maxX - minX > 5 && maxY - minY > 5) {
+                const northWest = map.containerPointToLatLng([minX, minY]);
+                const southEast = map.containerPointToLatLng([maxX, maxY]);
+                const bounds = L.latLngBounds(northWest, southEast);
+
+                pendingSelection.clear();
+                const slider = document.getElementById('date-slider');
+                const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+                
+                const filtered = allData.filter(d => 
+                    d.ts >= start && d.ts <= end && 
+                    activeEntityFilters.has(d.entity) &&
+                    bounds.contains([d.lat, d.lng])
+                );
+
+                filtered.forEach(d => pendingSelection.add(d));
+
+                const btnFit = document.getElementById('btnFitSelected');
+                if (pendingSelection.size > 0) {
+                    btnFit.classList.remove('hidden');
+                    btnFit.innerText = `Fit Selected (${pendingSelection.size})`;
+                } else {
+                    btnFit.classList.add('hidden');
+                }
+            }
+            startSelPoint = null;
+            document.getElementById('btnBoxSelect').click(); // Toggle off
+        });
+
         document.getElementById('btnToggleExpand').onclick = function() {
             const mapEl = document.getElementById('map');
             const view3dEl = document.getElementById('view-3d');
@@ -2299,6 +2336,198 @@ async function detectCarJourneys() {
             }
             setTimeout(() => { map.invalidateSize(); if(renderer) { renderer.setSize(view3dEl.clientWidth, view3dEl.clientHeight); camera.aspect = view3dEl.clientWidth / view3dEl.clientHeight; camera.updateProjectionMatrix(); } }, 300);
         };
+
+        // Report Builder Logic
+        let reportSnapshots = [];
+
+        document.getElementById('btnCapture').onclick = async () => {
+            const btn = document.getElementById('btnCapture');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin">⌛</span> Capturing...`;
+            btn.disabled = true;
+
+            // Force a render cycle to ensure map is ready
+            await new Promise(r => setTimeout(r, 100));
+
+            try {
+                const canvas = await html2canvas(document.getElementById('map-container'), {
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    scale: 1 // Keep file size reasonable
+                });
+                
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                reportSnapshots.push({
+                    id: Date.now(),
+                    image: imgData,
+                    comment: "",
+                    timestamp: new Date().toLocaleString()
+                });
+                
+                updateReportUI();
+                
+                // Visual feedback
+                const flash = document.createElement('div');
+                flash.className = "fixed inset-0 bg-white z-[9999] opacity-50 transition-opacity duration-300 pointer-events-none";
+                document.body.appendChild(flash);
+                setTimeout(() => { flash.classList.add('opacity-0'); setTimeout(() => flash.remove(), 300); }, 50);
+
+            } catch (e) {
+                console.error("Capture failed:", e);
+                alert("Failed to capture snapshot. Ensure map tiles allow cross-origin requests.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        function updateReportUI() {
+            const btn = document.getElementById('btnOpenReport');
+            const count = document.getElementById('reportCount');
+            count.innerText = reportSnapshots.length;
+            if (reportSnapshots.length > 0) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        }
+
+        document.getElementById('btnOpenReport').onclick = () => {
+            renderReportList();
+            document.getElementById('reportModal').classList.remove('hidden');
+        };
+
+        document.getElementById('btnCloseReport').onclick = () => {
+            document.getElementById('reportModal').classList.add('hidden');
+        };
+        
+        document.getElementById('btnClearReport').onclick = () => {
+            if(confirm("Clear all snapshots?")) {
+                reportSnapshots = [];
+                updateReportUI();
+                document.getElementById('reportModal').classList.add('hidden');
+            }
+        };
+
+        function renderReportList() {
+            const list = document.getElementById('reportList');
+            list.innerHTML = '';
+            if (reportSnapshots.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-400 mt-10">No snapshots taken.</p>';
+                return;
+            }
+            
+            reportSnapshots.forEach((snap, index) => {
+                const item = document.createElement('div');
+                item.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-4 items-start";
+                item.innerHTML = `
+                    <div class="w-1/3 flex-shrink-0">
+                        <img src="${snap.image}" class="w-full rounded-lg border border-slate-300 shadow-sm">
+                        <p class="text-[10px] text-slate-400 mt-1 text-center">${snap.timestamp}</p>
+                    </div>
+                    <div class="flex-grow space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs font-bold text-slate-700 uppercase">Snapshot #${index + 1}</span>
+                            <button class="text-rose-500 hover:text-rose-700 text-xs font-bold" onclick="removeSnapshot(${snap.id})">Remove</button>
+                        </div>
+                        <textarea class="w-full h-24 border border-slate-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
+                            placeholder="Add analysis comments here..." onchange="updateSnapshotComment(${snap.id}, this.value)">${snap.comment}</textarea>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        window.removeSnapshot = (id) => {
+            reportSnapshots = reportSnapshots.filter(s => s.id !== id);
+            updateReportUI();
+            renderReportList();
+        };
+
+        window.updateSnapshotComment = (id, text) => {
+            const snap = reportSnapshots.find(s => s.id === id);
+            if (snap) snap.comment = text;
+        };
+
+        document.getElementById('btnDownloadPDF').onclick = async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(22);
+            doc.setTextColor(30, 64, 175); // Blue
+            doc.text("Intelligence Report", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 28);
+            doc.line(20, 32, 190, 32);
+
+            let yPos = 40;
+
+            for (let i = 0; i < reportSnapshots.length; i++) {
+                const snap = reportSnapshots[i];
+                
+                // Check for page break
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                // Image
+                doc.addImage(snap.image, 'JPEG', 20, yPos, 170, 95); // Aspect ratio approx 16:9
+                yPos += 100;
+
+                // Comment Box
+                doc.setFillColor(248, 250, 252); // Slate-50
+                doc.rect(20, yPos, 170, 30, 'F');
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(50);
+                doc.text(`Snapshot #${i+1} Analysis:`, 25, yPos + 8);
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                doc.setTextColor(0);
+                
+                const splitText = doc.splitTextToSize(snap.comment || "No commentary provided.", 160);
+                doc.text(splitText, 25, yPos + 16);
+                
+                yPos += 40; // Spacing for next item
+            }
+
+            doc.save("Burnmouth_Report.pdf");
+        };
+
+        // AUTO-INIT FOR PREVIEW MODE
+        if (window.IS_PREVIEW_MODE) {
+            console.log("🚀 Launching Preview Mode...");
+            allData = [
+                { lat: 51.5074, lng: -0.1278, ts: Date.now(), label: "Preview Point 1", entity: "Target A" },
+                { lat: 51.515, lng: -0.135, ts: Date.now() + 3600000, label: "Preview Point 2", entity: "Target A" },
+                { lat: 51.520, lng: -0.110, ts: Date.now() + 7200000, label: "Preview Point 3", entity: "Target B" }
+            ];
+            
+            // Populate Entities
+            uniqueEntities.add("Target A");
+            uniqueEntities.add("Target B");
+            activeEntityFilters.add("Target A");
+            activeEntityFilters.add("Target B");
+            entityColors["Target A"] = "#2563eb";
+            entityColors["Target B"] = "#dc2626";
+
+            // Calculate Date Range
+            dateRange.min = Math.min(...allData.map(d => d.ts));
+            dateRange.max = Math.max(...allData.map(d => d.ts));
+
+            // Force UI Open
+            setTimeout(() => {
+                showApp();
+                updateEntityCheckboxes();
+                initSlider();
+                updateMap(true);
+            }, 500); // Small delay to ensure DOM is ready
+        }
 
         window.onload = initMap;
     </script>
