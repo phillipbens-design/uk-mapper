@@ -10,6 +10,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Report Builder Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
@@ -33,7 +37,7 @@
         .custom-slider .noUi-handle { border-radius: 50%; cursor: pointer; }
         input[type=range] { accent-color: #2563eb; }
         .detection-card:hover { border-color: #2563eb; background-color: #f8fafc; }
-        #entityModal, #userMarkerModal { z-index: 9999; }
+        #entityModal, #userMarkerModal, #reportModal { z-index: 9999; }
         .placement-cursor { cursor: crosshair !important; }
         
         /* 3D Nav Button */
@@ -214,6 +218,26 @@
         </div>
     </div>
 
+    <!-- Report Builder Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10003]">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 animate-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-800">Intelligence Report Builder</h2>
+                <button id="btnCloseReport" class="text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div id="reportList" class="flex-grow overflow-y-auto space-y-6 pr-2 mb-4">
+                <!-- Snapshots go here -->
+            </div>
+            <div class="border-t border-slate-100 pt-4 flex justify-end gap-3">
+                <button id="btnClearReport" class="px-4 py-2 text-rose-600 font-bold hover:bg-rose-50 rounded-lg transition">Clear All</button>
+                <button id="btnDownloadPDF" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="mapContextMenu" class="hidden absolute z-[9999] bg-white rounded-xl shadow-2xl border border-slate-100 w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
         <button id="ctxTagLocation" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border-b border-slate-50 transition-colors flex items-center gap-2">
             <span>📍</span> Tag Location
@@ -221,19 +245,6 @@
         <button id="ctxLookupPostcode" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2">
             <span>📮</span> Lookup Postcode
         </button>
-    </div>
-
-    <div id="helpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[10002]">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-blue-50 text-blue-600 rounded-full">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 id="helpModalTitle" class="text-lg font-bold text-slate-800">Help</h2>
-            </div>
-            <p id="helpModalText" class="text-sm text-slate-600 leading-relaxed mb-6"></p>
-            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-all">Close</button>
-        </div>
     </div>
 
     <nav class="bg-white border-b px-6 py-4 flex flex-wrap justify-between items-center shadow-sm gap-4">
@@ -247,6 +258,11 @@
             <h1 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase" style="font-family: 'Montserrat', sans-serif;">Burnmouth <span class="text-slate-400 font-semibold normal-case tracking-normal">- Geospatial tool kit</span></h1>
         </div>
         <div class="flex gap-3 items-center">
+            <!-- User Guide Button (Nav) -->
+            <a href="user_guide.html" target="_blank" class="text-slate-500 hover:text-blue-600 font-bold text-xs flex items-center gap-1 transition-colors mr-2 border border-slate-200 rounded-lg px-3 py-2 bg-white shadow-sm hover:shadow-md h-[42px]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                User Guide
+            </a>
             <div class="relative">
                 <input type="text" id="postcodeInput" placeholder="Postcode..." class="pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-32 focus:w-48 transition-all shadow-sm">
                 <button id="btnSearchPostcode" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1">
@@ -363,6 +379,19 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Tag Location
                     </button>
+                    <!-- New 2D Selection Button -->
+                    <button id="btnSelectArea" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2" onclick="toggle2DSelection()">
+                        <span>⛝</span> Select Area
+                    </button>
+
+                    <!-- Report Builder Buttons -->
+                    <button id="btnCapture" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm inline-flex items-center gap-2">
+                        <span>📸</span> Capture
+                    </button>
+                    <button id="btnOpenReport" class="hidden px-4 py-2 text-xs font-bold text-white bg-slate-800 border border-slate-900 rounded-xl hover:bg-slate-700 transition shadow-sm inline-flex items-center gap-2">
+                        <span>📄</span> Report <span id="reportCount" class="bg-slate-600 px-1.5 rounded-full text-[10px]">0</span>
+                    </button>
+
                     <button id="btnResetAll" class="px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 transition">
                         Clear Filters
                     </button>
@@ -396,7 +425,13 @@
                 </div>
             </div>
             <h3 class="text-slate-800 font-bold mb-2 text-lg font-['Montserrat']">Ready to Visualise</h3>
-            <p class="text-sm max-w-xs text-center px-4 mb-6">Upload a CSV file to begin.</p>
+            <p class="text-sm max-w-xs text-center px-4 mb-4">Upload a CSV file to begin.</p>
+
+            <!-- User Guide Button (Empty State) -->
+            <a href="user_guide.html" target="_blank" class="mb-6 text-xs font-bold text-slate-600 hover:text-blue-600 bg-white border border-slate-200 hover:border-blue-200 shadow-sm hover:shadow-md px-5 py-2.5 rounded-xl transition-all inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                Open User Guide
+            </a>
 
             <details class="group mb-2 max-w-md w-full px-4 text-center cursor-pointer">
                 <summary class="list-none text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 transition-all inline-flex items-center gap-2 select-none mx-auto">
@@ -602,6 +637,24 @@
     <script src="data.js"></script>
 
     <script>
+    // PREVIEW SHIM: Fixes ReferenceErrors for static data (runs before main logic)
+    if (typeof MAJOR_CITIES === 'undefined') {
+        console.warn("⚠️ Canvas Preview Mode Active - Polyfilling Data");
+        window.IS_PREVIEW_MODE = true;
+        if (window.proj4) {
+            proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
+        }
+        window.MAJOR_CITIES = [{ name: "London (Preview)", lat: 51.5074, lng: -0.1278 }];
+        window.TRANSPORT_HUBS = []; 
+        window.RAIL_NETWORK_WAYPOINTS = []; 
+        window.PRISONS = []; 
+        window.SERVICE_STATIONS = []; 
+        window.MISC_KEY_LOCATIONS = []; 
+        window.MARITIME_HARBOURS = [];
+    }
+    </script>
+
+    <script>
         let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
         let allData = [];
         let userMarkers = []; // { id, lat, lng, label, color }
@@ -618,30 +671,26 @@
         let activeColumnMap = null;
         let currentEditingEntity = null;
         
+        // 2D Selection State
+        let is2DSelectionMode = false;
+        let selectionStartLatLng = null;
+        let selectionRect = null;
+        
         // Context Menu State
         let contextMenuLatLng = null;
 
-        // Help Text Data
-        const helpData = {
-            timeline: "Control the time range of your data. Drag the blue handles on the slider to narrow down the specific date and time window. You can also manually input start and end times below. The 'Apply' button updates the map.",
-            visualisation: "Choose how to view your data: 'Markers' shows individual points, 'Clusters' groups them for clarity, 'Heatmap' shows density, 'Path' draws lines between points in time order, and '3D' opens the Space-Time Cube.",
-            maptools: "Toggle labels on/off, enable 'Auto-Snap' to follow data during playback, or use 'Tag Location' to drop your own markers. 'Clear Filters' resets all views, selections, and time ranges.",
-            analysis: "Use 'Show top locations' to automatically identify and list the top 12 most visited coordinates in your dataset, enriched with nearest postcode data.",
-            keylocations: "Automatically scan your data for proximity to known sensitive locations such as Transport Hubs, Prisons, Hospitals, and Harbours. You can adjust the search radius (km) for each category.",
-            advanced: "Detect complex patterns: 'Detect Journeys' identifies sustained movements over distance. 'Detect Co-location' finds instances where two entities (or an entity and a tag) were in the same place at the same time."
-        };
-
         function openHelp(key) {
-            const info = helpData[key];
-            if (info) {
-                document.getElementById('helpModalTitle').innerText = key === 'timeline' ? 'Timeline Controls' : 
-                    key === 'visualisation' ? 'Visualisation Styles' :
-                    key === 'maptools' ? 'Map Tools' :
-                    key === 'analysis' ? 'Analytical Intelligence' :
-                    key === 'keylocations' ? 'Key Location Detectors' : 'Advanced Analysis';
-                document.getElementById('helpModalText').innerText = info;
-                document.getElementById('helpModal').classList.remove('hidden');
-            }
+            // Maps internal keys to the IDs in the new user_guide.html
+            const map = {
+                'timeline': 'timeline',
+                'visualisation': 'visualisation',
+                'maptools': 'maptools',
+                'analysis': 'analysis',
+                'keylocations': 'analysis', // Maps to the general analysis section
+                'advanced': 'analysis'
+            };
+            const section = map[key] || 'intro';
+            window.open('user_guide.html#' + section, '_blank');
         }
 
         // 3D Variables
@@ -698,6 +747,22 @@
             return `Region of ${closest.name}`;
         }
 
+        function toggle2DSelection() {
+            is2DSelectionMode = !is2DSelectionMode;
+            const btn = document.getElementById('btnSelectArea');
+            if (is2DSelectionMode) {
+                map.dragging.disable();
+                map.getContainer().style.cursor = 'crosshair';
+                btn.classList.add('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerHTML = `<span class="animate-pulse">⛝</span> Drag to Select`;
+            } else {
+                map.dragging.enable();
+                map.getContainer().style.cursor = '';
+                btn.classList.remove('ring-4', 'ring-blue-400', 'bg-slate-50');
+                btn.innerHTML = `<span>⛝</span> Select Area`; 
+            }
+        }
+
         function initMap() {
             if (map) return;
             const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap, &copy; CARTO' });
@@ -747,6 +812,59 @@
                     togglePlacementMode(false);
                     openUserMarkerModal(null, e.latlng.lat, e.latlng.lng);
                 }
+            });
+            
+            // 2D Selection Events
+            map.on('mousedown', (e) => {
+                if (!is2DSelectionMode || e.originalEvent.button !== 0) return;
+                map.dragging.disable();
+                selectionStartLatLng = e.latlng;
+                if (selectionRect) map.removeLayer(selectionRect);
+                selectionRect = null;
+                L.DomEvent.preventDefault(e.originalEvent);
+            });
+
+            map.on('mousemove', (e) => {
+                if (!is2DSelectionMode || !selectionStartLatLng) return;
+                const bounds = L.latLngBounds(selectionStartLatLng, e.latlng);
+                if (!selectionRect) {
+                    selectionRect = L.rectangle(bounds, {color: "#3b82f6", weight: 2, dashArray: '5, 5', fillOpacity: 0.2}).addTo(map);
+                } else {
+                    selectionRect.setBounds(bounds);
+                }
+            });
+
+            map.on('mouseup', (e) => {
+                if (!is2DSelectionMode || !selectionStartLatLng) return;
+                
+                const bounds = selectionRect ? selectionRect.getBounds() : L.latLngBounds(selectionStartLatLng, e.latlng);
+                const slider = document.getElementById('date-slider');
+                const [start, end] = slider.noUiSlider.get().map(v => parseInt(v));
+                const filtered = allData.filter(d => d.ts >= start && d.ts <= end && activeEntityFilters.has(d.entity));
+                
+                pendingSelection.clear();
+                filtered.forEach(d => {
+                    if (bounds.contains([d.lat, d.lng])) {
+                        pendingSelection.add(d);
+                    }
+                });
+
+                const btn = document.getElementById('btnFitSelected');
+                if (pendingSelection.size > 0) {
+                    btn.classList.remove('hidden');
+                    btn.innerText = `Fit Selected (${pendingSelection.size})`;
+                } else {
+                    btn.classList.add('hidden');
+                }
+
+                // Remove the blue box immediately to keep map clean
+                if (selectionRect) {
+                    map.removeLayer(selectionRect);
+                    selectionRect = null;
+                }
+
+                selectionStartLatLng = null;
+                toggle2DSelection(); // Auto-exit mode
             });
             
             // Context Menu Logic
@@ -2143,6 +2261,7 @@ async function detectCarJourneys() {
             uniqueEntities.forEach(entity => activeEntityFilters.add(entity));
             activeSelectionFilter = null;
             pendingSelection.clear();
+            if (selectionRect) { map.removeLayer(selectionRect); selectionRect = null; }
             document.getElementById('btnFitSelected').classList.add('hidden');
             updateEntityCheckboxes();
             if (document.getElementById('date-slider').noUiSlider) {
@@ -2157,9 +2276,9 @@ async function detectCarJourneys() {
         };
         
         document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels;
-            this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
+            this.innerHTML = `Show Labels: <span class=\"text-blue-600\">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
         document.getElementById('toggleAutoSnap').onclick = function() { autoSnap = !autoSnap;
-            this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`; };
+            this.innerHTML = `Auto-Snap: <span class=\"text-blue-600\">${autoSnap ? 'On' : 'Off'}</span>`; };
         document.getElementById('btnToggleExpand').onclick = function() {
             const mapEl = document.getElementById('map');
             const view3dEl = document.getElementById('view-3d');
