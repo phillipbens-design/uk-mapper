@@ -271,6 +271,10 @@
             <h1 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase" style="font-family: 'Montserrat', sans-serif;">Burnmouth <span class="text-slate-400 font-semibold normal-case tracking-normal">- Geospatial tool kit</span></h1>
         </div>
         <div class="flex gap-3 items-center">
+            <a href="user_guide.html" target="_blank" class="text-slate-500 hover:text-blue-600 font-bold text-sm mr-4 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                User Guide
+            </a>
             <div class="relative">
                 <input type="text" id="postcodeInput" placeholder="Postcode..." class="pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-32 focus:w-48 transition-all shadow-sm">
                 <button id="btnSearchPostcode" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1">
@@ -476,6 +480,11 @@
                     </ul>
                 </div>
             </details>
+
+            <a href="user_guide.html" target="_blank" class="mt-6 text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                Read the User Guide
+            </a>
         </div>
 
         <div id="map-container" class="relative hidden">
@@ -1342,6 +1351,7 @@ async function detectCarJourneys() {
                     temporalSummary: `Started: ${j[0].label} <br> Finished: ${j[j.length-1].label}` 
                 };
             });
+            
             // Postcode Lookup Logic
             const enrichmentPromises = results.map(async (item) => {
                 const startPt = item.matches[0];
