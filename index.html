@@ -1346,7 +1346,8 @@
 
             document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
             markerLayer.clearLayers(); pathLayer.clearLayers(); clusterLayer.clearLayers();
-            if (heatLayer) map.removeLayer(heatLayer);
+            // FIX: Explicitly nullify the heatLayer reference after removal to prevent memory leaks and crashes
+            if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
             if (filtered.length > 0) {
                 if (currentView === 'markers') {
                     filtered.forEach((d, idx) => {
