@@ -28,6 +28,7 @@
             background: rgba(255, 255, 255, 0.95); border: 1px solid #2563eb;
             border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 600;
             color: #1e40af; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: move; white-space: nowrap; pointer-events: auto;
         }
         .user-label {
             background: #1e293b; border: 1px solid #ffffff;
@@ -432,9 +433,15 @@
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Map Tools</span>
                         <button onclick="openHelp('maptools')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
                     </div>
-                    <button id="toggleLabels" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
-                        Show Labels: <span class="text-blue-600">Off</span>
-                    </button>
+                    <div class="flex items-center bg-white border border-slate-200 rounded-xl shadow-sm p-1 gap-2">
+                        <button id="toggleLabels" class="px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 rounded-lg transition">
+                            Labels: <span class="text-blue-600">Off</span>
+                        </button>
+                        <div class="flex items-center gap-1 border-l border-slate-100 pl-2 pr-1">
+                            <input type="number" id="labelLimitInput" min="1" max="2000" value="500" class="w-12 text-[10px] font-bold border border-slate-200 rounded px-1 py-1 outline-none focus:border-blue-500 text-center" title="Max Labels (Default: 500)">
+                            <span id="labelLimitWarning" class="hidden text-[10px] text-rose-600 font-black px-1" title="High label count may cause crashes!">⚠️</span>
+                        </div>
+                    </div>
                     <button id="toggleAutoSnap" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
                         Auto-Snap: <span class="text-blue-600">Off</span>
                     </button>
@@ -725,7 +732,7 @@
         let isPlacementMode = false;
         let pendingCsvData = null; 
         let editingUserMarker = null;
-        const LABEL_LIMIT = 500;
+        let labelLimit = 500; // User adjustable
         let uniqueEntities = new Set();
         let entityColors = {}; 
         let activeEntityFilters = new Set();
@@ -1196,8 +1203,14 @@
             
             // Recalc Date Range if needed
             if (allData.length > 0) {
-                 dateRange.min = Math.min(...allData.map(d => d.ts));
-                 dateRange.max = Math.max(...allData.map(d => d.ts));
+                 // PROFESSIONAL FIX: Use linear loop to find min/max to prevent stack overflow
+                 let min = Infinity, max = -Infinity;
+                 for (let i = 0; i < allData.length; i++) {
+                     if (allData[i].ts < min) min = allData[i].ts;
+                     if (allData[i].ts > max) max = allData[i].ts;
+                 }
+                 dateRange.min = min;
+                 dateRange.max = max;
                  initSlider(); // Re-init slider with new bounds
             } else {
                  document.getElementById('empty-state').classList.remove('hidden');
@@ -1278,9 +1291,14 @@
                 }
             });
             if (allData.length === 0) return;
+            // Sort data by time (Critical for timeline and optimized analysis)
             allData.sort((a, b) => a.ts - b.ts);
-            dateRange.min = Math.min(...allData.map(d => d.ts));
-            dateRange.max = Math.max(...allData.map(d => d.ts));
+            
+            // PROFESSIONAL FIX: Direct index access avoids stack overflow on large datasets (>65k rows)
+            // and is O(1) efficiency compared to Math.min/max spread operator.
+            dateRange.min = allData[0].ts;
+            dateRange.max = allData[allData.length - 1].ts;
+
             updateEntityCheckboxes();
             showApp();
             initSlider();
@@ -1352,7 +1370,23 @@
                 if (currentView === 'markers') {
                     filtered.forEach((d, idx) => {
                         const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
-                        if (showLabels && idx < LABEL_LIMIT) m.bindTooltip(d.label, { permanent: true, direction: 'top', className: 'date-label', offset: [0, -8] });
+                        
+                        // NEW: Draggable Labels Logic
+                        if (showLabels && idx < labelLimit) {
+                            const labelIcon = L.divIcon({
+                                className: 'bg-transparent',
+                                html: `<div class="date-label">${d.label}</div>`,
+                                iconSize: null, // Allow CSS to size it
+                                iconAnchor: [20, 24] // Offset slightly above the point
+                            });
+                            const labelMarker = L.marker([d.lat, d.lng], { 
+                                icon: labelIcon, 
+                                draggable: true, // Enable dragging
+                                zIndexOffset: 1000 // Keep on top
+                            });
+                            labelMarker.addTo(markerLayer);
+                        }
+                        
                         m.addTo(markerLayer);
                     });
                 } else if (currentView === 'clusters') {
@@ -1715,9 +1749,20 @@ async function detectCarJourneys() {
             if (objA.type === 'entity' && objB.type === 'entity') {
                 const filteredA = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objA.name && isVisible(d));
                 const filteredB = allData.filter(d => d.ts >= start && d.ts <= end && d.entity === objB.name && isVisible(d));
+                
+                // EFFICIENCY UPGRADE: Leveraging sorted data to reduce complexity
                 filteredA.forEach(p1 => {
-                    filteredB.forEach(p2 => {
+                    for (let i = 0; i < filteredB.length; i++) {
+                        const p2 = filteredB[i];
+                        
+                        // Optimization 1: Since sorted, if p2 is way behind p1, skip it
+                        if (p2.ts < p1.ts - maxTimeMs) continue;
+                        
+                        // Optimization 2: Since sorted, if p2 is way ahead of p1, stop checking entirely
+                        if (p2.ts > p1.ts + maxTimeMs) break;
+
                         const timeDiff = Math.abs(p1.ts - p2.ts);
+                        // Double check redundant timeDiff (implicit from above logic but good for safety)
                         if (timeDiff <= maxTimeMs) {
                             const dist = getDistance(p1.lat, p1.lng, p2.lat, p2.lng);
                             if (dist <= maxDist) {
@@ -1730,7 +1775,7 @@ async function detectCarJourneys() {
                                 });
                             }
                         }
-                    });
+                    }
                 });
             }
             else if (objA.type !== objB.type) {
@@ -2506,6 +2551,10 @@ async function detectCarJourneys() {
             document.querySelectorAll('#day-filters input').forEach(cb => cb.checked = true);
             document.querySelectorAll('#hour-filters input').forEach(cb => cb.checked = true);
 
+            // Reset Labels
+            showLabels = false;
+            document.getElementById('toggleLabels').innerHTML = `Labels: <span class="text-blue-600">Off</span>`;
+
             activeSelectionFilter = null;
             pendingSelection.clear();
             document.getElementById('btnFitSelected').classList.add('hidden');
@@ -2522,7 +2571,24 @@ async function detectCarJourneys() {
         };
         
         document.getElementById('toggleLabels').onclick = function() { showLabels = !showLabels;
-            this.innerHTML = `Show Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
+            this.innerHTML = `Labels: <span class="text-blue-600">${showLabels ? 'On' : 'Off'}</span>`; updateMap(); };
+            
+        // NEW: Label Limit Listener
+        document.getElementById('labelLimitInput').addEventListener('input', function(e) {
+            let val = parseInt(e.target.value);
+            const warn = document.getElementById('labelLimitWarning');
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 2000) { e.target.value = 2000; val = 2000; }
+            
+            labelLimit = val;
+            
+            // Show warning if over 1000
+            if (val > 1000) warn.classList.remove('hidden'); 
+            else warn.classList.add('hidden');
+            
+            if (showLabels) updateMap();
+        });
+
         document.getElementById('toggleAutoSnap').onclick = function() { autoSnap = !autoSnap;
             this.innerHTML = `Auto-Snap: <span class="text-blue-600">${autoSnap ? 'On' : 'Off'}</span>`; };
         
