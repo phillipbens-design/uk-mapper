@@ -385,7 +385,8 @@
                                 <button id="viewClusters" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Clusters</button>
                                 <button id="viewHeatmap" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Heatmap</button>
                                 <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
-                                <button id="view3D" class="col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
+                                <button id="viewAzimuth" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Azimuth</button>
+                                <button id="view3D" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                                     3D
                                 </button>
@@ -723,7 +724,7 @@
     </script>
 
     <script>
-        let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer;
+        let map, markerLayer, heatLayer, pathLayer, clusterLayer, userMarkerLayer, draggableLabelLayer;
         let allData = [];
         let userMarkers = []; // { id, lat, lng, label, color }
         let dateRange = { min: 0, max: 0 };
@@ -873,6 +874,7 @@
             markerLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
             userMarkerLayer = L.layerGroup().addTo(map);
+            draggableLabelLayer = L.layerGroup().addTo(map); // New layer for tethered labels
             clusterLayer = L.markerClusterGroup({ 
                 disableClusteringAtZoom: 17, 
                 spiderfyOnMaxZoom: true,
@@ -1364,6 +1366,7 @@
 
             document.getElementById('stats').innerText = `Points: ${filtered.length.toLocaleString()}`;
             markerLayer.clearLayers(); pathLayer.clearLayers(); clusterLayer.clearLayers();
+            if (draggableLabelLayer) draggableLabelLayer.clearLayers();
             // FIX: Explicitly nullify the heatLayer reference after removal to prevent memory leaks and crashes
             if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
             if (filtered.length > 0) {
@@ -1371,20 +1374,42 @@
                     filtered.forEach((d, idx) => {
                         const color = entityColors[d.entity] || "#2563eb", m = L.circleMarker([d.lat, d.lng], { radius: 6, fillColor: color, color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9 }).bindPopup(`<p class="text-xs font-bold">${d.label}</p>`);
                         
-                        // NEW: Draggable Labels Logic
+                        // NEW: Draggable Labels with Leader Lines (Tethers)
                         if (showLabels && idx < labelLimit) {
+                            const origin = [d.lat, d.lng];
+                            // Slight offset so the label doesn't spawn directly on top of the marker
+                            const offsetLat = d.lat + 0.0002; 
+                            const offsetLng = d.lng + 0.0002;
+
                             const labelIcon = L.divIcon({
                                 className: 'bg-transparent',
-                                html: `<div class="date-label">${d.label}</div>`,
-                                iconSize: null, // Allow CSS to size it
-                                iconAnchor: [20, 24] // Offset slightly above the point
+                                html: `<div class="date-label" style="cursor: move;">${d.label}</div>`,
+                                iconSize: null, 
+                                iconAnchor: [0, 20] // Anchor bottom-left
                             });
-                            const labelMarker = L.marker([d.lat, d.lng], { 
+
+                            const labelMarker = L.marker([offsetLat, offsetLng], { 
                                 icon: labelIcon, 
-                                draggable: true, // Enable dragging
-                                zIndexOffset: 1000 // Keep on top
+                                draggable: true, 
+                                zIndexOffset: 1000 
                             });
-                            labelMarker.addTo(markerLayer);
+
+                            // Create the Leader Line (Tether)
+                            const leaderLine = L.polyline([origin, [offsetLat, offsetLng]], {
+                                color: '#64748b', // Slate-500
+                                weight: 1.5,
+                                dashArray: '3, 3', // Dashed look
+                                opacity: 0.8,
+                                interactive: false // Click-through
+                            });
+
+                            // Update Line dynamically when dragging
+                            labelMarker.on('drag', function(e) {
+                                leaderLine.setLatLngs([origin, e.target.getLatLng()]);
+                            });
+
+                            labelMarker.addTo(draggableLabelLayer);
+                            leaderLine.addTo(draggableLabelLayer);
                         }
                         
                         m.addTo(markerLayer);
@@ -1404,6 +1429,137 @@
                             const latlngs = entityPoints.map(p => [p.lat, p.lng]), color = entityColors[entity] || "#2563eb";
                             L.polyline(latlngs, { color: color, weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
                         }
+                    });
+                } else if (currentView === 'azimuthClusters') {
+                    // Group data by exact coordinate location
+                    const sites = {};
+                    filtered.forEach(d => {
+                        const key = `${d.lat},${d.lng}`;
+                        if (!sites[key]) sites[key] = { lat: d.lat, lng: d.lng, count: 0, azimuths: [] };
+                        sites[key].count++;
+                        if (d.azimuth !== null && d.azimuth !== undefined && !isNaN(d.azimuth)) {
+                            sites[key].azimuths.push(Number(d.azimuth));
+                        }
+                    });
+
+                    Object.values(sites).forEach(site => {
+                        let ringSVG = '';
+                        
+                        // Only generate Tri-Cone if azimuth data exists
+                        if (site.azimuths.length > 0) {
+                            // 1. Find Peak Angle (10-degree bins)
+                            const densityBins = new Array(36).fill(0);
+                            site.azimuths.forEach(az => {
+                                const binIdx = Math.floor((az % 360) / 10);
+                                if (binIdx >= 0 && binIdx < 36) densityBins[binIdx]++;
+                            });
+                            
+                            let maxDensity = -1, peakAngle = 0;
+                            densityBins.forEach((count, idx) => {
+                                if (count > maxDensity) { maxDensity = count; peakAngle = (idx * 10) + 5; }
+                            });
+
+                            // 2. Define 3 Cones (Red, Orange, Green)
+                            const cones = [
+                                { id: 0, center: peakAngle, count: 0, color: '' },
+                                { id: 1, center: (peakAngle + 120) % 360, count: 0, color: '' },
+                                { id: 2, center: (peakAngle + 240) % 360, count: 0, color: '' }
+                            ];
+
+                            // 3. Assign Points
+                            site.azimuths.forEach(az => {
+                                let bestCone = 0, minDiff = 360;
+                                cones.forEach((c, idx) => {
+                                    let diff = Math.abs((az % 360) - c.center);
+                                    if (diff > 180) diff = 360 - diff;
+                                    if (diff < minDiff) { minDiff = diff; bestCone = idx; }
+                                });
+                                cones[bestCone].count++;
+                            });
+
+                            // 4. Sort and Color (Red=Dominant, Green=Low)
+                            const sorted = [...cones].sort((a, b) => b.count - a.count);
+                            if (sorted[0].count > 0) sorted[0].color = "#ef4444"; // Red
+                            if (sorted[1].count > 0) sorted[1].color = "#f97316"; // Orange
+                            if (sorted[2].count > 0) sorted[2].color = "#22c55e"; // Green
+
+                            // 5. Generate SVG Arcs
+                            const arcs = cones.map(c => {
+                                if (!c.color) return '';
+                                const startRad = (c.center - 60 - 90) * (Math.PI / 180);
+                                const endRad = (c.center + 60 - 90) * (Math.PI / 180);
+                                const cx = 20, cy = 20, r = 18, thickness = 3;
+                                // Outer Arc path
+                                const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+                                const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+                                return `<path d="M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}" fill="none" stroke="${c.color}" stroke-width="${thickness}" opacity="0.8" />`;
+                            }).join('');
+                            
+                            ringSVG = `<svg viewBox="0 0 40 40" class="absolute inset-0 w-full h-full animate-in zoom-in duration-300">${arcs}</svg>`;
+
+                            // Generate Detailed Popup SVG (Thickened rings with counts)
+                            const popupArcs = cones.map(c => {
+                                const color = c.color || '#e2e8f0'; 
+                                const startRad = (c.center - 60 - 90) * (Math.PI / 180);
+                                const endRad = (c.center + 60 - 90) * (Math.PI / 180);
+                                const cx = 60, cy = 60, r = 45, thickness = 18; // Larger scale for popup
+                                const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+                                const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+                                
+                                // Text Position
+                                const midRad = (c.center - 90) * (Math.PI / 180);
+                                const tx = cx + r * Math.cos(midRad);
+                                const ty = cy + r * Math.sin(midRad) + 4;
+
+                                return `
+                                    <path d="M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}" fill="none" stroke="${color}" stroke-width="${thickness}" stroke-linecap="butt" />
+                                    <text x="${tx}" y="${ty}" text-anchor="middle" font-size="14" font-weight="bold" fill="${c.color ? '#ffffff' : '#94a3b8'}" style="text-shadow: 0 1px 2px rgba(0,0,0,0.3); pointer-events: none;">${c.count}</text>
+                                `;
+                            }).join('');
+                            
+                            popupHTML = `
+                                <div class="flex flex-col items-center p-2">
+                                    <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Directional Hits</div>
+                                    <div class="relative w-32 h-32">
+                                        <svg viewBox="0 0 120 120" class="w-full h-full">
+                                            <circle cx="60" cy="60" r="45" fill="none" stroke="#f8fafc" stroke-width="18" />
+                                            ${popupArcs}
+                                            <text x="60" y="10" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="bold">N</text>
+                                            <text x="110" y="64" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="bold">E</text>
+                                            <text x="60" y="115" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="bold">S</text>
+                                            <text x="10" y="64" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="bold">W</text>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div class="flex flex-col items-center bg-white/90 rounded-full px-2 py-1 shadow-sm border border-slate-100">
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase">Total</span>
+                                                <span class="text-sm font-black text-slate-800">${site.count}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        } else {
+                            // Grey ring if no azimuth data
+                            ringSVG = `<svg viewBox="0 0 40 40" class="absolute inset-0 w-full h-full"><circle cx="20" cy="20" r="18" fill="none" stroke="#cbd5e1" stroke-width="2" /></svg>`;
+                            popupHTML = `<div class="text-center font-bold text-slate-700">Total Hits: ${site.count}<br><span class="text-[10px] text-slate-400 italic">No directional data available</span></div>`;
+                        }
+
+                        const icon = L.divIcon({
+                            className: 'bg-transparent',
+                            html: `
+                                <div class="relative w-10 h-10 flex items-center justify-center">
+                                    ${ringSVG}
+                                    <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 z-10">
+                                        <span class="text-[10px] font-bold text-slate-700">${site.count}</span>
+                                    </div>
+                                </div>
+                            `,
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20]
+                        });
+
+                        L.marker([site.lat, site.lng], { icon: icon })
+                            .bindPopup(popupHTML)
+                            .addTo(markerLayer);
                     });
                 }
                 if (shouldCentre) {
@@ -2031,6 +2187,7 @@ async function detectCarJourneys() {
         document.getElementById('viewClusters').onclick = () => setView('clusters', 'viewClusters');
         document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
         document.getElementById('viewPath').onclick = () => setView('path', 'viewPath');
+        document.getElementById('viewAzimuth').onclick = () => setView('azimuthClusters', 'viewAzimuth');
         document.getElementById('view3D').onclick = () => setView('3d', 'view3D');
         
         // These calls use the arrays loaded from data.js
@@ -2087,11 +2244,12 @@ async function detectCarJourneys() {
 
         function setView(type, btnId) {
             currentView = type;
-            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath', 'view3D'].forEach(id => { 
+            // Removed 'col-span-2' logic from view3D to accommodate the new button in the grid
+            ['viewMarkers', 'viewClusters', 'viewHeatmap', 'viewPath', 'viewAzimuth', 'view3D'].forEach(id => { 
                 const b = document.getElementById(id); 
                 if (b) b.className = id === btnId 
                     ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200" 
-                    : (id === 'view3D' ? "col-span-2 px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"); 
+                    : (id === 'view3D' ? "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1" : "px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600"); 
             });
             if (type === '3d') {
                 document.getElementById('map').classList.add('hidden');
