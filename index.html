@@ -374,53 +374,35 @@
                 </div>
 
                 <div class="lg:col-span-6 flex flex-col gap-6 lg:border-l lg:pl-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-1 mb-2">
-                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Visualisation Style</label>
-                                <button onclick="openHelp('visualisation')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                                <button id="viewMarkers" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
-                                <button id="viewClusters" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Clusters</button>
-                                <button id="viewHeatmap" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Heatmap</button>
-                                <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
-                                <button id="viewAzimuth" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Azimuth</button>
-                                <button id="view3D" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                    3D
-                                </button>
-                            </div>
-                            
-                            <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
-                                    <div id="entityCheckboxList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                                        <p class="text-[10px] text-slate-400 italic">No entities loaded</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tagged Locations</label>
-                                    <div id="userMarkerList" class="flex flex-col gap-2 max-h-32 overflow-y-auto">
-                                        <p class="text-[10px] text-slate-400 italic">No tags added</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Visualisation Style Expanded -->
+                    <div class="space-y-4 h-full flex flex-col">
+                        <div class="flex items-center gap-1 mb-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Visualisation Style</label>
+                            <button onclick="openHelp('visualisation')" class="text-slate-400 hover:text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
                         </div>
-
-                        <div class="space-y-4">
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Animation Playback</label>
-                            <div class="flex items-center gap-4">
-                                <button id="btnPlay" class="flex-shrink-0 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md">
-                                    <svg id="playIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-                                    <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                                </button>
-                                <div class="flex-grow space-y-1">
-                                    <div class="flex justify-between items-center">
-                                        <label class="text-[10px] font-bold text-slate-400 uppercase">Speed</label>
-                                        <span id="speed-label" class="text-[10px] font-bold text-blue-600">Moderate</span>
-                                    </div>
-                                    <input type="range" id="playbackSpeedRange" min="0.0001" max="0.0019" step="0.0001" value="0.001" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+                        <div class="grid grid-cols-6 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                            <button id="viewMarkers" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm border border-slate-200">Markers</button>
+                            <button id="viewClusters" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Clusters</button>
+                            <button id="viewHeatmap" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Heatmap</button>
+                            <button id="viewPath" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Path</button>
+                            <button id="viewAzimuth" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600">Azimuth</button>
+                            <button id="view3D" class="px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all text-slate-600 bg-slate-200/50 flex items-center justify-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                3D
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-6 flex-grow">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Active Entities</label>
+                                <div id="entityCheckboxList" class="flex flex-wrap content-start gap-2 max-h-60 overflow-y-auto p-1">
+                                    <p class="text-[10px] text-slate-400 italic">No entities loaded</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tagged Locations</label>
+                                <div id="userMarkerList" class="flex flex-col gap-2 max-h-60 overflow-y-auto p-1">
+                                    <p class="text-[10px] text-slate-400 italic">No tags added</p>
                                 </div>
                             </div>
                         </div>
@@ -547,11 +529,62 @@
         </div>
 
         <div id="map-container" class="relative hidden">
+            <!-- Expand Button -->
             <button id="btnToggleExpand" class="absolute top-4 left-14 z-[1000] bg-white border border-slate-200 p-2 rounded-lg shadow-md hover:bg-slate-50 transition-all text-slate-600 flex items-center gap-2 text-xs font-bold">
                 <svg id="expandIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                 <svg id="collapseIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0h4m-4 0v4m11 1l5-5m0 0h-4m4 0v4m-11 11l-5-5m0 0v4m0-4h4m11 5l5-5m0 0v-4m0 4h-4"></path></svg>
                 <span>Expand map</span>
             </button>
+
+            <!-- Playback Control Overlay -->
+            <div id="playbackOverlay" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center gap-0 transition-none cursor-move select-none" style="touch-action: none;">
+                <!-- Collapsible Header -->
+                <button id="btnTogglePlaybackPanel" class="bg-white/95 backdrop-blur-sm text-slate-600 px-4 py-1.5 rounded-xl text-[10px] font-bold shadow-md border border-slate-200 hover:bg-white hover:text-blue-600 flex items-center gap-2 transition-colors">
+                    <span>Playback Controls</span>
+                    <svg id="playbackPanelChevron" class="w-3 h-3 transform rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                <!-- Main Control Panel -->
+                <div id="playbackPanelContent" class="hidden bg-white/95 backdrop-blur-sm p-3 rounded-xl rounded-tl-none shadow-2xl border border-slate-200 flex flex-col gap-3 min-w-[320px] mt-1 animate-in slide-in-from-bottom-1">
+                    <!-- Timeline Text & Input -->
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">Start</span>
+                            <input type="datetime-local" id="playback-jump-input" class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-blue-500 font-mono tracking-tight w-32" step="1">
+                        </div>
+                        <div class="flex items-center gap-1 border-l border-slate-100 pl-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">Window</span>
+                            <input type="number" id="playback-window-input" value="30" step="15" min="15" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-blue-500 font-mono w-12 text-center" title="Window size in minutes">
+                            <span class="text-[9px] font-bold text-slate-400">m</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <!-- Playback Buttons -->
+                        <div class="flex items-center gap-1.5" onmousedown="event.stopPropagation()">
+                            <button id="btnReverse" class="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition active:scale-95" title="Reverse">
+                                <svg class="w-4 h-4 transform rotate-180" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <button id="btnPause" class="p-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition active:scale-95" title="Pause">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <button id="btnPlay" class="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md shadow-blue-200 transition active:scale-95" title="Forward">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Speed Control -->
+                        <div class="flex flex-col flex-grow gap-1 border-l border-slate-100 pl-4" onmousedown="event.stopPropagation()">
+                            <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                                <span>Speed</span>
+                                <span id="speed-label" class="text-blue-600">Moderate</span>
+                            </div>
+                            <input type="range" id="playbackSpeedRange" min="0.0001" max="0.0019" step="0.0001" value="0.001" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="map" class="shadow-xl border border-slate-200"></div>
             
             <div id="view-3d" class="shadow-xl border border-slate-200 hidden">
@@ -702,6 +735,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
     <script src="data.js"></script>
 
@@ -1311,39 +1345,221 @@
         function initSlider() {
             const slider = document.getElementById('date-slider');
             const rangeDisplay = document.getElementById('range-display');
+            const dateInput = document.getElementById('playback-jump-input');
+            const windowInput = document.getElementById('playback-window-input');
+            
             if (slider.noUiSlider) slider.noUiSlider.destroy();
             noUiSlider.create(slider, { start: [dateRange.min, dateRange.max], connect: true, behaviour: 'tap-drag', range: { 'min': dateRange.min, 'max': dateRange.max }, step: 1000 });
+            
             slider.noUiSlider.on('update', (values) => {
                 const s = parseInt(values[0]), e = parseInt(values[1]);
                 document.getElementById('input-start').value = formatToLocalISO(s);
                 document.getElementById('input-end').value = formatToLocalISO(e);
                 rangeDisplay.innerText = `${new Date(s).toLocaleDateString('en-GB')} - ${new Date(e).toLocaleDateString('en-GB')}`;
+                
+                // Update Overlay Start Input (values[0])
+                if (dateInput && document.activeElement !== dateInput) {
+                    dateInput.value = formatToLocalISO(s);
+                }
             });
-            slider.noUiSlider.on('change', () => { if (isPlaying) togglePlayback(); updateMap(); });
+            slider.noUiSlider.on('change', () => { if (isPlaying) togglePlayback(0); updateMap(); });
+            
+            // "Start Time" Input Listener (Moves the whole window to start at this time)
+            if (dateInput) {
+                dateInput.onchange = (e) => {
+                    const newStart = new Date(e.target.value).getTime();
+                    if (!isNaN(newStart) && newStart >= dateRange.min && newStart <= dateRange.max) {
+                        const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
+                        const windowSize = currEnd - currStart;
+                        // Clamp to max
+                        const safeStart = Math.min(newStart, dateRange.max - windowSize); 
+                        slider.noUiSlider.set([safeStart, safeStart + windowSize]);
+                        updateMap();
+                    }
+                };
+            }
+
+            // "Window Size" Input Listener (Expands/Contracts the window)
+            if (windowInput) {
+                windowInput.onchange = (e) => {
+                    let mins = parseInt(e.target.value);
+                    if (isNaN(mins) || mins < 1) mins = 15; // Fallback
+                    const durationMs = mins * 60 * 1000;
+                    
+                    const [currStart] = slider.noUiSlider.get().map(v => parseInt(v));
+                    let newEnd = currStart + durationMs;
+                    
+                    // If window exceeds data range, clamp end (visual window shrinks) 
+                    // or shift start left? Typically just clamp end for safety.
+                    if (newEnd > dateRange.max) newEnd = dateRange.max;
+                    
+                    slider.noUiSlider.set([currStart, newEnd]);
+                    updateMap();
+                };
+            }
+
+            // Shared state to detect dragging vs clicking
+            let hasMoved = false;
+
+            // Draggable Logic
+            const overlay = document.getElementById('playbackOverlay');
+            if (overlay && !overlay.hasAttribute('data-drag-init')) {
+                overlay.setAttribute('data-drag-init', 'true');
+                let isDragging = false, offset = { x: 0, y: 0 }, startX = 0, startY = 0;
+                
+                overlay.onmousedown = (e) => {
+                    if (['INPUT', 'SVG', 'PATH'].includes(e.target.tagName) || (e.target.tagName === 'BUTTON' && e.target.id !== 'btnTogglePlaybackPanel') || e.target.closest('button[id^="btnPlay"], button[id^="btnReverse"], button[id^="btnPause"]')) return;
+                    isDragging = true;
+                    hasMoved = false;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    
+                    const rect = overlay.getBoundingClientRect();
+                    const parent = overlay.offsetParent;
+                    const parentRect = parent.getBoundingClientRect();
+                    
+                    const borderLeft = parent.clientLeft || 0;
+                    const borderTop = parent.clientTop || 0;
+                    const relativeLeft = rect.left - parentRect.left - borderLeft;
+                    const relativeTop = rect.top - parentRect.top - borderTop;
+
+                    overlay.classList.remove('-translate-x-1/2');
+                    overlay.style.transform = 'none';
+                    overlay.style.position = 'absolute';
+                    overlay.style.left = relativeLeft + 'px';
+                    overlay.style.top = relativeTop + 'px';
+                    overlay.style.bottom = 'auto'; 
+
+                    offset.x = e.clientX - rect.left;
+                    offset.y = e.clientY - rect.top;
+                };
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) hasMoved = true;
+                    e.preventDefault();
+                    const parent = overlay.offsetParent;
+                    const parentRect = parent.getBoundingClientRect();
+                    const borderLeft = parent.clientLeft || 0;
+                    const borderTop = parent.clientTop || 0;
+                    overlay.style.left = (e.clientX - parentRect.left - borderLeft - offset.x) + 'px';
+                    overlay.style.top = (e.clientY - parentRect.top - borderTop - offset.y) + 'px';
+                });
+                window.addEventListener('mouseup', () => { isDragging = false; });
+            }
+            
+            // Toggle Logic (Reset to Default 30 min window on Open)
+            const btnToggle = document.getElementById('btnTogglePlaybackPanel');
+            const panel = document.getElementById('playbackPanelContent');
+            const chevron = document.getElementById('playbackPanelChevron');
+            
+            if (btnToggle && !btnToggle.hasAttribute('data-init')) {
+                btnToggle.setAttribute('data-init', 'true');
+                btnToggle.onclick = (e) => {
+                    if (hasMoved) { hasMoved = false; e.preventDefault(); e.stopPropagation(); return; }
+
+                    const isHidden = panel.classList.contains('hidden');
+                    if (isHidden) {
+                        // OPENING
+                        panel.classList.remove('hidden');
+                        chevron.style.transform = 'rotate(0deg)';
+                        btnToggle.classList.add('rounded-t-xl');
+                        btnToggle.classList.remove('rounded-xl', 'shadow-md');
+
+                        // Reset Timeline: Start at min, Window = 30 mins
+                        const defaultWindowMs = 30 * 60 * 1000;
+                        if (windowInput) windowInput.value = 30; // Reset input visual
+                        
+                        // Ensure window fits within range
+                        const safeEnd = Math.min(dateRange.min + defaultWindowMs, dateRange.max);
+                        slider.noUiSlider.set([dateRange.min, safeEnd]);
+                        updateMap();
+
+                    } else {
+                        // CLOSING
+                        panel.classList.add('hidden');
+                        chevron.style.transform = 'rotate(180deg)';
+                        btnToggle.classList.remove('rounded-t-xl');
+                        btnToggle.classList.add('rounded-xl', 'shadow-md');
+
+                        // Reset Position
+                        overlay.style.left = '';
+                        overlay.style.top = '';
+                        overlay.style.bottom = '';
+                        overlay.style.position = '';
+                        overlay.style.transform = '';
+                        overlay.classList.add('-translate-x-1/2');
+                    }
+                };
+            }
         }
 
-        function togglePlayback() {
-            const btn = document.getElementById('btnPlay');
-            const playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), slider = document.getElementById('date-slider');
-            if (isPlaying) { clearInterval(playInterval); playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); isPlaying = false;
+        function togglePlayback(direction = 0) {
+            const slider = document.getElementById('date-slider');
+            const reverseBtn = document.getElementById('btnReverse');
+            const playBtn = document.getElementById('btnPlay');
+            
+            // 1. Reset Everything (Stop)
+            clearInterval(playInterval);
+            isPlaying = false;
+            reverseBtn.classList.remove('bg-indigo-200', 'text-indigo-800', 'ring-2', 'ring-indigo-300'); // Reset Reverse
+            playBtn.classList.remove('bg-blue-800', 'ring-2', 'ring-blue-300'); // Reset Forward
+            playBtn.classList.add('bg-blue-600', 'hover:bg-blue-700'); // Restore default Forward
+            
+            // 2. If direction is 0 (Pause), we are done.
+            if (direction === 0) {
+                window.currentPlayDirection = 0;
+                return; 
             }
-            else {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden'); isPlaying = true;
-                playInterval = setInterval(() => {
-                    const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value), totalRange = dateRange.max - dateRange.min, step = (totalRange / 100) * multiplier; 
-                    const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
-                    let nextEnd = currEnd + step;
-                    if (nextEnd > dateRange.max) { slider.noUiSlider.set([currStart, dateRange.max]); togglePlayback(); return; }
-                    slider.noUiSlider.set([nextEnd - (currEnd - currStart), nextEnd]);
-                    
-                    if (currentView === '3d') {
-                        update3D();
-                    } else {
-                        updateMap(autoSnap); 
-                    }
-                }, 50);
+
+            // 3. If clicking the same active direction, act as toggle off (Pause)
+            if (window.currentPlayDirection === direction && window.wasPlaying) {
+                window.wasPlaying = false;
+                window.currentPlayDirection = 0;
+                return;
             }
+
+            // 4. Start Playback
+            window.currentPlayDirection = direction;
+            window.wasPlaying = true;
+            isPlaying = true;
+
+            // Apply Active Styles
+            if (direction === 1) {
+                playBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                playBtn.classList.add('bg-blue-800', 'ring-2', 'ring-blue-300');
+            } else {
+                reverseBtn.classList.add('bg-indigo-200', 'text-indigo-800', 'ring-2', 'ring-indigo-300');
+            }
+
+            playInterval = setInterval(() => {
+                const multiplier = parseFloat(document.getElementById('playbackSpeedRange').value);
+                const totalRange = dateRange.max - dateRange.min;
+                const step = ((totalRange / 100) * multiplier) * direction;
+                
+                const [currStart, currEnd] = slider.noUiSlider.get().map(v => parseInt(v));
+                const rangeWidth = currEnd - currStart;
+                
+                let nextEnd = currEnd + step;
+                let nextStart = nextEnd - rangeWidth;
+
+                // Boundary Checks
+                if (direction === 1 && nextEnd >= dateRange.max) {
+                    slider.noUiSlider.set([dateRange.max - rangeWidth, dateRange.max]); 
+                    togglePlayback(0); // Stop
+                    return; 
+                }
+                if (direction === -1 && nextStart <= dateRange.min) {
+                    slider.noUiSlider.set([dateRange.min, dateRange.min + rangeWidth]); 
+                    togglePlayback(0); // Stop
+                    return; 
+                }
+
+                slider.noUiSlider.set([nextStart, nextEnd]);
+                
+                if (currentView === '3d') update3D();
+                else updateMap(autoSnap);
+            }, 50);
         }
 
         function updateMap(shouldCentre = false) {
@@ -1426,8 +1642,28 @@
                     activeEntityFilters.forEach(entity => {
                         const entityPoints = filtered.filter(p => p.entity === entity);
                         if (entityPoints.length > 1) {
-                            const latlngs = entityPoints.map(p => [p.lat, p.lng]), color = entityColors[entity] || "#2563eb";
-                            L.polyline(latlngs, { color: color, weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(pathLayer);
+                            const latlngs = entityPoints.map(p => [p.lat, p.lng]);
+                            const color = entityColors[entity] || "#2563eb";
+                            
+                            // 1. Draw base path (Solid line for better visibility with arrows)
+                            const line = L.polyline(latlngs, { color: color, weight: 3, opacity: 0.8 }).addTo(pathLayer);
+
+                            // 2. Add Directional Arrowheads (if library is loaded)
+                            if (L.polylineDecorator) {
+                                L.polylineDecorator(line, {
+                                    patterns: [
+                                        {
+                                            offset: '50px',   // Start arrows slightly after the beginning
+                                            repeat: '120px',  // Repeat every 120 pixels of screen space
+                                            symbol: L.Symbol.arrowHead({
+                                                pixelSize: 14,
+                                                polygon: true, // Filled triangle for better visibility
+                                                pathOptions: { stroke: true, color: color, fillOpacity: 1, weight: 1 }
+                                            })
+                                        }
+                                    ]
+                                }).addTo(pathLayer);
+                            }
                         }
                     });
                 } else if (currentView === 'azimuthClusters') {
@@ -1587,34 +1823,66 @@
                     clusterLayer.clearLayers();
                     if (heatLayer) map.removeLayer(heatLayer);
 
-                    // 1. Calculate Date Range and prepare markers
+                    // 1. Calculate Date Range and prepare path visualization
                     let minTs = Infinity, maxTs = -Infinity;
-                    const markers = res.matches.map(p => {
+                    res.matches.forEach(p => {
                         if (p.ts < minTs) minTs = p.ts;
                         if (p.ts > maxTs) maxTs = p.ts;
-                        
-                        const color = entityColors[p.entity] || "#ef4444";
-                        // Create marker but do not add to map yet
-                        const m = L.circleMarker([p.lat, p.lng], { 
-                            radius: 7, 
-                            fillColor: color, 
-                            color: '#fff', 
-                            weight: 2, 
-                            fillOpacity: 1 
-                        }).bindPopup(`<div class="text-[10px]"><strong>Event:</strong> ${p.label}<br><strong>Coords:</strong> ${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>`);
-                        return m;
                     });
 
-                    // 2. Use Cluster Layer for performance (handles thousands of points without crashing)
-                    clusterLayer.addLayers(markers);
-                    map.addLayer(clusterLayer);
+                    const latlngs = res.matches.map(p => [p.lat, p.lng]);
+                    const color = entityColors[res.matches[0].entity] || "#2563eb";
+
+                    // Draw Journey Path (Solid Line)
+                    const journeyLine = L.polyline(latlngs, { color: color, weight: 4, opacity: 0.8 }).addTo(pathLayer);
+
+                    // Add Directional Arrows
+                    if (L.polylineDecorator) {
+                        L.polylineDecorator(journeyLine, {
+                            patterns: [{
+                                offset: '50px',
+                                repeat: '150px',
+                                symbol: L.Symbol.arrowHead({
+                                    pixelSize: 14,
+                                    polygon: true,
+                                    pathOptions: { stroke: true, color: color, fillOpacity: 1, weight: 1 }
+                                })
+                            }]
+                        }).addTo(pathLayer);
+                    }
+                    
+                    // Add Start/End Markers for clarity
+                    if (res.matches.length > 0) {
+                        const start = res.matches[0];
+                        const end = res.matches[res.matches.length - 1];
+                        L.circleMarker([start.lat, start.lng], { radius: 6, color: '#10b981', fillColor: '#10b981', fillOpacity: 1 })
+                            .bindPopup(`<strong>Start</strong><br>${start.label}`).addTo(markerLayer);
+                        L.circleMarker([end.lat, end.lng], { radius: 6, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1 })
+                            .bindPopup(`<strong>End</strong><br>${end.label}`).addTo(markerLayer);
+                    }
 
                     // 3. Add Custom Summary Label (Count + Date Range + Azimuth Graph)
                     if (res.matches.length > 0) {
                         const center = res.matches[0]; // Use first point as anchor
-                        const startDate = new Date(minTs).toLocaleDateString('en-GB');
-                        const endDate = new Date(maxTs).toLocaleDateString('en-GB');
-                        const dateLabel = minTs === maxTs ? startDate : `${startDate} - ${endDate}`;
+                        
+                        // Enhanced Date/Time formatting for Journey precision
+                        const fmt = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+                        const startDate = new Date(minTs).toLocaleString('en-GB', fmt);
+                        const endDate = new Date(maxTs).toLocaleString('en-GB', fmt);
+                        
+                        let dateLabel = '';
+                        if (minTs === maxTs) {
+                             dateLabel = `<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${startDate}</span>`;
+                        } else {
+                             // Display distinct Start/End times for journeys
+                             dateLabel = `
+                                <div class="grid grid-cols-[min-content_1fr] gap-x-2 text-left mt-1 border-t border-slate-100 pt-1">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase self-center">Start</span>
+                                    <span class="text-[10px] font-bold text-emerald-600 whitespace-nowrap">${startDate}</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase self-center">End</span>
+                                    <span class="text-[10px] font-bold text-rose-600 whitespace-nowrap">${endDate}</span>
+                                </div>`;
+                        }
 
                         // Azimuth Tri-Cone Visualization
                         let azimuthHTML = '';
@@ -1721,8 +1989,8 @@
                             icon: L.divIcon({ className: 'bg-transparent border-none', html: '' }) // Invisible anchor
                         }).bindTooltip(
                             `<div class="text-center font-sans">
-                                <span class="font-black text-blue-700 text-sm">${res.matches.length} Hits</span><br>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${dateLabel}</span>
+                                <span class="font-black text-blue-700 text-sm">${res.matches.length} Hits</span>
+                                ${dateLabel}
                                 ${azimuthHTML}
                             </div>`,
                             { permanent: true, direction: 'top', className: 'bg-white/95 border border-blue-200 rounded-lg shadow-lg px-3 py-2', offset: [0, -25] }
@@ -1731,7 +1999,9 @@
                     }
 
                     // 4. Fit view
-                    map.fitBounds(clusterLayer.getBounds(), { padding: [50, 50], animate: true });
+                    if (journeyLine) {
+                        map.fitBounds(journeyLine.getBounds(), { padding: [50, 50], animate: true });
+                    }
                     window.scrollTo({ top: document.getElementById('map-container').offsetTop - 20, behavior: 'smooth' });
                 };
                 grid.appendChild(card);
@@ -2182,7 +2452,9 @@ async function detectCarJourneys() {
             editingUserMarker = null;
         };
 
-        document.getElementById('btnPlay').onclick = togglePlayback;
+        document.getElementById('btnPlay').onclick = () => togglePlayback(1);
+        document.getElementById('btnReverse').onclick = () => togglePlayback(-1);
+        document.getElementById('btnPause').onclick = () => togglePlayback(0);
         document.getElementById('viewMarkers').onclick = () => setView('markers', 'viewMarkers');
         document.getElementById('viewClusters').onclick = () => setView('clusters', 'viewClusters');
         document.getElementById('viewHeatmap').onclick = () => setView('heat', 'viewHeatmap');
