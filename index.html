@@ -2149,24 +2149,41 @@ async function detectCarJourneys() {
             entities.forEach(entity => {
                 const ePoints = filtered.filter(d => d.entity === entity);
                 if (ePoints.length < 2) return;
-                let currentJourney = [ePoints[0]];
-                for (let i = 1; i < ePoints.length; i++) {
-                    if (ePoints[i].ts - ePoints[i-1].ts > MAX_GAP) { processJourney(currentJourney); currentJourney = [ePoints[i]]; }
-                    else { currentJourney.push(ePoints[i]); }
-                }
-                processJourney(currentJourney);
-            });
+                
+                let startIdx = 0;
+                while (startIdx < ePoints.length - 1) {
+                    let bestEndIdx = -1;
+                    let currentPathLength = 0;
+                    let maxDisp = 0;
 
-            function processJourney(jPoints) {
-                if (jPoints.length < 2) return;
-                const duration = jPoints[jPoints.length - 1].ts - jPoints[0].ts;
-                const displacement = getDistance(jPoints[0].lat, jPoints[0].lng, jPoints[jPoints.length - 1].lat, jPoints[jPoints.length - 1].lng);
-                if (duration >= MIN_DURATION && displacement >= MIN_DISPLACEMENT) {
-                    let totalPath = 0;
-                    for(let k = 1; k < jPoints.length; k++) { totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng); }
-                    if (totalPath < displacement * ratioThreshold) { journeys.push([...jPoints]); }
+                    for (let i = startIdx + 1; i < ePoints.length; i++) {
+                        const gap = ePoints[i].ts - ePoints[i-1].ts;
+                        if (gap > MAX_GAP) break;
+
+                        currentPathLength += getDistance(ePoints[i-1].lat, ePoints[i-1].lng, ePoints[i].lat, ePoints[i].lng);
+                        const disp = getDistance(ePoints[startIdx].lat, ePoints[startIdx].lng, ePoints[i].lat, ePoints[i].lng);
+                        
+                        if (disp > maxDisp) maxDisp = disp;
+
+                        // Break out if the entity turns back heavily, signaling the end of an outbound leg
+                        if (maxDisp >= MIN_DISPLACEMENT && disp < maxDisp * 0.7) {
+                            break;
+                        }
+
+                        const duration = ePoints[i].ts - ePoints[startIdx].ts;
+                        if (duration >= MIN_DURATION && disp >= MIN_DISPLACEMENT && currentPathLength <= disp * ratioThreshold) {
+                            bestEndIdx = i;
+                        }
+                    }
+
+                    if (bestEndIdx !== -1) {
+                        journeys.push(ePoints.slice(startIdx, bestEndIdx + 1));
+                        startIdx = bestEndIdx; // Continue checking from the end of the last valid journey
+                    } else {
+                        startIdx++; // Shift forward and look for a new start point
+                    }
                 }
-            }
+            });
             
             const results = journeys.map((j, idx) => {
                 const durMs = j[j.length-1].ts - j[0].ts, hours = Math.floor(durMs / 3600000), mins = Math.floor((durMs % 3600000) / 60000), disp = getDistance(j[0].lat, j[0].lng, j[j.length-1].lat, j[j.length-1].lng).toFixed(1);
