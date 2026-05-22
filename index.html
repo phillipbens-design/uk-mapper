@@ -2141,27 +2141,30 @@ async function detectCarJourneys() {
             const ratioThreshold = 7 - (certaintyInput / 100 * 5.9);
             const MIN_DISPLACEMENT = minDispInput; 
             const MAX_GAP = 2 * 60 * 60 * 1000;
-            const MIN_DURATION = 60 * 60 * 1000; 
+            const MIN_DURATION = 10 * 60 * 1000; 
             
             const journeys = [];
-            let currentJourney = [filtered[0]];
-            for (let i = 1; i < filtered.length; i++) {
-                if (filtered[i].ts - filtered[i-1].ts > MAX_GAP) { processJourney(currentJourney);
-                currentJourney = [filtered[i]]; }
-                else { currentJourney.push(filtered[i]);
+            const entities = [...new Set(filtered.map(d => d.entity))];
+            
+            entities.forEach(entity => {
+                const ePoints = filtered.filter(d => d.entity === entity);
+                if (ePoints.length < 2) return;
+                let currentJourney = [ePoints[0]];
+                for (let i = 1; i < ePoints.length; i++) {
+                    if (ePoints[i].ts - ePoints[i-1].ts > MAX_GAP) { processJourney(currentJourney); currentJourney = [ePoints[i]]; }
+                    else { currentJourney.push(ePoints[i]); }
                 }
-            }
-            processJourney(currentJourney);
+                processJourney(currentJourney);
+            });
+
             function processJourney(jPoints) {
                 if (jPoints.length < 2) return;
                 const duration = jPoints[jPoints.length - 1].ts - jPoints[0].ts;
                 const displacement = getDistance(jPoints[0].lat, jPoints[0].lng, jPoints[jPoints.length - 1].lat, jPoints[jPoints.length - 1].lng);
                 if (duration >= MIN_DURATION && displacement >= MIN_DISPLACEMENT) {
                     let totalPath = 0;
-                    for(let k = 1; k < jPoints.length; k++) { totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng);
-                    }
-                    if (totalPath < displacement * ratioThreshold) { journeys.push([...jPoints]);
-                    }
+                    for(let k = 1; k < jPoints.length; k++) { totalPath += getDistance(jPoints[k-1].lat, jPoints[k-1].lng, jPoints[k].lat, jPoints[k].lng); }
+                    if (totalPath < displacement * ratioThreshold) { journeys.push([...jPoints]); }
                 }
             }
             
